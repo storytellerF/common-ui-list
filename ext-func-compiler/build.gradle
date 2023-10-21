@@ -3,6 +3,7 @@ import com.storyteller_f.version_manager.Versions
 plugins {
     id 'org.jetbrains.kotlin.jvm'
     id "com.storyteller_f.version_manager"
+    id("common-publish")
 }
 def javaVersion = JavaVersion.VERSION_17
 java {

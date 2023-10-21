@@ -1,6 +1,7 @@
 pluginManagement {
     val smlFolder: String by settings
     includeBuild("version-manager")
+    includeBuild("common-publish")
     if (smlFolder == "submodule" || smlFolder == "local") {
         includeBuild("../SML/plugin")
     }

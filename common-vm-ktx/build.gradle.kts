@@ -5,6 +5,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
     id("com.storyteller_f.version_manager")
+    id("common-publish")
 }
 
 android {
