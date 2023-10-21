@@ -1,6 +1,7 @@
 import com.storyteller_f.version_manager.Versions
 import com.storyteller_f.version_manager.baseLibrary
 import com.storyteller_f.version_manager.unitTestDependency
+import com.storyteller_f.version_manager.commonAndroidDependency
 
 plugins {
     id("com.android.library")
@@ -17,9 +18,7 @@ android {
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:${Versions.coreVersion}")
-    implementation("androidx.appcompat:appcompat:${Versions.appcompatVersion}")
-    implementation("com.google.android.material:material:${Versions.materialVersion}")
+    commonAndroidDependency()
     unitTestDependency()
 }
 

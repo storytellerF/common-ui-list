@@ -40,7 +40,7 @@ object Libraries
 /**
  * 需要加载kapt 插件
  */
-fun DependencyHandlerScope.baseDependency() {
+fun DependencyHandlerScope.baseAppDependency() {
     "implementation"(project(":common-ktx"))
     "implementation"(project(":common-ui"))
     "implementation"(project(":ui-list"))

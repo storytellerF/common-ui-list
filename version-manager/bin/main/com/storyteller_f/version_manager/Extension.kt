@@ -53,7 +53,7 @@ fun Project.setupCompose(isLibrary: Boolean = false, supportUiList: Boolean = tr
 fun Project.setupBase() {
     loadPlugin("kotlin-kapt")
     dependencies {
-        baseDependency()
+        baseAppDependency()
     }
 }
 

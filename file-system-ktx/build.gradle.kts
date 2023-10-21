@@ -19,9 +19,7 @@ dependencies {
     implementation(project(":file-system"))
     implementation(project(":file-system-remote"))
     implementation(project(":file-system-root"))
-    implementation("androidx.core:core-ktx:${Versions.coreVersion}")
-    implementation("androidx.appcompat:appcompat:${Versions.appcompatVersion}")
-    implementation("com.google.android.material:material:${Versions.materialVersion}")
+    commonAndroidDependency()
     implementation("com.j256.simplemagic:simplemagic:1.17")
     unitTestDependency()
 }

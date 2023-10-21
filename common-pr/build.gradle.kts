@@ -23,8 +23,6 @@ dependencies {
     implementation(project(":common-ktx"))
     implementation(project(":common-vm-ktx"))
     implementation(project(":common-ui"))
-    implementation("androidx.core:core-ktx:${Versions.coreVersion}")
-    implementation("androidx.appcompat:appcompat:${Versions.appcompatVersion}")
-    implementation("com.google.android.material:material:${Versions.materialVersion}")
+    commonAndroidDependency()
     unitTestDependency()
 }

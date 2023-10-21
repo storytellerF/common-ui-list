@@ -38,9 +38,9 @@ object Versions {
 object Libraries
 
 /**
- * 需要加载kapt 插件
+ * 需要加载kapt 插件。应用于app 组件
  */
-fun DependencyHandlerScope.baseDependency() {
+fun DependencyHandlerScope.baseAppDependency() {
     "implementation"(project(":common-ktx"))
     "implementation"(project(":common-ui"))
     "implementation"(project(":ui-list"))
@@ -104,4 +104,10 @@ fun DependencyHandlerScope.workerDependency() {
 fun DependencyHandlerScope.fileSystemDependency() {
     "implementation"(project(":file-system"))
     "implementation"(project(":file-system-ktx"))
+}
+
+fun DependencyHandlerScope.commonAndroidDependency() {
+    "implementation"("androidx.core:core-ktx:${Versions.coreVersion}")
+    "implementation"("androidx.appcompat:appcompat:${Versions.appcompatVersion}")
+    "implementation"("com.google.android.material:material:${Versions.materialVersion}")
 }

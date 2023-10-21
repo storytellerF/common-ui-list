@@ -1,5 +1,6 @@
 import com.storyteller_f.version_manager.baseLibrary
 import com.storyteller_f.version_manager.unitTestDependency
+import com.storyteller_f.version_manager.commonAndroidDependency
 
 plugins {
     id("com.android.library")
@@ -26,9 +27,7 @@ dependencies {
     implementation(project(":common-ktx"))
 
     implementation(project(":multi-core"))
-    implementation("androidx.core:core-ktx:1.10.1")
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("com.google.android.material:material:1.9.0")
+    commonAndroidDependency()
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     unitTestDependency()
     implementation(project(":compat-ktx"))
