@@ -3,12 +3,16 @@ plugins {
     `kotlin-dsl`
     `maven-publish`
 }
+group = "com.storyteller_f.version_manager"
+version = "1.0"
+publishing {
 
+}
 gradlePlugin {
     plugins {
         register("version-manager") {
             // 插件ID
-            id = "com.storyteller_f.version_manager"
+            id = "common-version-manager"
             // 插件的实现类
             implementationClass = "com.storyteller_f.version_manager.VersionManager"
         }
