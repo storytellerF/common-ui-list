@@ -19,7 +19,6 @@ android {
         minSdk = 21
     }
 
-    @Suppress("UnstableApiUsage")
     buildFeatures {
         dataBinding = true
     }
@@ -34,10 +33,9 @@ dependencies {
     implementation(project(":common-ktx"))
     implementation(project(":compat-ktx"))
     implementation(project(":common-vm-ktx"))
-    implementation("androidx.navigation:navigation-runtime-ktx:2.6.0")
-    api("androidx.core:core-ktx:${Versions.coreVersion}")
-    api("androidx.appcompat:appcompat:${Versions.appcompatVersion}")
-    api("com.google.android.material:material:${Versions.materialVersion}")
-    unitTestDependency()
+    implementation("androidx.navigation:navigation-runtime-ktx:2.7.4")
     implementation("androidx.databinding:viewbinding:${Versions.dataBindingCompilerVersion}")
+
+    commonAndroidDependency()
+    unitTestDependency()
 }

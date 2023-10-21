@@ -1,22 +1,14 @@
 import com.storyteller_f.version_manager.Versions
+import com.storyteller_f.version_manager.*
 
 plugins {
-    id 'org.jetbrains.kotlin.jvm'
+    id("org.jetbrains.kotlin.jvm")
     id("common-version-manager")
     id("common-publish")
 }
-def javaVersion = JavaVersion.VERSION_17
-java {
-    sourceCompatibility = javaVersion
-    targetCompatibility = javaVersion
-}
 
-compileKotlin {
-    kotlinOptions {
-        jvmTarget = javaVersion.toString()
-        freeCompilerArgs += "-opt-in=kotlin.RequiresOptIn"
-    }
-}
+pureKotlinLanguageLevel()
+
 dependencies {
     implementation(project(":slim-ktx"))
     implementation(project(":ext-func-definition"))

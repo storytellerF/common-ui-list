@@ -13,9 +13,6 @@ android {
     defaultConfig {
         minSdk = 21
     }
-    kotlinOptions {
-        freeCompilerArgs = listOf("-opt-in=kotlin.RequiresOptIn")
-    }
 
     buildFeatures {
         viewBinding = true

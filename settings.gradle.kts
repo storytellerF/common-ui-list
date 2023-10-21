@@ -29,7 +29,9 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "common_ui_list"
-include(":app")
+if (System.getenv()["JITPACK"] == null) {
+    include(":app")
+}
 
 include(":ui-list")
 include(":view-holder-compose")

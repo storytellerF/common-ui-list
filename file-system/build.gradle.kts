@@ -1,3 +1,4 @@
+import com.storyteller_f.version_manager.Versions
 import com.storyteller_f.version_manager.baseLibrary
 import com.storyteller_f.version_manager.unitTestDependency
 import com.storyteller_f.version_manager.commonAndroidDependency
@@ -32,13 +33,13 @@ dependencies {
     unitTestDependency()
     implementation(project(":compat-ktx"))
     // https://mvnrepository.com/artifact/androidx.test.uiautomator/uiautomator
-    androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0-alpha03")
+    androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0-alpha04")
 
-    debugImplementation("androidx.lifecycle:lifecycle-runtime-ktx:${com.storyteller_f.version_manager.Versions.lifecycleVersion}")
-    debugImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${com.storyteller_f.version_manager.Versions.coroutinesVersion}")
-    debugImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:${com.storyteller_f.version_manager.Versions.coroutinesVersion}")
-    androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
+    debugImplementation("androidx.lifecycle:lifecycle-runtime-ktx:${Versions.lifecycleVersion}")
+    debugImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.coroutinesVersion}")
+    debugImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:${Versions.coroutinesVersion}")
+    androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
     implementation("com.google.code.gson:gson:2.10.1")
 }

@@ -3,8 +3,8 @@ plugins {
     `kotlin-dsl`
     `maven-publish`
 }
-group = "com.storyteller_f.version_manager"
-version = "1.0"
+
+version = "0.0.1"
 publishing {
 
 }
