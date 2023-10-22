@@ -11,7 +11,7 @@ plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
     id("kotlin-kapt")
-    id("common-version-manager")
+    id("com.storyteller_f.version_manager")
     id("common-publish")
 }
 

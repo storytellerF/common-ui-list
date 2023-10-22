@@ -4,6 +4,6 @@ plugins {
     id("java-library")
     id("org.jetbrains.kotlin.jvm")
     id("common-publish")
-    id("common-version-manager")
+    id("com.storyteller_f.version_manager")
 }
 pureKotlinLanguageLevel()

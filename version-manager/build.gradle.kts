@@ -4,6 +4,7 @@ plugins {
     `maven-publish`
 }
 
+group = "com.storyteller_f"
 version = "0.0.1"
 publishing {
 
@@ -12,7 +13,7 @@ gradlePlugin {
     plugins {
         register("version-manager") {
             // 插件ID
-            id = "common-version-manager"
+            id = "com.storyteller_f.version_manager"
             // 插件的实现类
             implementationClass = "com.storyteller_f.version_manager.VersionManager"
         }

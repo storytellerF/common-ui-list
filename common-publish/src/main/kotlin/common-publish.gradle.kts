@@ -2,6 +2,7 @@ plugins {
     `maven-publish`
 }
 
+group = "com.storyteller_f"
 version = "0.0.1"
 
 afterEvaluate {
