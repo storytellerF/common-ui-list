@@ -38,6 +38,8 @@ object Versions {
     const val TEST_ESPRESSO = "3.4.0"
     const val MULTI_DEX = "2.0.1"
     const val BAO = "2.2.0"
+    const val NAVIGATION = "2.7.4"
+    const val SWIPE_REFRESH = "1.1.0"
 }
 
 fun Project.implModule(moduleName: String) {

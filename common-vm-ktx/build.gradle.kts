@@ -21,5 +21,5 @@ dependencies {
     implementation("androidx.appcompat:appcompat:${Versions.APPCOMPAT}")
     unitTestDependency()
 
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:${Versions.LIFECYCLE}")
 }

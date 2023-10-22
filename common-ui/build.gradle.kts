@@ -34,7 +34,7 @@ dependencies {
     implModule(":common-ktx")
     implModule(":compat-ktx")
     implModule(":common-vm-ktx")
-    implementation("androidx.navigation:navigation-runtime-ktx:2.7.4")
+    implementation("androidx.navigation:navigation-runtime-ktx:${Versions.NAVIGATION}")
     implementation("androidx.databinding:viewbinding:${Versions.DATA_BINDING_COMPILER}")
 
     commonAndroidDependency()

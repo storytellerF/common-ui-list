@@ -29,7 +29,7 @@ dependencies {
     //components
     commonAndroidDependency()
     implementation("androidx.recyclerview:recyclerview:${Versions.RECYCLERVIEW}")
-    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:${Versions.SWIPE_REFRESH}")
 
     implementation("androidx.fragment:fragment-ktx:${Versions.FRAGMENT_KTX}")
     implementation("androidx.activity:activity-ktx:${Versions.ACTIVITY_KTX}")

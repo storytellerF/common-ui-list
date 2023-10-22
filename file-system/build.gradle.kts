@@ -30,7 +30,7 @@ dependencies {
 
     implModule(":multi-core")
     commonAndroidDependency()
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    implementation("androidx.constraintlayout:constraintlayout:${Versions.CONSTRAINTLAYOUT}")
     unitTestDependency()
     implModule(":compat-ktx")
     // https://mvnrepository.com/artifact/androidx.test.uiautomator/uiautomator
@@ -39,8 +39,8 @@ dependencies {
     debugImplementation("androidx.lifecycle:lifecycle-runtime-ktx:${Versions.LIFECYCLE}")
     debugImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.COROUTINES}")
     debugImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:${Versions.COROUTINES}")
-    androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:${Versions.COROUTINES}")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.COROUTINES}")
 
     implementation("com.google.code.gson:gson:2.10.1")
 }
