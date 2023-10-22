@@ -6,6 +6,7 @@ plugins {
     id("kotlin-android")
     id("kotlin-parcelize")
     id("common-version-manager")
+    id("kotlin-kapt")
 }
 
 android {
@@ -17,10 +18,13 @@ android {
     namespace = "com.storyteller_f.common_ui_list_structure"
 }
 
-dependencies {
-    implementation(fileTree("libs"))
+//kapt {
+//    correctErrorTypes = true
+//}
 
+dependencies {
     networkDependency()
+    implementation("com.squareup.retrofit2:converter-gson:${Versions.RETROFIT}")
 }
 baseApp()
 setupGeneric()

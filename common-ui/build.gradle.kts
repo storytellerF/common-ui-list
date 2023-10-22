@@ -1,10 +1,11 @@
-import com.storyteller_f.version_manager.*
-
-import org.gradle.kotlin.dsl.android
-import org.gradle.kotlin.dsl.api
-import org.gradle.kotlin.dsl.dependencies
-import org.gradle.kotlin.dsl.implementation
-import org.gradle.kotlin.dsl.project
+import com.storyteller_f.version_manager.Versions
+import com.storyteller_f.version_manager.apiModule
+import com.storyteller_f.version_manager.baseLibrary
+import com.storyteller_f.version_manager.commonAndroidDependency
+import com.storyteller_f.version_manager.implModule
+import com.storyteller_f.version_manager.setupCompose
+import com.storyteller_f.version_manager.setupExtFunc
+import com.storyteller_f.version_manager.unitTestDependency
 
 plugins {
     id("com.android.library")
@@ -29,12 +30,12 @@ baseLibrary()
 setupCompose(true)
 setupExtFunc()
 dependencies {
-    api(project(":ext-func-definition"))
-    implementation(project(":common-ktx"))
-    implementation(project(":compat-ktx"))
-    implementation(project(":common-vm-ktx"))
+    apiModule(":ext-func-definition")
+    implModule(":common-ktx")
+    implModule(":compat-ktx")
+    implModule(":common-vm-ktx")
     implementation("androidx.navigation:navigation-runtime-ktx:2.7.4")
-    implementation("androidx.databinding:viewbinding:${Versions.dataBindingCompilerVersion}")
+    implementation("androidx.databinding:viewbinding:${Versions.DATA_BINDING_COMPILER}")
 
     commonAndroidDependency()
     unitTestDependency()

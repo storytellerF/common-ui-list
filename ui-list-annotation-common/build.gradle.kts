@@ -1,3 +1,4 @@
+import com.storyteller_f.version_manager.implModule
 import com.storyteller_f.version_manager.pureKotlinLanguageLevel
 
 plugins {
@@ -7,5 +8,5 @@ plugins {
 }
 pureKotlinLanguageLevel()
 dependencies {
-    implementation(project(":slim-ktx"))
+    implModule(":slim-ktx")
 }

@@ -1,3 +1,5 @@
+import com.storyteller_f.version_manager.apiModule
+import com.storyteller_f.version_manager.implModule
 import com.storyteller_f.version_manager.pureKotlinLanguageLevel
 
 plugins {
@@ -11,7 +13,7 @@ plugins {
 pureKotlinLanguageLevel()
 
 dependencies {
-    api(project(":ui-list-annotation-definition"))
-    implementation(project(":slim-ktx"))
-    implementation(project(":ui-list-annotation-common"))
+    apiModule(":ui-list-annotation-definition")
+    implModule(":slim-ktx")
+    implModule(":ui-list-annotation-common")
 }

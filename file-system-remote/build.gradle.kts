@@ -2,6 +2,7 @@ import com.storyteller_f.version_manager.Versions
 import com.storyteller_f.version_manager.baseLibrary
 import com.storyteller_f.version_manager.unitTestDependency
 import com.storyteller_f.version_manager.commonAndroidDependency
+import com.storyteller_f.version_manager.implModule
 
 plugins {
     id("com.android.library")
@@ -23,9 +24,9 @@ baseLibrary()
 dependencies {
 
     commonAndroidDependency()
-    implementation("androidx.room:room-common:${Versions.roomVersion}")
+    implementation("androidx.room:room-common:${Versions.ROOM}")
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
-    implementation(project(":file-system"))
+    implModule(":file-system")
 
     // https://mvnrepository.com/artifact/commons-net/commons-net
     implementation("commons-net:commons-net:3.9.0")

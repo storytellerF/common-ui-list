@@ -1,6 +1,7 @@
 import com.storyteller_f.version_manager.baseLibrary
 import com.storyteller_f.version_manager.unitTestDependency
 import com.storyteller_f.version_manager.commonAndroidDependency
+import com.storyteller_f.version_manager.implModule
 
 plugins {
     id("com.android.library")
@@ -27,5 +28,5 @@ dependencies {
     implementation("com.github.topjohnwu.libsu:nio:${libsuVersion}")
 
     unitTestDependency()
-    implementation(project(":file-system"))
+    implModule(":file-system")
 }

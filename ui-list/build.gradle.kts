@@ -23,43 +23,37 @@ android {
 baseLibrary()
 
 dependencies {
-    implementation(project(":ui-list-annotation-definition"))
-    implementation(fileTree("libs"))
-
-    //test
+    implModule(":ui-list-annotation-definition")
     unitTestDependency()
 
     //components
-    api("androidx.appcompat:appcompat:${Versions.appcompatVersion}")
-    api("androidx.recyclerview:recyclerview:${Versions.recyclerViewVersion}")
-    api("androidx.constraintlayout:constraintlayout:${Versions.constraintLayoutVersion}")
-    api("com.google.android.material:material:${Versions.materialVersion}")
+    commonAndroidDependency()
+    implementation("androidx.recyclerview:recyclerview:${Versions.RECYCLERVIEW}")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
 
+    implementation("androidx.fragment:fragment-ktx:${Versions.FRAGMENT_KTX}")
+    implementation("androidx.activity:activity-ktx:${Versions.ACTIVITY_KTX}")
+
     //coroutines
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.coroutinesVersion}")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:${Versions.coroutinesVersion}")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.COROUTINES}")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:${Versions.COROUTINES}")
 
     // lifecycle & view model
-    api("androidx.lifecycle:lifecycle-runtime-ktx:${Versions.lifecycleVersion}")
-    api("androidx.lifecycle:lifecycle-viewmodel-ktx:${Versions.lifecycleVersion}")
-    api("androidx.lifecycle:lifecycle-livedata-ktx:${Versions.lifecycleVersion}")
-    api("androidx.lifecycle:lifecycle-viewmodel-savedstate:${Versions.lifecycleVersion}")
+    api("androidx.lifecycle:lifecycle-runtime-ktx:${Versions.LIFECYCLE}")
+    api("androidx.lifecycle:lifecycle-viewmodel-ktx:${Versions.LIFECYCLE}")
+    api("androidx.lifecycle:lifecycle-livedata-ktx:${Versions.LIFECYCLE}")
+    api("androidx.lifecycle:lifecycle-viewmodel-savedstate:${Versions.LIFECYCLE}")
+    apiModule(":common-vm-ktx")
 
     // room
-    api("androidx.room:room-runtime:${Versions.roomVersion}")
-    api("androidx.room:room-ktx:${Versions.roomVersion}")
-    api("androidx.room:room-paging:${Versions.roomVersion}")
+    api("androidx.room:room-runtime:${Versions.ROOM}")
+    api("androidx.room:room-ktx:${Versions.ROOM}")
+    api("androidx.room:room-paging:${Versions.ROOM}")
 
-    api("androidx.paging:paging-runtime-ktx:${Versions.pagingVersion}")
+    api("androidx.paging:paging-runtime-ktx:${Versions.PAGING}")
 
-    kapt("androidx.databinding:databinding-compiler-common:${Versions.dataBindingCompilerVersion}")
+    kapt("androidx.databinding:databinding-compiler-common:${Versions.DATA_BINDING_COMPILER}")
 
     // retrofit & okhttp
-    api("com.squareup.retrofit2:converter-gson:${Versions.retrofitVersion}")
-
-    //ktx
-    implementation("androidx.fragment:fragment-ktx:${Versions.fragmentKtxVersion}")
-    implementation("androidx.activity:activity-ktx:${Versions.activityKtxVersion}")
-    api(project(":common-vm-ktx"))
+    implementation("com.squareup.retrofit2:converter-gson:${Versions.RETROFIT}")
 }

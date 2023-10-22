@@ -19,7 +19,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 fun Project.setupExtFunc() {
     loadPlugin("com.google.devtools.ksp")
     dependencies {
-        "ksp"(project(":ext-func-compiler"))
+        kspModule(":ext-func-compiler")
     }
 }
 
@@ -30,7 +30,7 @@ fun Project.setupCompose(isLibrary: Boolean = false, supportUiList: Boolean = tr
                 compose = true
             }
             composeOptions {
-                kotlinCompilerExtensionVersion = Versions.composeCompilerVersion
+                kotlinCompilerExtensionVersion = Versions.COMPOSE_COMPILER
             }
         }
     } else
@@ -39,26 +39,28 @@ fun Project.setupCompose(isLibrary: Boolean = false, supportUiList: Boolean = tr
                 compose = true
             }
             composeOptions {
-                kotlinCompilerExtensionVersion = Versions.composeCompilerVersion
+                kotlinCompilerExtensionVersion = Versions.COMPOSE_COMPILER
             }
         }
     dependencies {
         composeDependency()
         if (supportUiList) {
-            "implementation"(project(":view-holder-compose"))
+            implModule(":view-holder-compose")
         }
     }
 }
 
-fun Project.setupBase() {
-    loadPlugin("kotlin-kapt")
+/**
+ * 需要手动添加kapt 插件
+ */
+fun Project.setupAppBase() {
     dependencies {
         baseAppDependency()
     }
 }
 
 fun Project.setupGeneric() {
-    setupBase()
+    setupAppBase()
     setupCompose()
     setupExtFunc()
     dependencies {
@@ -97,12 +99,12 @@ fun Project.loadPlugin(id: String) {
 
 fun Project.baseApp() {
     androidApp {
-        compileSdk = Versions.compileSdkVersion
+        compileSdk = Versions.COMPILE_SDK
         defaultConfig {
             minSdk = 21
             versionCode = 1
             versionName = "1.0"
-            targetSdk = Versions.targetSdkVersion
+            targetSdk = Versions.TARGET_SDK
             testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         }
         signingConfigs {
@@ -150,16 +152,16 @@ fun Project.baseApp() {
         if (baoModule != null)
             "implementation"(baoModule)
         else
-            "implementation"("com.github.storytellerF.Bao:startup:2.2.0")
+            "implementation"("com.github.storytellerF.Bao:startup:${Versions.BAO}")
     }
 }
 
 fun Project.baseLibrary() {
     androidLibrary {
-        compileSdk = Versions.compileSdkVersion
+        compileSdk = Versions.COMPILE_SDK
 
         defaultConfig {
-            targetSdk = Versions.targetSdkVersion
+            targetSdk = Versions.TARGET_SDK
             testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
             consumerProguardFiles("consumer-rules.pro")
         }

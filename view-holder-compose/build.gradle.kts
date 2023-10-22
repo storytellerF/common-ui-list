@@ -20,7 +20,7 @@ baseLibrary()
 dependencies {
 
     unitTestDependency()
-    api("androidx.compose.ui:ui:${Versions.composeUiVersion}")
+    api("androidx.compose.ui:ui:${Versions.COMPOSE_UI}")
 
-    implementation(project(":ui-list"))
+    implModule(":ui-list")
 }

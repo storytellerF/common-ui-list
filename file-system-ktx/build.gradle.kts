@@ -16,9 +16,9 @@ android {
 }
 baseLibrary()
 dependencies {
-    implementation(project(":file-system"))
-    implementation(project(":file-system-remote"))
-    implementation(project(":file-system-root"))
+    implModule(":file-system")
+    implModule(":file-system-remote")
+    implModule(":file-system-root")
     commonAndroidDependency()
     implementation("com.j256.simplemagic:simplemagic:1.17")
     unitTestDependency()

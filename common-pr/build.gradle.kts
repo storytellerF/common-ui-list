@@ -19,10 +19,10 @@ android {
 baseLibrary()
 setupExtFunc()
 dependencies {
-    implementation(project(":ext-func-definition"))
-    implementation(project(":common-ktx"))
-    implementation(project(":common-vm-ktx"))
-    implementation(project(":common-ui"))
+    implModule(":ext-func-definition")
+    implModule(":common-ktx")
+    implModule(":common-vm-ktx")
+    implModule(":common-ui")
     commonAndroidDependency()
     unitTestDependency()
 }

@@ -10,7 +10,7 @@ plugins {
 pureKotlinLanguageLevel()
 
 dependencies {
-    implementation(project(":slim-ktx"))
-    implementation(project(":ext-func-definition"))
-    implementation("com.google.devtools.ksp:symbol-processing-api:${Versions.kspVersion}")
+    implModule(":slim-ktx")
+    apiModule(":ext-func-definition")
+    implementation("com.google.devtools.ksp:symbol-processing-api:${Versions.KSP}")
 }

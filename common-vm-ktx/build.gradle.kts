@@ -17,8 +17,8 @@ android {
 baseLibrary()
 setupExtFunc()
 dependencies {
-    implementation(project(":ext-func-definition"))
-    implementation("androidx.appcompat:appcompat:${Versions.appcompatVersion}")
+    implModule(":ext-func-definition")
+    implementation("androidx.appcompat:appcompat:${Versions.APPCOMPAT}")
     unitTestDependency()
 
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")

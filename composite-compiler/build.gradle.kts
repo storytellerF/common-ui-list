@@ -10,6 +10,6 @@ plugins {
 pureKotlinLanguageLevel()
 
 dependencies {
-    implementation(project(":composite-definition"))
+    implModule(":composite-definition")
 }
 
