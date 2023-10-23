@@ -9,13 +9,8 @@ buildscript {
     dependencies {
         val smlFolder: String by project
         val navVersion = "2.6.0"
-        val smlVersion = "0.0.2"
         classpath("androidx.navigation:navigation-safe-args-gradle-plugin:$navVersion")
         classpath("app.cash.licensee:licensee-gradle-plugin:1.6.0")
-        when (smlFolder) {
-            "remote" -> classpath("com.github.storytellerF.SML:com.storyteller_f.sml.gradle.plugin:$smlVersion")
-            "repository" -> classpath("com.storyteller_f.sml:sml:$smlVersion")
-        }
     }
 }
 plugins {
@@ -27,7 +22,6 @@ plugins {
     id("org.jetbrains.kotlin.android") version kotlinVersion apply false
     id("org.jetbrains.kotlin.jvm") version kotlinVersion apply false
     id("com.google.devtools.ksp") version kspVersion apply false
-    //使用includeBuild 时使用sml，不需要指定id
     id("io.gitlab.arturbosch.detekt") version ("1.23.1")
 }
 

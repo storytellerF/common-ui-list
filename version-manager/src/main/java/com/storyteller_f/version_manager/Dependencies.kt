@@ -48,7 +48,7 @@ fun Project.implModule(moduleName: String) {
         if (module != null) {
             "implementation"(module)
         } else {
-            "implementation"("com.github.storytellerF.common-ui-list$moduleName:fb195719bf")
+            "implementation"("com.github.storytellerF.common-ui-list$moduleName")
         }
     }
 
@@ -60,7 +60,7 @@ fun Project.apiModule(moduleName: String) {
         if (module != null) {
             "api"(module)
         } else {
-            "api"("com.github.storytellerF.common-ui-list$moduleName:fb195719bf")
+            "api"("com.github.storytellerF.common-ui-list$moduleName")
         }
     }
 
@@ -72,7 +72,7 @@ fun Project.kaptModule(moduleName: String) {
         if (module != null) {
             "kapt"(module)
         } else {
-            "kapt"("com.github.storytellerF.common-ui-list$moduleName:fb195719bf")
+            "kapt"("com.github.storytellerF.common-ui-list$moduleName")
         }
     }
 
@@ -84,7 +84,7 @@ fun Project.kspModule(moduleName: String) {
         if (module != null) {
             "ksp"(module)
         } else {
-            "ksp"("com.github.storytellerF.common-ui-list$moduleName:fb195719bf")
+            "ksp"("com.github.storytellerF.common-ui-list$moduleName")
         }
     }
 
