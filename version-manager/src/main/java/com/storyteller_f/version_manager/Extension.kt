@@ -231,3 +231,41 @@ fun Project.pureKotlinLanguageLevel() {
         kotlinOptions.freeCompilerArgs += "-opt-in=kotlin.RequiresOptIn"
     }
 }
+
+/**
+ * 必须手动加载ksp 插件
+ */
+fun Project.constraintCommonUIListVersion(version: String) {
+    dependencies {
+        constraints {
+            listOf(
+                "common-ktx",
+                "common-pr",
+                "common-ui",
+                "common-vm-ktx",
+                "compat-ktx",
+                "composite-compiler",
+                "composite-definition",
+                "ext-func-compiler",
+                "ext-func-definition",
+                "file-system",
+                "file-system-ktx",
+                "file-system-remote",
+                "file-system-root",
+                "multi-core",
+                "slim-ktx",
+                "ui-list",
+                "ui-list-annotation-common",
+                "ui-list-annotation-compiler",
+                "ui-list-annotation-compiler-ksp",
+                "ui-list-annotation-definition",
+                "view-holder-compose"
+            ).forEach {
+                "implementation"("com.github.storytellerF.common-ui-list:$it:$version")
+                "ksp"("com.github.storytellerF.common-ui-list:$it:$version")
+                "kapt"("com.github.storytellerF.common-ui-list:$it:$version")
+            }
+        }
+    }
+
+}
