@@ -25,7 +25,7 @@ object Versions {
     const val RETROFIT = "2.9.0"
     const val OKHTTP_LOGGING_INTERCEPTOR = "5.0.0-alpha.6"
     const val COROUTINES = "1.7.3"
-    const val COMPOSE_COMPILER = "1.4.7"
+    const val COMPOSE_COMPILER = "1.5.3"
     const val COMPOSE = "1.4.0"
     const val COMPOSE_UI = "1.5.4"
     const val COMPOSE_MATERIAL = "1.4.0-beta02"

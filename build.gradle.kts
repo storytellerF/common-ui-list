@@ -8,15 +8,15 @@ import io.gitlab.arturbosch.detekt.report.ReportMergeTask
 buildscript {
     dependencies {
         val smlFolder: String by project
-        val navVersion = "2.6.0"
+        val navVersion = "2.7.4"
         classpath("androidx.navigation:navigation-safe-args-gradle-plugin:$navVersion")
         classpath("app.cash.licensee:licensee-gradle-plugin:1.6.0")
     }
 }
 plugins {
-    val androidVersion = "8.1.2"
-    val kotlinVersion = "1.8.21"
-    val kspVersion = "1.8.21-1.0.11"
+    val androidVersion = "8.3.0-alpha11"
+    val kotlinVersion = "1.9.10"
+    val kspVersion = "1.9.10-1.0.13"
     id("com.android.application") version androidVersion apply false
     id("com.android.library") version androidVersion apply false
     id("org.jetbrains.kotlin.android") version kotlinVersion apply false
@@ -29,7 +29,7 @@ tasks.register("clean", Delete::class) {
     delete(rootProject.layout.buildDirectory)
 }
 
-val deprecationCheckModule = listOf("common-ktx")
+val deprecationCheckModule = listOf("")
 subprojects {
     if (deprecationCheckModule.contains(name)) {
         tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {

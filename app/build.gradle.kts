@@ -18,9 +18,10 @@ android {
     namespace = "com.storyteller_f.common_ui_list_structure"
 }
 
-//kapt {
+kapt {
 //    correctErrorTypes = true
-//}
+    useBuildCache = true
+}
 
 dependencies {
     networkDependency()

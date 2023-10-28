@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "com.storyteller_f"
-version = "0.0.1"
+version = "0.0.2"
 
 afterEvaluate {
     publishing {
