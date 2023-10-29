@@ -15,6 +15,8 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
 import java.io.PrintWriter
 
 val ftpClients = mutableMapOf<RemoteSpec, FtpInstance>()
@@ -38,7 +40,7 @@ class FtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(uri
         }
     }
 
-    private fun getInstance(): FtpInstance? {
+    fun getInstance(): FtpInstance? {
         val ftpInstance = ftpClients.getOrPut(spec) {
             FtpInstance(spec)
         }
@@ -47,6 +49,9 @@ class FtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(uri
         }
         return null
     }
+
+    val completePendingCommand
+        get() = getInstance()?.completePendingCommand
 
     override suspend fun getFile(): FileItemModel {
         TODO("Not yet implemented")
@@ -66,6 +71,15 @@ class FtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(uri
 
     override suspend fun getFileOutputStream(): FileOutputStream {
         TODO("Not yet implemented")
+    }
+
+    override suspend fun getInputStream(): InputStream {
+        return getInstance()!!.inputStream(path)!!
+    }
+
+    override suspend fun getOutputStream(): OutputStream {
+        val instance = getInstance()!!
+        return instance.outputStream(path)!!
     }
 
     override suspend fun listInternal(
@@ -206,7 +220,7 @@ class FtpInstance(private val spec: RemoteSpec) {
     }
 
     fun connectIfNeed(): Boolean {
-        return if (ftp.isConnected) {
+        return if (ftp.isConnected && ftp.isAvailable) {
             true
         } else {
             try {
@@ -217,6 +231,19 @@ class FtpInstance(private val spec: RemoteSpec) {
             }
         }
     }
+
+    fun inputStream(path: String): InputStream? {
+        return ftp.retrieveFileStream(path)
+    }
+
+    fun outputStream(path: String): OutputStream? {
+        return ftp.storeFileStream(path)
+    }
+
+    val completePendingCommand: Boolean
+        get() {
+            return ftp.completePendingCommand()
+        }
 
     companion object {
         private const val TAG = "FtpInstance"
