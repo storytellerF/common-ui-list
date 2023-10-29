@@ -1,4 +1,4 @@
-package com.storyteller_f.file_system_root
+package com.storyteller_f.file_system_remote
 
 import org.junit.Assert.*
 import org.junit.Test
