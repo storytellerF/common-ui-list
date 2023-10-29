@@ -31,7 +31,7 @@ dependencies {
     // https://mvnrepository.com/artifact/commons-net/commons-net
     implementation("commons-net:commons-net:3.9.0")
     // https://mvnrepository.com/artifact/org.mockftpserver/MockFtpServer
-    testImplementation("org.mockftpserver:MockFtpServer:3.1.0")
+    androidTestImplementation("org.mockftpserver:MockFtpServer:3.1.0")
     // https://mvnrepository.com/artifact/com.hierynomus/smbj
     implementation("com.hierynomus:smbj:0.11.5")
     // https://mvnrepository.com/artifact/com.hierynomus/sshj

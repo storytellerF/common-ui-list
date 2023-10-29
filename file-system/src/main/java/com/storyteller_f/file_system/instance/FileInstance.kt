@@ -10,6 +10,8 @@ import com.storyteller_f.file_system.model.FilesAndDirectories
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.io.InputStream
+import java.io.OutputStream
 
 // todo getChannel
 // todo file descriptor
@@ -42,6 +44,16 @@ abstract class FileInstance(val uri: Uri) {
 
     @WorkerThread
     abstract suspend fun getFileOutputStream(): FileOutputStream
+
+    @WorkerThread
+    open suspend fun getInputStream(): InputStream {
+        return getFileInputStream()
+    }
+
+    @WorkerThread
+    open suspend fun getOutputStream(): OutputStream {
+        return getFileOutputStream()
+    }
 
     @WorkerThread
     open suspend fun isSymbolicLink(): Boolean = false
