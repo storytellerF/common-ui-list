@@ -23,6 +23,10 @@ fun ShareSpec.requireDiskShare(): DiskShare {
     return session.connectShare(share) as DiskShare
 }
 
+fun ShareSpec.checkSmb() {
+    requireDiskShare().close()
+}
+
 val smbSessions = mutableMapOf<ShareSpec, DiskShare>()
 
 class SmbFileInstance(private val shareSpec: ShareSpec, uri: Uri) : FileInstance(uri) {
