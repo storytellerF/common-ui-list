@@ -12,8 +12,7 @@ data class ShareSpec(
     val share: String
 ) {
     fun toUri(): Uri {
-        // todo 使用路径的第一个作为share
-        return Uri.parse("$type://$user:$password@$server:$port:$share")!!
+        return Uri.parse("$type://$user:$password@$server:$port/$share")!!
     }
 
     fun toRemote(): RemoteAccessSpec {
@@ -21,12 +20,12 @@ data class ShareSpec(
     }
 
     companion object {
-        fun parse(parse: Uri): ShareSpec {
-            val authority = parse.authority!!
+        fun parse(uri: Uri): ShareSpec {
+            val authority = uri.authority!!
             val split = authority.split("@")
             val (user, pass) = split.first().split(":")
-            val (loc, port, share) = split.last().split(":")
-            return ShareSpec(loc, port.toInt(), user, pass, parse.scheme!!, share)
+            val (server, port) = split.last().split(":")
+            return ShareSpec(server, port.toInt(), user, pass, uri.scheme!!, uri.path!!.substring(1))
         }
     }
 }
@@ -53,8 +52,8 @@ data class RemoteSpec(
             val authority = parse.authority!!
             val split = authority.split("@")
             val (user, pass) = split.first().split(":")
-            val (loc, port) = split.last().split(":")
-            return RemoteSpec(loc, port.toInt(), user, pass, type = scheme)
+            val (server, port) = split.last().split(":")
+            return RemoteSpec(server, port.toInt(), user, pass, type = scheme)
         }
     }
 }

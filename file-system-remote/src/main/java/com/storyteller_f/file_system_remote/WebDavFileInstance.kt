@@ -14,6 +14,8 @@ val webdavInstances = mutableMapOf<ShareSpec, WebDavInstance>()
 class WebDavFileInstance(private val spec: ShareSpec, uri: Uri) : FileInstance(uri) {
 
     private val instance = getWebDavInstance()
+    override val path: String
+        get() = super.path.substring(spec.share.length + 1).ifEmpty { "/" }
 
     private fun getWebDavInstance(): WebDavInstance {
         return webdavInstances.getOrPut(spec) {
