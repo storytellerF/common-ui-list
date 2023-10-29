@@ -235,7 +235,10 @@ fun Project.pureKotlinLanguageLevel() {
 /**
  * 必须手动加载ksp 插件
  */
-fun Project.constraintCommonUIListVersion(version: String) {
+fun Project.constraintCommonUIListVersion(
+    version: String, 
+    group: String = "com.github.storytellerF.common-ui-list"
+) {
     dependencies {
         constraints {
             listOf(
@@ -261,9 +264,9 @@ fun Project.constraintCommonUIListVersion(version: String) {
                 "ui-list-annotation-definition",
                 "view-holder-compose"
             ).forEach {
-                "implementation"("com.github.storytellerF.common-ui-list:$it:$version")
-                "ksp"("com.github.storytellerF.common-ui-list:$it:$version")
-                "kapt"("com.github.storytellerF.common-ui-list:$it:$version")
+                "implementation"("$group:$it:$version")
+                "ksp"("$group:$it:$version")
+                "kapt"("$group:$it:$version")
             }
         }
     }
