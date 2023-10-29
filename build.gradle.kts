@@ -22,7 +22,8 @@ plugins {
     id("org.jetbrains.kotlin.android") version kotlinVersion apply false
     id("org.jetbrains.kotlin.jvm") version kotlinVersion apply false
     id("com.google.devtools.ksp") version kspVersion apply false
-    id("io.gitlab.arturbosch.detekt") version ("1.23.1")
+    id("io.gitlab.arturbosch.detekt") version "1.23.1"
+    id("org.jetbrains.kotlinx.kover") version "0.7.4"
 }
 
 tasks.register("clean", Delete::class) {
@@ -34,11 +35,13 @@ subprojects {
     if (deprecationCheckModule.contains(name)) {
         tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
             kotlinOptions {
-                freeCompilerArgs = freeCompilerArgs + listOf("-Xlint:deprecation", "-Xlint:unchecked")
+                freeCompilerArgs =
+                    freeCompilerArgs + listOf("-Xlint:deprecation", "-Xlint:unchecked")
             }
         }
         tasks.withType<JavaCompile> {
-            options.compilerArgs = options.compilerArgs + listOf("-Xlint:deprecation", "-Xlint:unchecked")
+            options.compilerArgs =
+                options.compilerArgs + listOf("-Xlint:deprecation", "-Xlint:unchecked")
         }
     }
 }
@@ -47,9 +50,10 @@ val detektReportMergeSarif by tasks.registering(ReportMergeTask::class) {
     output = layout.buildDirectory.file("reports/detekt/merge.sarif")
 }
 
-allprojects {
+subprojects {
 
     apply(plugin = "io.gitlab.arturbosch.detekt")
+    apply(plugin = "org.jetbrains.kotlinx.kover")
 
     detekt {
         source.setFrom(
@@ -64,10 +68,61 @@ allprojects {
         baseline = file("$rootDir/config/detekt/baseline.xml")
     }
 
+    val androidModules = listOf(
+        "common-ktx",
+        "common-pr",
+        "common-ui",
+        "common-vm-ktx",
+        "compat-ktx",
+        "file-system",
+        "file-system-ktx",
+        "file-system-remote",
+        "file-system-root",
+        "ui-list",
+        "view-holder-compose"
+    )
+    val jvmModules = listOf("composite-compiler",
+        "composite-definition",
+        "ext-func-compiler",
+        "ext-func-definition",
+        "multi-core",
+        "slim-ktx",
+        "ui-list-annotation-common",
+        "ui-list-annotation-compiler",
+        "ui-list-annotation-compiler-ksp",
+        "ui-list-annotation-definition",)
     dependencies {
         detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.1")
         detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules-libraries:1.23.1")
         detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules-ruleauthors:1.23.1")
+        if (name == "app") {
+            val action = { it: String ->
+                kover(project(":$it"))
+                Unit
+            }
+            androidModules.forEach(action)
+            jvmModules.forEach(action)
+        }
+    }
+    koverReport {
+        if (androidModules.contains(name)) {
+            defaults {
+                mergeWith("release")
+            }
+        }
+        // filters for all report types of all build variants
+        filters {
+            excludes {
+                classes(
+                    "*Fragment",
+                    "*Fragment\$*",
+                    "*Activity",
+                    "*Activity\$*",
+                    "*.databinding.*",
+                    "*.BuildConfig"
+                )
+            }
+        }
     }
 
     tasks.withType<Detekt>().configureEach {
