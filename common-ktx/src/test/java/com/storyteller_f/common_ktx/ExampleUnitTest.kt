@@ -10,8 +10,26 @@ import org.junit.Test
  */
 class ExampleUnitTest {
     @Test
-    fun addition_isCorrect() {
+    fun testBit() {
         assertEquals(true, 3.bit(1))
         assertEquals(false, 2.bit(1))
+    }
+
+    @Test
+    fun testSame() {
+        assertEquals(false, listOf(1, 2).same(listOf(1)))
+        assertEquals(true, listOf(1, 2).same(listOf(1, 2)))
+        assertEquals(false, listOf(1, 2).same(listOf(2, 1)))
+    }
+
+    @Test
+    fun testToggle() {
+        val listOf = mutableListOf(1, 2)
+        listOf.toggle(1)
+        assertEquals(false, listOf.contains(1))
+        assertEquals(true, listOf.contains(2))
+        listOf.toggle(1)
+        assertEquals(true, listOf.contains(1))
+        assertEquals(true, listOf.contains(2))
     }
 }
