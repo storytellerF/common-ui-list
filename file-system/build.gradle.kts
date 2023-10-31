@@ -27,20 +27,16 @@ android {
 baseLibrary()
 dependencies {
     implModule(":common-ktx")
-
-    implModule(":multi-core")
-    commonAndroidDependency()
-    implementation("androidx.constraintlayout:constraintlayout:${Versions.CONSTRAINTLAYOUT}")
-    unitTestDependency()
     implModule(":compat-ktx")
+    implModule(":multi-core")
+
+    implementation("com.google.android.material:material:${Versions.MATERIAL}")
+
+    unitTestDependency()
     // https://mvnrepository.com/artifact/androidx.test.uiautomator/uiautomator
     androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0-alpha04")
-
-    debugImplementation("androidx.lifecycle:lifecycle-runtime-ktx:${Versions.LIFECYCLE}")
-    debugImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.COROUTINES}")
-    debugImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:${Versions.COROUTINES}")
     androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:${Versions.COROUTINES}")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.COROUTINES}")
+    testImplementation("org.robolectric:robolectric:4.10.3")
 
     implementation("com.google.code.gson:gson:2.10.1")
 }
