@@ -7,7 +7,7 @@ import android.os.Build
 import android.os.Process
 import android.os.UserManager
 import androidx.annotation.WorkerThread
-import com.storyteller_f.file_system.FileInstanceFactory
+import com.storyteller_f.file_system.LocalFileSystem
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
@@ -35,7 +35,7 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
     private val presetDirectories: MutableMap<String, List<String>> = mutableMapOf(
         "/data/user/$myId" to listOf(context.packageName),
         "/data/data" to listOf(context.packageName),
-        FileInstanceFactory.EMULATED_ROOT_PATH to listOf(myId.toString()),
+        LocalFileSystem.EMULATED_ROOT_PATH to listOf(myId.toString()),
         "/data/user" to listOf(myId.toString()),
     )
 
@@ -74,7 +74,7 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
             DirectoryItemModel(it, child, false, file.lastModified(), symLink.contains(it))
         }?.forEach(directoryItems::add)
 
-        if (path == FileInstanceFactory.STORAGE_PATH) {
+        if (path == LocalFileSystem.STORAGE_PATH) {
             storageVolumes().forEach(directoryItems::add)
         }
     }

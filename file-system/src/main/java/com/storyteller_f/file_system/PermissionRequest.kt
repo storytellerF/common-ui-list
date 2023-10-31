@@ -16,7 +16,7 @@ suspend fun Context.requestPathPermission(uri: Uri): Boolean {
     val path = uri.path!!
     val task = CompletableDeferred<Boolean>()
     when {
-        path.startsWith(FileInstanceFactory.USER_EMULATED_FRONT_PATH) -> {
+        path.startsWith(LocalFileSystem.USER_EMULATED_FRONT_PATH) -> {
             when {
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.R ->
                     requestManageExternalPermission(task)
@@ -25,7 +25,7 @@ suspend fun Context.requestPathPermission(uri: Uri): Boolean {
                 else -> requestWriteExternalStorage(task)
             }
         }
-        path.startsWith(FileInstanceFactory.STORAGE_PATH) -> {
+        path.startsWith(LocalFileSystem.STORAGE_PATH) -> {
             when {
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.R ->
                     requestManageExternalPermission(task)

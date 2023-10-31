@@ -8,5 +8,8 @@
 val androidVersion = "8.3.0-alpha11"
 val kotlinVersion = "1.9.10"
 val kspVersion = "1.9.10-1.0.13"
-const val COMPOSE_COMPILER = "1.5.3"
+object Dependencies {
+    const val COMPOSE_COMPILER = "1.5.3"
+}
+val gradleVersion = "8.4"
 ```

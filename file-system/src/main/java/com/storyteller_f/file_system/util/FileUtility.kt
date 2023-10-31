@@ -11,7 +11,7 @@ import android.provider.DocumentsContract
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.documentfile.provider.DocumentFile
-import com.storyteller_f.file_system.FileInstanceFactory
+import com.storyteller_f.file_system.LocalFileSystem
 import com.storyteller_f.file_system.LocalFileSystemPrefix
 import com.storyteller_f.file_system.instance.local.DocumentLocalFileInstance
 import java.io.File
@@ -91,7 +91,7 @@ object FileUtility {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             getStorageVolume(context).map { storageVolume: StorageVolume ->
                 val uuid = storageVolume.uuid
-                File(FileInstanceFactory.STORAGE_PATH, volumePathName(uuid))
+                File(LocalFileSystem.STORAGE_PATH, volumePathName(uuid))
             }
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             val externalFilesDirs = context.externalCacheDirs

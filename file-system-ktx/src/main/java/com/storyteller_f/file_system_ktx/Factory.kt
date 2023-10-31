@@ -18,6 +18,6 @@ fun getFileInstance(
         supportScheme.contains(scheme) -> {
             getRemoteInstance(uri)
         }
-        else -> FileInstanceFactory.getFileInstance(context, uri)
+        else -> FileInstanceFactory.getLocalFileInstance(context, uri)
     }
 }
