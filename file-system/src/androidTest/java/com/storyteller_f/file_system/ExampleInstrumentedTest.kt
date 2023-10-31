@@ -15,12 +15,12 @@ class ExampleInstrumentedTest {
     fun testPrefix() {
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
         listOf(
-            FileInstanceFactory.CURRENT_EMULATED_PATH to FileInstanceFactory.CURRENT_EMULATED_PATH,
-            "/storage/self/primary" to FileInstanceFactory.CURRENT_EMULATED_PATH,
-            FileInstanceFactory.ROOT_USER_EMULATED_PATH to FileInstanceFactory.ROOT_USER_EMULATED_PATH,
+            LocalFileSystem.CURRENT_EMULATED_PATH to LocalFileSystem.CURRENT_EMULATED_PATH,
+            "/storage/self/primary" to LocalFileSystem.CURRENT_EMULATED_PATH,
+            LocalFileSystem.ROOT_USER_EMULATED_PATH to LocalFileSystem.ROOT_USER_EMULATED_PATH,
             "/storage/XX44-XX55/Downloads" to "/storage/XX44-XX55",
             "/storage/XX44-XX55" to "/storage/XX44-XX55",
-            FileInstanceFactory.STORAGE_PATH to "fake"
+            LocalFileSystem.STORAGE_PATH to "fake"
         ).forEach {
             val prefix = FileInstanceFactory.getPrefix(appContext, File(it.first).toUri())
             assertEquals(it.second, prefix?.key)
@@ -35,7 +35,7 @@ class ExampleInstrumentedTest {
                 "/storage/self" to listOf("primary"),
                 "/storage/self/primary" to listOf(),
             ).forEach { (it, expected) ->
-                val fileInstance = FileInstanceFactory.getFileInstance(
+                val fileInstance = FileInstanceFactory.getLocalFileInstance(
                     appContext,
                     File(it).toUri(),
                 )

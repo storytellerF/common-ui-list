@@ -27,10 +27,10 @@ import java.io.FileOutputStream
 
 /**
  * 如果是通过挂载路径 访问/storage/emulated/0，uri 是file:///storage/emulated/0/Downloads，prefix 是/storage/emulated/0，tree 是primary:
- * 如果是访问/storage/XXXX-XXXX，uri 是file:///storage/XXXX-XXXX/Downloads，prefix 是/storage/XXXX-XXXX，tree 是XXXX-XXXX:
+ * 如果是访问/storage/XX44-XX55，uri 是file:///storage/XX44-XX55/Downloads，prefix 是/storage/XX44-XX55，tree 是XX44-XX55:
  * 如果是通过DocumentProvider 访问前者，uri 是content://authority/primary:/Downloads，prefix 是primary:，tree 是primary:
  * @param prefix 用于从path 中截取root对应的真正的路径。因为需要通过prefix 获取真正路径，所以此信息需要进行base64 编码。
- * 如果是内存卡就是/storage/XXXX-XXXX。对应的tree 是XXXX-XXXX:。
+ * 如果是内存卡就是/storage/XX44-XX55。对应的tree 是XX44-XX55:。
  * 如果是mounted，就是/storage/emulated/0。包含tree 部分。对应的tree 是primary:
  * 如果是DocumentProvider，就是/ 加上treeId，并且treeId可以是/。内存卡和mounted 也可以通过DocumentProvider 直接访问。
  * @param preferenceKey 一般是authority，用于获取存储在FileSystemUriSaver 中取出rootUri。
