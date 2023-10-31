@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.Process
 import android.os.UserManager
 import androidx.annotation.WorkerThread
+import androidx.core.content.ContextCompat
 import com.storyteller_f.file_system.LocalFileSystem
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
@@ -17,11 +18,10 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 
-fun Context.getMyId() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-    getSystemService(UserManager::class.java)
-        .getSerialNumberForUser(Process.myUserHandle())
+fun Context.getMyId() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+    ContextCompat.getSystemService(this, UserManager::class.java)!!.getSerialNumberForUser(Process.myUserHandle())
 } else {
-    TODO("VERSION.SDK_INT < M")
+    0L
 }
 
 /**

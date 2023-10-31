@@ -3,6 +3,8 @@
 import io.gitlab.arturbosch.detekt.Detekt
 import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 import io.gitlab.arturbosch.detekt.report.ReportMergeTask
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
@@ -142,5 +144,19 @@ subprojects {
     }
     tasks.withType<DetektCreateBaselineTask>().configureEach {
         jvmTarget = "1.8"
+    }
+
+    tasks.withType<Test> {
+        maxHeapSize = "8g"
+        testLogging {
+            exceptionFormat = TestExceptionFormat.FULL
+            events = setOf(
+                TestLogEvent.STARTED,
+                TestLogEvent.SKIPPED,
+                TestLogEvent.FAILED,
+                TestLogEvent.PASSED
+            )
+            showStandardStreams = true
+        }
     }
 }
