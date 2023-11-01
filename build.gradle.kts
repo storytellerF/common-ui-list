@@ -20,7 +20,7 @@ plugins {
     val kotlinVersion = "1.9.10"
     val kspVersion = "1.9.10-1.0.13"
     id("com.android.application") version androidVersion apply false
-    id("com.android.library") version androidVersion apply false
+    id("com.android.library") version androidVersion
     id("org.jetbrains.kotlin.android") version kotlinVersion apply false
     id("org.jetbrains.kotlin.jvm") version kotlinVersion apply false
     id("com.google.devtools.ksp") version kspVersion apply false
@@ -28,8 +28,13 @@ plugins {
     id("org.jetbrains.kotlinx.kover") version "0.7.4"
 }
 
-tasks.register("clean", Delete::class) {
-    delete(rootProject.layout.buildDirectory)
+// tasks.register("clean", Delete::class) {
+//     delete(rootProject.layout.buildDirectory)
+// }
+
+android {
+    compileSdk = 33
+    namespace = "com.root"
 }
 
 val deprecationCheckModule = listOf("")
@@ -51,12 +56,36 @@ subprojects {
 val detektReportMergeSarif by tasks.registering(ReportMergeTask::class) {
     output = layout.buildDirectory.file("reports/detekt/merge.sarif")
 }
-
+val androidModules = listOf(
+    "common-ktx",
+    "common-pr",
+    "common-ui",
+    "common-vm-ktx",
+    "compat-ktx",
+    "file-system",
+    "file-system-ktx",
+    "file-system-remote",
+    "file-system-root",
+    "ui-list",
+    "view-holder-compose"
+)
+val jvmModules = listOf("composite-compiler",
+    "composite-definition",
+    "ext-func-compiler",
+    "ext-func-definition",
+    "multi-core",
+    "slim-ktx",
+    "ui-list-annotation-common",
+    "ui-list-annotation-compiler",
+    "ui-list-annotation-compiler-ksp",
+    "ui-list-annotation-definition",)
 subprojects {
 
     apply(plugin = "io.gitlab.arturbosch.detekt")
     apply(plugin = "org.jetbrains.kotlinx.kover")
-
+    if (androidModules.contains(name)) {
+        apply(plugin = "com.android.library")
+    }
     detekt {
         source.setFrom(
             io.gitlab.arturbosch.detekt.extensions.DetektExtension.DEFAULT_SRC_DIR_JAVA,
@@ -70,29 +99,6 @@ subprojects {
         baseline = file("$rootDir/config/detekt/baseline.xml")
     }
 
-    val androidModules = listOf(
-        "common-ktx",
-        "common-pr",
-        "common-ui",
-        "common-vm-ktx",
-        "compat-ktx",
-        "file-system",
-        "file-system-ktx",
-        "file-system-remote",
-        "file-system-root",
-        "ui-list",
-        "view-holder-compose"
-    )
-    val jvmModules = listOf("composite-compiler",
-        "composite-definition",
-        "ext-func-compiler",
-        "ext-func-definition",
-        "multi-core",
-        "slim-ktx",
-        "ui-list-annotation-common",
-        "ui-list-annotation-compiler",
-        "ui-list-annotation-compiler-ksp",
-        "ui-list-annotation-definition",)
     dependencies {
         detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.1")
         detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules-libraries:1.23.1")
@@ -104,6 +110,9 @@ subprojects {
             }
             androidModules.forEach(action)
             jvmModules.forEach(action)
+        }
+        if (androidModules.contains(name)) {
+            testImplementation("org.robolectric:robolectric:4.10.3")
         }
     }
     koverReport {
@@ -148,6 +157,9 @@ subprojects {
 
     tasks.withType<Test> {
         maxHeapSize = "8g"
+        systemProperties["junit.jupiter.execution.parallel.enabled"] = true
+        systemProperties["junit.jupiter.execution.parallel.mode.default"] = "concurrent"
+        maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1
         testLogging {
             exceptionFormat = TestExceptionFormat.FULL
             events = setOf(
