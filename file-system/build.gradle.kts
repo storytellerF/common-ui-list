@@ -36,7 +36,7 @@ dependencies {
     // https://mvnrepository.com/artifact/androidx.test.uiautomator/uiautomator
     androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0-alpha04")
     androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:${Versions.COROUTINES}")
-    testImplementation("org.robolectric:robolectric:4.10.3")
+
 
     implementation("com.google.code.gson:gson:2.10.1")
 }
