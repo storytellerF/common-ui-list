@@ -4,6 +4,9 @@ import android.net.Uri
 import java.io.File
 
 open class FileItemModel : FileSystemItemModel {
+    /**
+     * message digest
+     */
     var md: String? = null
 
     /**
@@ -17,7 +20,13 @@ open class FileItemModel : FileSystemItemModel {
         isHide: Boolean = file.isHidden,
         extension: String = file.extension,
         isSymLink: Boolean,
-    ) : super(file.name, uri, isHide, file.lastModified(), isSymLink) {
+    ) : super(
+        file.name,
+        uri,
+        isHide,
+        file.lastModified(),
+        isSymLink
+    ) {
         this.extension = extension
     }
 

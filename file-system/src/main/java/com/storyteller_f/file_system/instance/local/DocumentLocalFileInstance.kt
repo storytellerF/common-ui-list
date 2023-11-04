@@ -8,7 +8,7 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.documentfile.provider.DocumentFile
-import com.storyteller_f.file_system.FileSystemUriSaver
+import com.storyteller_f.file_system.FileSystemUriStore
 import com.storyteller_f.file_system.encodeByBase64
 import com.storyteller_f.file_system.instance.BaseContextFileInstance
 import com.storyteller_f.file_system.instance.FileCreatePolicy
@@ -98,7 +98,7 @@ class DocumentLocalFileInstance(
      */
     private suspend fun getDocumentFile(policy: FileCreatePolicy): GetDocumentFile {
         // 此uri 是当前前缀下的根目录uri。fileInstance 的uri 是fileSystem 使用的uri。
-        val rootUri = FileSystemUriSaver.instance.savedUri(context, preferenceKey, tree)
+        val rootUri = FileSystemUriStore.instance.savedUri(context, preferenceKey, tree)
             ?: return GetDocumentFile.Failed(Exception("rootUri is null"))
         val rootFile = DocumentFile.fromTreeUri(context, rootUri)
             ?: return GetDocumentFile.Failed(Exception("fromTreeUri is null"))

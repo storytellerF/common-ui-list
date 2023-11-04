@@ -23,31 +23,19 @@ open class FileSystemItemModel(
     var formattedCreatedTime: String? = null
     var lastAccessTime: Long = 0
         set(value) {
-            formattedLastAccessTime = getTime(value)
+            formattedLastAccessTime = value.time
             field = value
         }
     var createdTime: Long = 0
         set(value) {
-            formattedCreatedTime = getTime(value)
+            formattedCreatedTime = value.time
             field = value
         }
     var size: Long = 0
     var formattedSize: String? = null
     var permissions: String? = null
-    private fun getTime(time: Long): String {
-        return simpleDateFormat.format(Date(time))
-    }
 
-    override fun toString(): String {
-        return "FileSystemItemModel{" +
-            "name='" + name + '\'' +
-            ", absPath='" + fullPath + '\'' +
-            ", isHidden=" + isHidden +
-            ", size=" + size +
-            ", lastAccessTime='" + lastModifiedTime + '\'' +
-            ", permissions='" + permissions + '\'' +
-            '}'
-    }
+    private val Long.time get() = simpleDateFormat.format(Date(this))
 
     fun editAccessTime(childFile: File) {
         val fileSystemItemModel = this
@@ -63,7 +51,7 @@ open class FileSystemItemModel(
     }
 
     init {
-        formattedLastModifiedTime = getTime(lastModifiedTime)
+        formattedLastModifiedTime = lastModifiedTime.time
     }
 
     companion object {

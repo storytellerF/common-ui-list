@@ -2,12 +2,13 @@ package com.storyteller_f.file_system_ktx
 
 import android.content.Context
 import android.net.Uri
-import com.storyteller_f.file_system.FileInstanceFactory
+import com.storyteller_f.file_system.getLocalFileInstance
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system_remote.getRemoteInstance
 import com.storyteller_f.file_system_remote.supportScheme
 import com.storyteller_f.file_system_root.RootAccessFileInstance
 
+@Suppress("unused")
 fun getFileInstance(
     context: Context,
     uri: Uri,
@@ -18,6 +19,6 @@ fun getFileInstance(
         supportScheme.contains(scheme) -> {
             getRemoteInstance(uri)
         }
-        else -> FileInstanceFactory.getLocalFileInstance(context, uri)
+        else -> getLocalFileInstance(context, uri)
     }
 }
