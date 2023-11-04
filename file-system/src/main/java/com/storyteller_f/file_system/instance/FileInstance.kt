@@ -6,7 +6,7 @@ import androidx.core.util.ObjectsCompat
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.FileSystemItemModel
-import com.storyteller_f.file_system.model.FilesAndDirectories
+import com.storyteller_f.file_system.model.FileSystemPack
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -94,10 +94,10 @@ abstract class FileInstance(val uri: Uri) {
     )
 
     @WorkerThread
-    suspend fun list(): FilesAndDirectories {
-        val filesAndDirectories = FilesAndDirectories(buildFilesContainer(), buildDirectoryContainer())
-        listInternal(filesAndDirectories.files, filesAndDirectories.directories)
-        return filesAndDirectories
+    suspend fun list(): FileSystemPack {
+        val fileSystemPack = FileSystemPack(buildFilesContainer(), buildDirectoryContainer())
+        listInternal(fileSystemPack.files, fileSystemPack.directories)
+        return fileSystemPack
     }
 
     /**

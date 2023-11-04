@@ -8,6 +8,7 @@ object LocalFileSystem {
 
     @SuppressLint("SdCardPath")
     const val USER_DATA_FRONT_PATH = "/data/user/"
+    const val USER_DATA = "/data/user"
     const val USER_EMULATED_FRONT_PATH = "/storage/emulated/"
 
     const val ROOT_USER_EMULATED_PATH = "/storage/emulated/0"
@@ -42,7 +43,7 @@ sealed class LocalFileSystemPrefix(val key: String) {
     /**
      * /storage/emulated/0 本身以及所有的子文件
      */
-    class RootEmulated(uid: Long) : LocalFileSystemPrefix("/storage/emulated/$uid")
+    class SelfEmulated(uid: Long) : LocalFileSystemPrefix("/storage/emulated/$uid")
 
     /**
      * /storage/emulated 本身
@@ -55,7 +56,7 @@ sealed class LocalFileSystemPrefix(val key: String) {
     data object Storage : LocalFileSystemPrefix(LocalFileSystem.STORAGE_PATH)
 
     /**
-     * 外接存储设备
+     * 外接存储设备，目录应该是/storage/emulated/XX44-XX55 类似的目录
      */
     class Mounted(key: String) : LocalFileSystemPrefix(key)
 
@@ -65,10 +66,13 @@ sealed class LocalFileSystemPrefix(val key: String) {
     class AppData(key: String) : LocalFileSystemPrefix(key)
 
     /**
-     * 用户安装的app
+     * 用户安装的app 路径/data/app
      */
     data object InstalledApps : LocalFileSystemPrefix("/data/app")
 
+    /**
+     * 根目录本身
+     */
     data object Root : LocalFileSystemPrefix("/")
 
     /**
@@ -82,10 +86,16 @@ sealed class LocalFileSystemPrefix(val key: String) {
     data object Data2 : LocalFileSystemPrefix("/data/data")
 
     /**
-     * /data/user
+     * /data/user 本身
      */
-    data object DataUser : LocalFileSystemPrefix("/data/user")
+    data object DataUser : LocalFileSystemPrefix(LocalFileSystem.USER_DATA)
+
+    /**
+     * /data/user/uid 本身
+     */
+    @SuppressLint("SdCardPath")
+    class SelfDataRoot(uid: Long) : LocalFileSystemPrefix("/data/user/$uid")
 
     @SuppressLint("SdCardPath")
-    class DataRootUser(uid: Long) : LocalFileSystemPrefix("/data/user/$uid")
+    class SelfPackage(uid: Long, packageName: String) : LocalFileSystemPrefix("/data/user/$uid/$packageName")
 }

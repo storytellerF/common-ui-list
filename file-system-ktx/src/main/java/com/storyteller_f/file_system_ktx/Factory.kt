@@ -15,7 +15,7 @@ fun getFileInstance(
 ): FileInstance {
     val scheme = uri.scheme!!
     return when {
-        scheme == RootAccessFileInstance.rootFileSystemScheme -> RootAccessFileInstance.instance(uri)!!
+        scheme == RootAccessFileInstance.ROOT_FILESYSTEM_SCHEME -> RootAccessFileInstance.instance(uri)!!
         supportScheme.contains(scheme) -> {
             getRemoteInstance(uri)
         }

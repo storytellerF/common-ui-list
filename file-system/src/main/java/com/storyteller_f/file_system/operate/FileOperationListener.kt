@@ -6,18 +6,15 @@ import com.storyteller_f.file_system.message.Message
 interface FileOperationListener {
     /**
      * 当一个文件处理完成
-     *
-     * @param type 暂时没有用到
      */
-    fun onFileDone(fileInstance: FileInstance?, message: Message?, size: Long, type: Int)
+    fun onFileDone(fileInstance: FileInstance?, message: Message?, size: Long)
 
     /**
      * 当一个文件夹处理完成
-     *
-     * @param type 暂时没有用到
      */
-    fun onDirectoryDone(fileInstance: FileInstance?, message: Message?, type: Int)
-    fun onError(message: Message?, type: Int)
+    fun onDirectoryDone(fileInstance: FileInstance?, message: Message?)
+
+    fun onError(message: Message?)
 }
 
 interface FileOperationForemanProgressListener {
@@ -60,7 +57,7 @@ interface FileOperationForemanProgressListener {
     fun onComplete(dest: String?, isSuccess: Boolean, key: String)
 }
 
-open class DefaultForemanProgressListener : FileOperationForemanProgressListener {
+open class DefaultForemanProgressAdapter : FileOperationForemanProgressListener {
     override fun onProgress(progress: Int, key: String) = Unit
 
     override fun onState(state: String?, key: String) = Unit

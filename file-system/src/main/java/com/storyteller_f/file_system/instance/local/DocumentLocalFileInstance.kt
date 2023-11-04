@@ -17,8 +17,10 @@ import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.GetDocumentFile
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
-import com.storyteller_f.file_system.util.FileInstanceUtility
-import com.storyteller_f.file_system.util.FileUtility
+import com.storyteller_f.file_system.util.addDirectory
+import com.storyteller_f.file_system.util.addFile
+import com.storyteller_f.file_system.util.getExtension
+import com.storyteller_f.file_system.util.permissions
 import kotlinx.coroutines.yield
 import java.io.File
 import java.io.FileInputStream
@@ -245,13 +247,13 @@ class DocumentLocalFileInstance(
         for (documentFile in documentFiles) {
             yield()
             val documentFileName = documentFile.name!!
-            val detailString = FileUtility.getPermissions(documentFile)
+            val detailString = documentFile.permissions()
             val t = child(documentFile, documentFileName)
             if (documentFile.isFile) {
-                FileInstanceUtility.addFile(fileItems, t, detailString)!!.size =
+                addFile(fileItems, t, detailString)!!.size =
                     documentFile.length()
             } else {
-                FileInstanceUtility.addDirectory(directoryItems, t, detailString)
+                addDirectory(directoryItems, t, detailString)
             }
         }
     }
@@ -344,7 +346,7 @@ class DocumentLocalFileInstance(
             false,
             getInstanceRelinkIfNeed()!!.lastModified(),
             false,
-            FileUtility.getExtension(name)
+            getExtension(name)
         )
     }
 

@@ -13,7 +13,7 @@ import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
-import com.storyteller_f.file_system.util.FileUtility
+import com.storyteller_f.file_system.util.getStorageCompat
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -89,7 +89,7 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
     }
 
     private fun storageVolumes(): List<DirectoryItemModel> {
-        return FileUtility.getStorageCompat(context).map {
+        return context.getStorageCompat().map {
             val (file, child) = child(it.name)
             DirectoryItemModel(it.name, child, false, file.lastModified(), false)
         }

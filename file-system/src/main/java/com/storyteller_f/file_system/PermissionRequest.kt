@@ -22,7 +22,7 @@ import kotlinx.coroutines.CompletableDeferred
 suspend fun Context.checkFilePermission(uri: Uri): Boolean {
     if (uri.scheme != ContentResolver.SCHEME_FILE) return true
     return when (val prefix = getPrefix(this, uri)!!) {
-        is LocalFileSystemPrefix.RootEmulated -> when {
+        is LocalFileSystemPrefix.SelfEmulated -> when {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> Environment.isExternalStorageManager()
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> DocumentLocalFileInstance.getEmulated(
                 this,

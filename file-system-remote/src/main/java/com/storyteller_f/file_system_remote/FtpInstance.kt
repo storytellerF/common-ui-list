@@ -6,7 +6,7 @@ import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
-import com.storyteller_f.file_system.util.FileUtility.permissions
+import com.storyteller_f.file_system.util.permissions
 import org.apache.commons.net.PrintCommandListener
 import org.apache.commons.net.ftp.FTPClient
 import org.apache.commons.net.ftp.FTPFile
@@ -91,10 +91,7 @@ class FtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(uri
             val name = it.name
             val (file, child) = child(it.name)
             val lastModifiedTime = it.timestamp.timeInMillis
-            val canRead = it.hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION)
-            val canWrite = it.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)
-            val canExecute = it.hasPermission(FTPFile.USER_ACCESS, FTPFile.EXECUTE_PERMISSION)
-            val permission = permissions(canRead, canWrite, canExecute, it.isFile)
+            val permission = it.permissions()
             if (it.isFile) {
                 fileItems.add(
                     FileItemModel(
@@ -248,4 +245,11 @@ class FtpInstance(private val spec: RemoteSpec) {
     companion object {
         private const val TAG = "FtpInstance"
     }
+}
+
+private fun FTPFile.permissions(): String {
+    val canRead = hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION)
+    val canWrite = hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)
+    val canExecute = hasPermission(FTPFile.USER_ACCESS, FTPFile.EXECUTE_PERMISSION)
+    return permissions(canRead, canWrite, canExecute, isFile)
 }
