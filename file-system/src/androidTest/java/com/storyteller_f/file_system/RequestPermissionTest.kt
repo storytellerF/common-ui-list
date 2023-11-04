@@ -19,7 +19,7 @@ import java.io.File
 
 
 @RunWith(AndroidJUnit4::class)
-class TestRequestPermission {
+class RequestPermissionTest {
 
     @get:Rule
     var mActivityRule = ActivityScenarioRule(

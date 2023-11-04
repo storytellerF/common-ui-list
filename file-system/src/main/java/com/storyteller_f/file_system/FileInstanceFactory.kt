@@ -13,6 +13,7 @@ import com.storyteller_f.file_system.instance.local.RegularLocalFileInstance
 import com.storyteller_f.file_system.instance.local.fake.AppLocalFileInstance
 import com.storyteller_f.file_system.instance.local.fake.FakeLocalFileInstance
 import com.storyteller_f.file_system.instance.local.fake.getMyId
+import com.storyteller_f.file_system.util.buildFile
 import java.io.File
 import java.util.*
 import kotlin.io.encoding.Base64
@@ -20,7 +21,11 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 
 @Suppress("HasPlatformType", "unused")
 fun Context.getCurrentUserEmulatedPath() =
-    File(LocalFileSystem.EMULATED_ROOT_PATH, getMyId().toString()).absolutePath
+    buildFile(LocalFileSystem.EMULATED_ROOT_PATH, getMyId().toString()).absolutePath
+
+@Suppress("HasPlatformType", "unused")
+fun Context.getCurrentUserDataPath() =
+    buildFile(LocalFileSystem.USER_DATA, getMyId().toString()).absolutePath
 
 /**
  * 除非是根路径，否则最后一个字符不可以是/
@@ -60,7 +65,8 @@ private fun getPublicFileSystemInstance(context: Context, uri: Uri): FileInstanc
         is LocalFileSystemPrefix.AppData -> RegularLocalFileInstance(context, uri)
         LocalFileSystemPrefix.Data -> FakeLocalFileInstance(context, uri)
         LocalFileSystemPrefix.Data2 -> FakeLocalFileInstance(context, uri)
-        is LocalFileSystemPrefix.DataRootUser -> RegularLocalFileInstance(context, uri)
+        is LocalFileSystemPrefix.SelfDataRoot -> FakeLocalFileInstance(context, uri)
+        is LocalFileSystemPrefix.SelfPackage -> RegularLocalFileInstance(context, uri)
         LocalFileSystemPrefix.DataUser -> FakeLocalFileInstance(context, uri)
         LocalFileSystemPrefix.EmulatedRoot -> FakeLocalFileInstance(context, uri)
         LocalFileSystemPrefix.InstalledApps -> AppLocalFileInstance(context, uri)
@@ -87,7 +93,7 @@ private fun getPublicFileSystemInstance(context: Context, uri: Uri): FileInstanc
 
         LocalFileSystemPrefix.Public -> RegularLocalFileInstance(context, uri)
         LocalFileSystemPrefix.Root -> FakeLocalFileInstance(context, uri)
-        is LocalFileSystemPrefix.RootEmulated -> when (Build.VERSION.SDK_INT) {
+        is LocalFileSystemPrefix.SelfEmulated -> when (Build.VERSION.SDK_INT) {
             Build.VERSION_CODES.Q -> DocumentLocalFileInstance.getEmulated(
                 context,
                 uri,
@@ -104,9 +110,7 @@ private fun getPublicFileSystemInstance(context: Context, uri: Uri): FileInstanc
         }
 
         LocalFileSystemPrefix.Self -> when (Build.VERSION.SDK_INT) {
-            Build.VERSION_CODES.Q -> {
-                FakeLocalFileInstance(context, uri)
-            }
+            Build.VERSION_CODES.Q -> FakeLocalFileInstance(context, uri)
 
             else -> RegularLocalFileInstance(context, uri)
         }
@@ -148,7 +152,12 @@ private fun getPublicFileSystemPrefix(context: Context, path: String): LocalFile
         LocalFileSystem.publicPath.any { path.startsWith(it) } -> LocalFileSystemPrefix.Public
         path.startsWith(LocalFileSystemPrefix.SdCard.key) -> LocalFileSystemPrefix.SdCard
         path.startsWith(context.appDataDir()) -> LocalFileSystemPrefix.AppData(context.appDataDir())
-        path.startsWith(LocalFileSystem.USER_EMULATED_FRONT_PATH) -> LocalFileSystemPrefix.RootEmulated(
+        path.startsWith("/data/user/${context.getMyId()}/${context.packageName}") -> LocalFileSystemPrefix.SelfPackage(
+            context.getMyId(),
+            context.packageName
+        )
+
+        path.startsWith(LocalFileSystem.USER_EMULATED_FRONT_PATH) -> LocalFileSystemPrefix.SelfEmulated(
             path.substring(
                 LocalFileSystem.USER_EMULATED_FRONT_PATH.length
             ).substringAt("/").toLong()
@@ -158,19 +167,19 @@ private fun getPublicFileSystemPrefix(context: Context, path: String): LocalFile
         path.startsWith(LocalFileSystem.CURRENT_EMULATED_PATH) -> LocalFileSystemPrefix.SelfPrimary
         path == LocalFileSystemPrefix.EmulatedRoot.key -> LocalFileSystemPrefix.EmulatedRoot
         path == LocalFileSystemPrefix.Storage.key -> LocalFileSystemPrefix.Storage
-        path.startsWith(LocalFileSystem.STORAGE_PATH) -> LocalFileSystemPrefix.Mounted(extractSdPath(path))
-        path == LocalFileSystemPrefix.Root.key -> LocalFileSystemPrefix.Root
-        path == LocalFileSystemPrefix.Data.key -> LocalFileSystemPrefix.Data
-        path.startsWith(LocalFileSystemPrefix.Data2.key) -> LocalFileSystemPrefix.Data2
-        path == LocalFileSystemPrefix.DataUser.key -> LocalFileSystemPrefix.DataUser
-        path.startsWith(LocalFileSystem.USER_DATA_FRONT_PATH) -> LocalFileSystemPrefix.DataRootUser(
-            path.substring(
-                LocalFileSystem.USER_DATA_FRONT_PATH.length
-            ).substringAt("/").toLong()
+        path.startsWith(LocalFileSystem.STORAGE_PATH) -> LocalFileSystemPrefix.Mounted(
+            extractSdPath(
+                path
+            )
         )
 
+        path == LocalFileSystemPrefix.Root.key -> LocalFileSystemPrefix.Root
+        path == LocalFileSystemPrefix.Data.key -> LocalFileSystemPrefix.Data
+        path == LocalFileSystemPrefix.Data2.key -> LocalFileSystemPrefix.Data2
+        path == LocalFileSystemPrefix.DataUser.key -> LocalFileSystemPrefix.DataUser
+        path == "/data/user/${context.getMyId()}" -> LocalFileSystemPrefix.SelfDataRoot(context.getMyId())
         path.startsWith(LocalFileSystemPrefix.InstalledApps.key) -> LocalFileSystemPrefix.InstalledApps
-        else -> throw Exception("unrecognized path")
+        else -> throw Exception("unrecognized path $path")
     }
 
 /**

@@ -10,7 +10,7 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-class TestFileInstance {
+class FileInstanceTest {
     @Config(minSdk = Build.VERSION_CODES.JELLY_BEAN)
     @Test
     fun test() {

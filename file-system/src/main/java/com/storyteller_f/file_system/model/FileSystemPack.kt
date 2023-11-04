@@ -1,6 +1,6 @@
 package com.storyteller_f.file_system.model
 
-class FilesAndDirectories(
+class FileSystemPack(
     val files: MutableList<FileItemModel>,
     val directories: MutableList<DirectoryItemModel>
 ) {
@@ -22,6 +22,6 @@ class FilesAndDirectories(
         get() = files.size + directories.size
 
     companion object {
-        val EMPTY = FilesAndDirectories(mutableListOf(), mutableListOf())
+        val EMPTY = FileSystemPack(mutableListOf(), mutableListOf())
     }
 }

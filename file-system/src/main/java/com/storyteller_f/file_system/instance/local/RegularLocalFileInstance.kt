@@ -8,8 +8,10 @@ import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileCreatePolicy.*
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
-import com.storyteller_f.file_system.util.FileInstanceUtility
-import com.storyteller_f.file_system.util.FileUtility
+import com.storyteller_f.file_system.util.addDirectory
+import com.storyteller_f.file_system.util.addFile
+import com.storyteller_f.file_system.util.getExtension
+import com.storyteller_f.file_system.util.permissions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
@@ -26,7 +28,13 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
 
     @Throws(IOException::class)
     override suspend fun createFile(): Boolean {
-        return if (innerFile.exists()) true else innerFile.createNewFile()
+        return if (innerFile.exists()) {
+            true
+        } else {
+            withContext(Dispatchers.IO) {
+                innerFile.createNewFile()
+            }
+        }
     }
 
     override suspend fun isHidden(): Boolean = innerFile.isHidden
@@ -61,16 +69,23 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
                         throw IOException("新建文件失败")
                     }
                 }
+
                 !file.mkdirs() -> throw IOException("新建文件失败")
             }
         }
     }
 
     @Throws(FileNotFoundException::class)
-    override suspend fun getFileInputStream(): FileInputStream = FileInputStream(innerFile)
+    override suspend fun getFileInputStream(): FileInputStream =
+        withContext(Dispatchers.IO) {
+            FileInputStream(innerFile)
+        }
 
     @Throws(FileNotFoundException::class)
-    override suspend fun getFileOutputStream(): FileOutputStream = FileOutputStream(innerFile)
+    override suspend fun getFileOutputStream(): FileOutputStream =
+        withContext(Dispatchers.IO) {
+            FileOutputStream(innerFile)
+        }
 
     override suspend fun getFile(): FileItemModel {
         val fileItemModel = FileItemModel(
@@ -79,7 +94,7 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
             innerFile.isHidden,
             innerFile.lastModified(),
             false,
-            FileUtility.getExtension(name)
+            getExtension(name)
         )
         fileItemModel.editAccessTime(innerFile)
         return fileItemModel
@@ -108,13 +123,13 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
         if (listFiles != null) {
             for (childFile in listFiles) {
                 val child = child(childFile.name)
-                val permissions = FileUtility.getPermissionStringByFile(childFile)
+                val permissions = childFile.permissions()
                 // 判断是否为文件夹
                 (
                     if (childFile.isDirectory) {
-                        FileInstanceUtility.addDirectory(directoryItems, child, permissions)
+                        addDirectory(directoryItems, child, permissions)
                     } else {
-                        FileInstanceUtility.addFile(fileItems, child, permissions)
+                        addFile(fileItems, child, permissions)
                     }
                     )?.editAccessTime(childFile)
             }

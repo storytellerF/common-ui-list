@@ -6,7 +6,7 @@ import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
-import com.storyteller_f.file_system.util.FileUtility.permissions
+import com.storyteller_f.file_system.util.permissions
 import org.apache.commons.net.PrintCommandListener
 import org.apache.commons.net.ftp.FTPClientConfig
 import org.apache.commons.net.ftp.FTPFile
@@ -104,13 +104,6 @@ class FtpsFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
                 )
             }
         }
-    }
-
-    private fun FTPFile.getPermissions(): String {
-        val canRead = hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION)
-        val canWrite = hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)
-        val canExecute = hasPermission(FTPFile.USER_ACCESS, FTPFile.EXECUTE_PERMISSION)
-        return permissions(canRead, canWrite, canExecute, isFile)
     }
 
     override suspend fun isFile(): Boolean {
@@ -233,4 +226,11 @@ class FtpsInstance(private val spec: RemoteSpec) {
     companion object {
         private const val TAG = "FtpInstance"
     }
+}
+
+private fun FTPFile.getPermissions(): String {
+    val canRead = hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION)
+    val canWrite = hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)
+    val canExecute = hasPermission(FTPFile.USER_ACCESS, FTPFile.EXECUTE_PERMISSION)
+    return permissions(canRead, canWrite, canExecute, isFile)
 }

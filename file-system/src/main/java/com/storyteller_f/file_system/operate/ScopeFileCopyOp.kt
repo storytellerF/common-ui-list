@@ -9,7 +9,6 @@ import com.storyteller_f.file_system.message.Message
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.toChildEfficiently
-import com.storyteller_f.multi_core.StoppableTask
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
@@ -24,22 +23,21 @@ interface SuspendCallable<T> {
  * 返回应该是任务是否成功
  */
 abstract class AbstractFileOperation(
-    val task: StoppableTask,
     val fileInstance: FileInstance,
     val context: Context
 ) : SuspendCallable<Boolean>, FileOperationListener {
     var fileOperationListener: FileOperationListener? = null
 
-    override fun onError(message: Message?, type: Int) {
-        fileOperationListener?.onError(message, type)
+    override fun onError(message: Message?) {
+        fileOperationListener?.onError(message)
     }
 
-    override fun onDirectoryDone(fileInstance: FileInstance?, message: Message?, type: Int) {
-        fileOperationListener?.onDirectoryDone(fileInstance, message, type)
+    override fun onDirectoryDone(fileInstance: FileInstance?, message: Message?) {
+        fileOperationListener?.onDirectoryDone(fileInstance, message)
     }
 
-    override fun onFileDone(fileInstance: FileInstance?, message: Message?, size: Long, type: Int) {
-        fileOperationListener?.onFileDone(fileInstance, message, size, type)
+    override fun onFileDone(fileInstance: FileInstance?, message: Message?, size: Long) {
+        fileOperationListener?.onFileDone(fileInstance, message, size)
     }
 
     fun bind(fileOperationListener: FileOperationListener): AbstractFileOperation {
@@ -52,24 +50,24 @@ abstract class AbstractFileOperation(
  * target 必须是一个目录
  */
 abstract class ScopeFileOperation(
-    task: StoppableTask,
     fileInstance: FileInstance,
     val target: FileInstance,
     context: Context
-) : AbstractFileOperation(task, fileInstance, context)
+) : AbstractFileOperation(fileInstance, context)
 
-abstract class MultiScopeFileOperation(
-    task: StoppableTask,
+/**
+ * 没有目标地址
+ */
+abstract class BlindFileOperation(
     fileInstance: FileInstance,
     context: Context
-) : AbstractFileOperation(task, fileInstance, context)
+) : AbstractFileOperation(fileInstance, context)
 
 open class ScopeFileCopyOp(
-    task: StoppableTask,
     fileInstance: FileInstance,
     target: FileInstance,
     context: Context
-) : ScopeFileOperation(task, fileInstance, target, context) {
+) : ScopeFileOperation(fileInstance, target, context) {
     override suspend fun call(): Boolean {
         return if (fileInstance.isFile()) {
             // 新建一个文件
@@ -108,11 +106,11 @@ open class ScopeFileCopyOp(
     }
 
     open suspend fun notifyDirectoryDone(fileInstance: FileInstance, message: Message, i: Int) {
-        onDirectoryDone(fileInstance, message, i)
+        onDirectoryDone(fileInstance, message)
     }
 
     open suspend fun notifyFileDone(f: FileInstance, message: Message, fileLength: Long, i: Int) {
-        onFileDone(fileInstance, message, fileLength, i)
+        onFileDone(fileInstance, message, fileLength)
     }
 
     private suspend fun copyFileFaster(f: FileInstance, t: FileInstance): Boolean {
@@ -125,7 +123,7 @@ open class ScopeFileCopyOp(
                 }
             }
         } catch (e: Exception) {
-            onError(Message(e.message ?: "error"), 0)
+            onError(Message(e.message ?: "error"))
         }
         return false
     }
@@ -149,18 +147,24 @@ open class ScopeFileCopyOp(
 }
 
 class ScopeFileMoveOp(
-    task: StoppableTask,
     fileInstance: FileInstance,
     target: FileInstance,
     context: Context
-) : ScopeFileCopyOp(task, fileInstance, target, context), FileOperationListener {
+) : ScopeFileCopyOp(fileInstance, target, context), FileOperationListener {
 
-    override suspend fun notifyFileDone(f: FileInstance, message: Message, fileLength: Long, i: Int) {
+    override suspend fun notifyFileDone(
+        f: FileInstance,
+        message: Message,
+        fileLength: Long,
+        i: Int
+    ) {
         super.notifyFileDone(f, message, fileLength, i)
         try {
             fileInstance.deleteFileOrEmptyDirectory()
         } catch (e: Exception) {
-            fileOperationListener?.onError(Message("delete ${fileInstance.name} failed ${e.localizedMessage}"), 0)
+            fileOperationListener?.onError(
+                Message("delete ${fileInstance.name} failed ${e.localizedMessage}")
+            )
         }
     }
 
@@ -173,35 +177,37 @@ class ScopeFileMoveOp(
         try {
             fileInstance.deleteFileOrEmptyDirectory()
         } catch (e: Exception) {
-            fileOperationListener?.onError(Message("delete ${fileInstance.name} failed ${e.exceptionMessage}"), 0)
+            fileOperationListener?.onError(
+                Message("delete ${fileInstance.name} failed ${e.exceptionMessage}")
+            )
         }
     }
 }
 
 class ScopeFileMoveOpInShell(
-    task: StoppableTask,
     fileInstance: FileInstance,
     target: FileInstance,
     context: Context
-) : ScopeFileOperation(task, fileInstance, target, context) {
+) : ScopeFileOperation(fileInstance, target, context) {
     override suspend fun call(): Boolean {
-        val exec = Runtime.getRuntime().exec("mv ${fileInstance.path} ${target.path}")
-        val waitFor = exec.waitFor()
-        val cmdFailed = waitFor != 0
+        val mvResult = withContext(Dispatchers.IO) {
+            Runtime.getRuntime().exec("mv ${fileInstance.path} ${target.path}").waitFor()
+        }
+
+        val cmdFailed = mvResult != 0
         when {
-            cmdFailed -> onError(Message("exec return $waitFor"), 0)
-            target.isFile() -> onFileDone(target, Message("success"), target.getFileLength(), 0)
-            else -> onDirectoryDone(fileInstance, Message("success"), 0)
+            cmdFailed -> onError(Message("process return $mvResult"))
+            target.isFile() -> onFileDone(target, Message("success"), target.getFileLength())
+            else -> onDirectoryDone(fileInstance, Message("success"))
         }
         return !cmdFailed
     }
 }
 
 class FileDeleteOp(
-    task: StoppableTask,
     fileInstance: FileInstance,
     context: Context
-) : MultiScopeFileOperation(task, fileInstance, context) {
+) : BlindFileOperation(fileInstance, context) {
 
     override suspend fun call(): Boolean {
         return deleteDirectory(fileInstance)
@@ -232,11 +238,10 @@ class FileDeleteOp(
             if (deleteCurrentDirectory) {
                 onDirectoryDone(
                     fileInstance,
-                    Message("delete ${fileInstance.name} success"),
-                    0
+                    Message("delete ${fileInstance.name} success")
                 )
             } else {
-                onError(Message("delete ${fileInstance.name} failed"), 0)
+                onError(Message("delete ${fileInstance.name} failed"))
             }
             return deleteCurrentDirectory
         } catch (_: Exception) {
@@ -244,7 +249,10 @@ class FileDeleteOp(
         }
     }
 
-    private suspend fun deleteChildDirectory(fileInstance: FileInstance, it: DirectoryItemModel): Boolean {
+    private suspend fun deleteChildDirectory(
+        fileInstance: FileInstance,
+        it: DirectoryItemModel
+    ): Boolean {
         val childDirectory = fileInstance.toChildEfficiently(
             context,
             it.name,
@@ -254,11 +262,10 @@ class FileDeleteOp(
         if (deleteDirectory) {
             onDirectoryDone(
                 childDirectory,
-                Message("delete ${it.name} success"),
-                0
+                Message("delete ${it.name} success")
             )
         } else {
-            onError(Message("delete ${it.name} failed"), 0)
+            onError(Message("delete ${it.name} failed"))
         }
         return deleteDirectory
     }
@@ -270,11 +277,10 @@ class FileDeleteOp(
             onFileDone(
                 childFile,
                 Message("delete ${it.name} success"),
-                fileInstance.getFileLength(),
-                0
+                fileInstance.getFileLength()
             )
         } else {
-            onError(Message("delete ${it.name} failed"), 0)
+            onError(Message("delete ${it.name} failed"))
         }
         return deleteFileOrEmptyDirectory
     }

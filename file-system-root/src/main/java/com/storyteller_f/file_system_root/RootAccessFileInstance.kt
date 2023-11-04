@@ -5,8 +5,9 @@ import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
-import com.storyteller_f.file_system.util.FileInstanceUtility
-import com.topjohnwu.superuser.nio.ExtendedFile
+import com.storyteller_f.file_system.util.addDirectory
+import com.storyteller_f.file_system.util.addFile
+import com.storyteller_f.file_system.util.permissions
 import com.topjohnwu.superuser.nio.FileSystemManager
 import java.io.File
 
@@ -52,18 +53,11 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
             val (_, child) = child(it.name)
             val pair = it to child
             if (it.isFile) {
-                FileInstanceUtility.addFile(fileItems, pair, permissions)
+                addFile(fileItems, pair, permissions)
             } else if (it.isDirectory) {
-                FileInstanceUtility.addDirectory(directoryItems, pair, permissions)
+                addDirectory(directoryItems, pair, permissions)
             }
         }
-    }
-
-    private fun ExtendedFile.permissions(): String {
-        val w = canWrite()
-        val e = canExecute()
-        val r = canRead()
-        return com.storyteller_f.file_system.util.FileUtility.permissions(r, w, e, isFile)
     }
 
     override suspend fun isFile(): Boolean = extendedFile.isFile
@@ -105,7 +99,7 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
     override suspend fun isSymbolicLink(): Boolean = extendedFile.isSymlink
 
     companion object {
-        const val rootFileSystemScheme = "root"
+        const val ROOT_FILESYSTEM_SCHEME = "root"
         var remote: FileSystemManager? = null
 
         val isReady get() = remote != null

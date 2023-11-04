@@ -15,7 +15,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.storyteller_f.compat_ktx.getParcelableCompat
 import com.storyteller_f.file_system.instance.local.DocumentLocalFileInstance
-import com.storyteller_f.file_system.util.FileUtility
+import com.storyteller_f.file_system.util.generateSAFRequestIntent
 import kotlinx.coroutines.CompletableDeferred
 
 class MainActivity : AppCompatActivity() {
@@ -98,7 +98,7 @@ class MainActivity : AppCompatActivity() {
             if (processResult(it)) return@registerForActivityResult
             failure()
         }.launch(
-            FileUtility.generateSAFRequestIntent(this, prefix)
+            this.generateSAFRequestIntent(prefix)
         )
     }
 
@@ -140,10 +140,7 @@ class MainActivity : AppCompatActivity() {
             }
             failure()
         }.launch(
-            FileUtility.generateSAFRequestIntent(
-                this,
-                prefix
-            )
+            generateSAFRequestIntent(prefix)
         )
     }
 
