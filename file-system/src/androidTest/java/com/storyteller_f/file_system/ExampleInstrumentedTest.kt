@@ -22,7 +22,7 @@ class ExampleInstrumentedTest {
             "/storage/XX44-XX55" to "/storage/XX44-XX55",
             LocalFileSystem.STORAGE_PATH to "fake"
         ).forEach {
-            val prefix = FileInstanceFactory.getPrefix(appContext, File(it.first).toUri())
+            val prefix = getPrefix(appContext, File(it.first).toUri())
             assertEquals(it.second, prefix?.key)
         }
     }
@@ -35,7 +35,7 @@ class ExampleInstrumentedTest {
                 "/storage/self" to listOf("primary"),
                 "/storage/self/primary" to listOf(),
             ).forEach { (it, expected) ->
-                val fileInstance = FileInstanceFactory.getLocalFileInstance(
+                val fileInstance = getLocalFileInstance(
                     appContext,
                     File(it).toUri(),
                 )

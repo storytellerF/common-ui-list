@@ -34,7 +34,7 @@ class TestRequestPermission {
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
         mActivityRule.scenario.onActivity {
             it.lifecycleScope.launch {
-                it.requestPathPermission(uri)
+                it.requestFilePermission(uri)
             }
         }
 
@@ -43,7 +43,7 @@ class TestRequestPermission {
         instance.findObject(UiSelector().textContains("ALLOW")).click()
         instance.findObject(UiSelector().text("ALLOW")).click()
         runTest {
-            assertTrue(appContext.checkPathPermission(uri))
+            assertTrue(appContext.checkFilePermission(uri))
         }
 
     }

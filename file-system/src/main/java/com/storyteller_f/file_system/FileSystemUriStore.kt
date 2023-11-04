@@ -12,7 +12,7 @@ import java.io.File
 class SavedUris(val uris: MutableMap<String, MutableMap<String, String>>)
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-class FileSystemUriSaver {
+class FileSystemUriStore {
     /**
      * key authority
      * value
@@ -27,7 +27,7 @@ class FileSystemUriSaver {
         Gson()
     }
     private val Context.file
-        get() = File(filesDir, "uri.saved").apply {
+        get() = File(filesDir, "uri.store").apply {
             if (!exists()) {
                 createNewFile()
             }
@@ -77,6 +77,6 @@ class FileSystemUriSaver {
     }
 
     companion object {
-        val instance = FileSystemUriSaver()
+        val instance = FileSystemUriStore()
     }
 }

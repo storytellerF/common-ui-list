@@ -1,17 +1,60 @@
 package com.storyteller_f.file_system
 
+import android.Manifest
 import android.content.ContentResolver
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.os.Environment
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
+import androidx.core.app.ActivityCompat
 import com.storyteller_f.file_system.MainActivity.Companion.putBundle
+import com.storyteller_f.file_system.instance.local.DocumentLocalFileInstance
 import kotlinx.coroutines.CompletableDeferred
 
-suspend fun Context.requestPathPermission(uri: Uri): Boolean {
+/**
+ * @return 返回是否含有权限。对于没有权限的，调用 requestPermissionForSpecialPath
+ */
+suspend fun Context.checkFilePermission(uri: Uri): Boolean {
+    if (uri.scheme != ContentResolver.SCHEME_FILE) return true
+    return when (val prefix = getPrefix(this, uri)!!) {
+        is LocalFileSystemPrefix.RootEmulated -> when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> Environment.isExternalStorageManager()
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> DocumentLocalFileInstance.getEmulated(
+                this,
+                uri,
+                prefix.key
+            ).exists()
+
+            else -> ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED
+        }
+
+        is LocalFileSystemPrefix.Mounted -> when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> Environment.isExternalStorageManager()
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> DocumentLocalFileInstance.getMounted(
+                this,
+                uri,
+                prefix.key
+            ).exists()
+
+            else -> ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED
+        }
+
+        else -> true
+    }
+}
+
+suspend fun Context.requestFilePermission(uri: Uri): Boolean {
     if (uri.scheme != ContentResolver.SCHEME_FILE) return true
     val path = uri.path!!
     val task = CompletableDeferred<Boolean>()
@@ -36,13 +79,13 @@ suspend fun Context.requestPathPermission(uri: Uri): Boolean {
         }
     }
     val await = task.await()
-    MainActivity.task = null
+    MainActivity.unbindWaitResult()
     return await
 }
 
 private suspend fun Context.requestWriteExternalStorage(task: CompletableDeferred<Boolean>) {
     if (yesOrNo("权限不足", "查看文件夹系统必须授予权限", "授予", "取消")) {
-        MainActivity.task = task
+        MainActivity.bindWaitResult(task)
         startActivity(
             Intent(this, MainActivity::class.java).apply {
                 putBundle(MainActivity.REQUEST_EMULATED, Uri.EMPTY)

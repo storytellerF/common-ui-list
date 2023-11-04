@@ -1,14 +1,11 @@
 package com.storyteller_f.file_system
 
 import android.Manifest
-import android.content.ContentResolver
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
 import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.result.ActivityResult
@@ -42,6 +39,14 @@ class MainActivity : AppCompatActivity() {
 
         fun Intent.fromBundle() = extras!!.let {
             it.getString("permission")!! to it.getParcelableCompat("path", Uri::class.java)!!
+        }
+
+        fun bindWaitResult(t: CompletableDeferred<Boolean>) {
+            task = t
+        }
+
+        fun unbindWaitResult() {
+            task = null
         }
     }
 
@@ -86,7 +91,7 @@ class MainActivity : AppCompatActivity() {
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private fun requestForSdcard(path: Uri) {
-        val prefix = FileInstanceFactory.getPrefix(this, path)!!
+        val prefix = getPrefix(this, path)!!
         registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) {
@@ -108,7 +113,7 @@ class MainActivity : AppCompatActivity() {
                         Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                     )
                 }
-                FileSystemUriSaver.instance.saveUri(
+                FileSystemUriStore.instance.saveUri(
                     this,
                     DocumentLocalFileInstance.EXTERNAL_STORAGE_DOCUMENTS,
                     uri,
@@ -123,7 +128,7 @@ class MainActivity : AppCompatActivity() {
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private fun requestForEmulatedSAF(path: Uri) {
-        val prefix = FileInstanceFactory.getPrefix(this, path)!!
+        val prefix = getPrefix(this, path)!!
         registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) {
@@ -166,43 +171,5 @@ class MainActivity : AppCompatActivity() {
             }
         }
         failure()
-    }
-}
-
-/**
- * @return 返回是否含有权限。对于没有权限的，调用 requestPermissionForSpecialPath
- */
-suspend fun Context.checkPathPermission(uri: Uri): Boolean {
-    if (uri.scheme != ContentResolver.SCHEME_FILE) return true
-    return when (val prefix = FileInstanceFactory.getPrefix(this, uri)!!) {
-        is LocalFileSystemPrefix.RootEmulated -> when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> Environment.isExternalStorageManager()
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> DocumentLocalFileInstance.getEmulated(
-                this,
-                uri,
-                prefix.key
-            ).exists()
-
-            else -> ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE
-            ) == PackageManager.PERMISSION_GRANTED
-        }
-
-        is LocalFileSystemPrefix.Mounted -> when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> Environment.isExternalStorageManager()
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> DocumentLocalFileInstance.getMounted(
-                this,
-                uri,
-                prefix.key
-            ).exists()
-
-            else -> ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE
-            ) == PackageManager.PERMISSION_GRANTED
-        }
-
-        else -> true
     }
 }

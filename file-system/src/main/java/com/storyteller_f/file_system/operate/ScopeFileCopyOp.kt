@@ -2,13 +2,13 @@ package com.storyteller_f.file_system.operate
 
 import android.content.Context
 import com.storyteller_f.common_ktx.exceptionMessage
-import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.instance.FileCreatePolicy.Create
 import com.storyteller_f.file_system.instance.FileCreatePolicy.NotCreate
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.message.Message
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
+import com.storyteller_f.file_system.toChildEfficiently
 import com.storyteller_f.multi_core.StoppableTask
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -77,9 +77,8 @@ open class ScopeFileCopyOp(
         } else {
             copyDirectoryFaster(
                 fileInstance,
-                FileInstanceFactory.toChild(
+                target.toChildEfficiently(
                     context,
-                    target,
                     fileInstance.name,
                     Create(false)
                 )
@@ -91,15 +90,14 @@ open class ScopeFileCopyOp(
         val listSafe = f.list()
         listSafe.files.forEach {
             yield()
-            copyFileFaster(FileInstanceFactory.toChild(context, f, it.name, Create(true)), t)
+            copyFileFaster(f.toChildEfficiently(context, it.name, Create(true)), t)
         }
         listSafe.directories.forEach {
             yield()
             copyDirectoryFaster(
-                FileInstanceFactory.toChild(context, f, it.name, Create(false)),
-                FileInstanceFactory.toChild(
+                f.toChildEfficiently(context, it.name, Create(false)),
+                t.toChildEfficiently(
                     context,
-                    t,
                     it.name,
                     Create(false)
                 )
@@ -119,7 +117,7 @@ open class ScopeFileCopyOp(
 
     private suspend fun copyFileFaster(f: FileInstance, t: FileInstance): Boolean {
         try {
-            val toChild = FileInstanceFactory.toChild(context, t, f.name, Create(true))
+            val toChild = t.toChildEfficiently(context, f.name, Create(true))
             f.getFileInputStream().channel.use { int ->
                 (toChild).getFileOutputStream().channel.use { out ->
                     copyFileInternal(int, out, f)
@@ -247,9 +245,8 @@ class FileDeleteOp(
     }
 
     private suspend fun deleteChildDirectory(fileInstance: FileInstance, it: DirectoryItemModel): Boolean {
-        val childDirectory = FileInstanceFactory.toChild(
+        val childDirectory = fileInstance.toChildEfficiently(
             context,
-            fileInstance,
             it.name,
             NotCreate
         )
@@ -267,7 +264,7 @@ class FileDeleteOp(
     }
 
     private suspend fun deleteChildFile(fileInstance: FileInstance, it: FileItemModel): Boolean {
-        val childFile = FileInstanceFactory.toChild(context, fileInstance, it.name, NotCreate)
+        val childFile = fileInstance.toChildEfficiently(context, it.name, NotCreate)
         val deleteFileOrEmptyDirectory = childFile.deleteFileOrEmptyDirectory()
         if (deleteFileOrEmptyDirectory) {
             onFileDone(

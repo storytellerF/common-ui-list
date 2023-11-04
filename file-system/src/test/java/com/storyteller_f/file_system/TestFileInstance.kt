@@ -17,7 +17,7 @@ class TestFileInstance {
         val parse = Uri.parse("file:///storage/emulated")
         val context = RuntimeEnvironment.getApplication()
         runBlocking {
-            assert(FileInstanceFactory.getLocalFileInstance(context, parse).list().count > 0)
+            assert(getLocalFileInstance(context, parse).list().count > 0)
         }
     }
 }

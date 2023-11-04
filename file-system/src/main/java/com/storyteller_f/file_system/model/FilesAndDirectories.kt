@@ -22,6 +22,6 @@ class FilesAndDirectories(
         get() = files.size + directories.size
 
     companion object {
-        fun empty() = FilesAndDirectories(mutableListOf(), mutableListOf())
+        val EMPTY = FilesAndDirectories(mutableListOf(), mutableListOf())
     }
 }
