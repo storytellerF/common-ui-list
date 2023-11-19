@@ -7,6 +7,7 @@ import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.file_system.model.FileSystemPack
+import com.storyteller_f.file_system.util.parentPath
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -25,7 +26,7 @@ abstract class FileInstance(val uri: Uri) {
      * @return 父路径
      */
     val parent: String?
-        get() = File(path).parent
+        get() = parentPath(path)
 
     val name: String
         get() = File(path).name

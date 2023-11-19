@@ -2,7 +2,9 @@ package com.storyteller_f.file_system_remote
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import android.webkit.URLUtil
+import com.storyteller_f.file_system.ensureFile
 import com.storyteller_f.file_system.instance.BaseContextFileInstance
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
@@ -18,7 +20,7 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.nio.ByteBuffer
 
-class HttpFileInstance(uri: Uri, context: Context) : BaseContextFileInstance(context, uri) {
+class HttpFileInstance(context: Context, uri: Uri) : BaseContextFileInstance(context, uri) {
     /**
      * 保存到cache 目录
      */
@@ -42,7 +44,8 @@ class HttpFileInstance(uri: Uri, context: Context) : BaseContextFileInstance(con
                 if (body == null) {
                     throw Exception("$uri body is empty")
                 } else {
-                    val file = createFile(execute)
+                    Log.i("TAG", "ensureFile: $body")
+                    val file = createFile(execute).ensureFile()!!
                     writeStream(body, file)
                     return file
                 }
@@ -62,8 +65,8 @@ class HttpFileInstance(uri: Uri, context: Context) : BaseContextFileInstance(con
     }
 
     private suspend fun writeStream(body: ResponseBody, file: File) {
-        body.source().buffer.use { int ->
-            file.inputStream().channel.use { out ->
+        body.source().use { int ->
+            file.outputStream().channel.use { out ->
                 val byteBuffer = ByteBuffer.allocateDirect(1024)
                 while (int.read(byteBuffer) != -1) {
                     yield()

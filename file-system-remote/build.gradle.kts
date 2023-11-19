@@ -13,7 +13,6 @@ plugins {
 
 android {
     namespace = "com.storyteller_f.file_system_remote"
-    compileSdk = 33
 
     defaultConfig {
         minSdk = 21
@@ -25,7 +24,7 @@ dependencies {
 
     commonAndroidDependency()
     implementation("androidx.room:room-common:${Versions.ROOM}")
-    implementation("com.squareup.okhttp3:okhttp:4.10.0")
+    implementation("com.squareup.okhttp3:okhttp:4.11.0")
     implModule(":file-system")
 
     // https://mvnrepository.com/artifact/commons-net/commons-net
@@ -38,4 +37,5 @@ dependencies {
     implementation("com.hierynomus:sshj:0.35.0")
 
     unitTestDependency()
+    androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.11.0")
 }

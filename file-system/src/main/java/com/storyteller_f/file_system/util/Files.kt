@@ -13,13 +13,30 @@ import androidx.documentfile.provider.DocumentFile
 import com.storyteller_f.file_system.LocalFileSystem
 import com.storyteller_f.file_system.LocalFileSystemPrefix
 import com.storyteller_f.file_system.instance.local.DocumentLocalFileInstance
+import com.storyteller_f.file_system.simplePath
 import java.io.File
 import java.util.Locale
 import java.util.Objects
 
-fun buildFile(vararg part: String): File = File(part.fold("/") { acc, s ->
-    File(acc, s).absolutePath
-})
+/**
+ * 返回的即是canonical path，也是absolute path
+ */
+fun buildPath(vararg part: String) = part.fold("/") { acc, s ->
+    simplePath("$acc/$s")
+}
+
+fun parentPath(vararg part: String): String? {
+    val currentPath = buildPath(*part)
+    if (currentPath == "/") return null
+    val endIndex = if (currentPath.last() == '/') {
+        currentPath.lastIndex - 1
+    } else {
+        currentPath.lastIndex
+    }
+    val index = currentPath.lastIndexOf("/", endIndex)
+    if (index == 0) return "/"
+    return currentPath.substring(0, index)
+}
 
 fun File.permissions(): String {
     val w = canWrite()

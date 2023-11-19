@@ -81,11 +81,11 @@ fun addDirectory(
  */
 fun addFile(
     directories: MutableCollection<FileItemModel>,
-    uriPair: Pair<File?, Uri?>?,
+    uriPair: Pair<File, Uri>,
     permissions: String?
 ): FileSystemItemModel? {
-    val childFile = uriPair!!.first
-    val hidden = childFile!!.isHidden
+    val childFile = uriPair.first
+    val hidden = childFile.isHidden
     val name = childFile.name
     val lastModifiedTime = childFile.lastModified()
     val extension = childFile.extension

@@ -64,8 +64,7 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
                 policy.isFile -> {
                     if (!withContext(Dispatchers.IO) {
                             file.createNewFile()
-                        }
-                    ) {
+                        }) {
                         throw IOException("新建文件失败")
                     }
                 }
@@ -76,16 +75,14 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
     }
 
     @Throws(FileNotFoundException::class)
-    override suspend fun getFileInputStream(): FileInputStream =
-        withContext(Dispatchers.IO) {
-            FileInputStream(innerFile)
-        }
+    override suspend fun getFileInputStream(): FileInputStream = withContext(Dispatchers.IO) {
+        FileInputStream(innerFile)
+    }
 
     @Throws(FileNotFoundException::class)
-    override suspend fun getFileOutputStream(): FileOutputStream =
-        withContext(Dispatchers.IO) {
-            FileOutputStream(innerFile)
-        }
+    override suspend fun getFileOutputStream(): FileOutputStream = withContext(Dispatchers.IO) {
+        FileOutputStream(innerFile)
+    }
 
     override suspend fun getFile(): FileItemModel {
         val fileItemModel = FileItemModel(
@@ -124,14 +121,11 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
             for (childFile in listFiles) {
                 val child = child(childFile.name)
                 val permissions = childFile.permissions()
-                // 判断是否为文件夹
-                (
-                    if (childFile.isDirectory) {
-                        addDirectory(directoryItems, child, permissions)
-                    } else {
-                        addFile(fileItems, child, permissions)
-                    }
-                    )?.editAccessTime(childFile)
+                (if (childFile.isDirectory) {
+                    addDirectory(directoryItems, child, permissions)
+                } else {
+                    addFile(fileItems, child, permissions)
+                })?.editAccessTime(childFile)
             }
         }
     }
