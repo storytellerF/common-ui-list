@@ -7,9 +7,9 @@ import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.util.addDirectory
 import com.storyteller_f.file_system.util.addFile
+import com.storyteller_f.file_system.util.buildPath
 import com.storyteller_f.file_system.util.permissions
 import com.topjohnwu.superuser.nio.FileSystemManager
-import java.io.File
 
 class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : FileInstance(uri) {
 
@@ -92,7 +92,7 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
     }
 
     override suspend fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
-        val newUri = uri.buildUpon().path(File(extendedFile, name).absolutePath).build()
+        val newUri = uri.buildUpon().path(buildPath(extendedFile.path, name)).build()
         return RootAccessFileInstance(remote, newUri)
     }
 

@@ -58,7 +58,7 @@ data class RemoteSpec(
     }
 }
 
-val supportScheme = listOf("ftp", "smb", "sftp", "ftpes", "ftps", "webdav")
+val supportScheme = listOf("ftp", "smb", "sftp", "ftpes", "ftps", "webdav", "http", "https")
 
 fun getRemoteInstance(uri: Uri): FileInstance {
     return when (uri.scheme) {

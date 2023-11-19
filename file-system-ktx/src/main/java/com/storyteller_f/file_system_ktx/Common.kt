@@ -5,9 +5,6 @@ import com.storyteller_f.file_system.R
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.FileSystemItemModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import java.io.File
 
 val FileSystemItemModel.isFile
     get() = this is FileItemModel
@@ -47,27 +44,4 @@ fun ImageView.fileIcon(fileSystemItemModel: FileSystemItemModel) {
     } else {
         setImageResource(R.drawable.ic_folder_explorer)
     }
-}
-
-suspend fun File.ensureFile(): File? {
-    if (!exists()) {
-        parentFile?.ensureDirs() ?: return null
-        if (!withContext(Dispatchers.IO) {
-                createNewFile()
-            }) {
-            return null
-        }
-    }
-    return this
-}
-
-suspend fun File.ensureDirs(): File? {
-    if (!exists()) {
-        if (!withContext(Dispatchers.IO) {
-                mkdirs()
-            }) {
-            return null
-        }
-    }
-    return this
 }

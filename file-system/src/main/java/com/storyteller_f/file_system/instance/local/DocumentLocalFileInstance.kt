@@ -19,7 +19,9 @@ import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.util.addDirectory
 import com.storyteller_f.file_system.util.addFile
+import com.storyteller_f.file_system.util.buildPath
 import com.storyteller_f.file_system.util.getExtension
+import com.storyteller_f.file_system.util.parentPath
 import com.storyteller_f.file_system.util.permissions
 import kotlinx.coroutines.yield
 import java.io.File
@@ -210,7 +212,7 @@ class DocumentLocalFileInstance(
             throw Exception("当前是一个文件，无法向下操作")
         }
 
-        val build = uri.buildUpon().path(File(uriFullPath, name).absolutePath).build()
+        val build = uri.buildUpon().path(buildPath(uriFullPath, name)).build()
         val instance = DocumentLocalFileInstance(prefix, preferenceKey, tree, context, build)
         instance._instance = getChild(name, policy)
         return instance
@@ -248,19 +250,19 @@ class DocumentLocalFileInstance(
             yield()
             val documentFileName = documentFile.name!!
             val detailString = documentFile.permissions()
-            val t = child(documentFile, documentFileName)
+            val uriPair = child(documentFile, documentFileName)
             if (documentFile.isFile) {
-                addFile(fileItems, t, detailString)!!.size =
+                addFile(fileItems, uriPair, detailString)!!.size =
                     documentFile.length()
             } else {
-                addDirectory(directoryItems, t, detailString)
+                addDirectory(directoryItems, uriPair, detailString)
             }
         }
     }
 
-    private fun child(documentFile: DocumentFile, documentFileName: String): Pair<File, Uri?> {
+    private fun child(documentFile: DocumentFile, documentFileName: String): Pair<File, Uri> {
         val child = child(documentFileName)
-        return Pair<File, Uri?>(
+        return Pair<File, Uri>(
             object : File(child.first.absolutePath) {
                 override fun lastModified(): Long {
                     return documentFile.lastModified()
@@ -280,7 +282,7 @@ class DocumentLocalFileInstance(
 
     @Throws(Exception::class)
     override suspend fun toParent(): BaseContextFileInstance {
-        val parentFile = File(uriFullPath).parentFile ?: throw Exception("到头了，无法继续向上寻找")
+        val parentFile = parentPath(uriFullPath) ?: throw Exception("到头了，无法继续向上寻找")
         val currentParentFile = getInstanceRelinkIfNeed()!!.parentFile
         checkNotNull(currentParentFile) {
             "查找parent DocumentFile失败"
@@ -289,7 +291,7 @@ class DocumentLocalFileInstance(
             "当前文件已存在，并且类型不同 源文件：" + currentParentFile.isFile
         }
 
-        val parent = uri.buildUpon().path(parentFile.absolutePath).build()
+        val parent = uri.buildUpon().path(parentFile).build()
         val instance = DocumentLocalFileInstance(prefix, prefix, tree, context, parent)
         instance._instance = currentParentFile
         return instance

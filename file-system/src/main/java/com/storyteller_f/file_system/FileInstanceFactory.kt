@@ -1,11 +1,9 @@
 package com.storyteller_f.file_system
 
-import android.annotation.SuppressLint
 import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
 import android.os.Build
-import com.storyteller_f.common_ktx.substringAt
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.local.DocumentLocalFileInstance
@@ -13,19 +11,19 @@ import com.storyteller_f.file_system.instance.local.RegularLocalFileInstance
 import com.storyteller_f.file_system.instance.local.fake.AppLocalFileInstance
 import com.storyteller_f.file_system.instance.local.fake.FakeLocalFileInstance
 import com.storyteller_f.file_system.instance.local.fake.getMyId
-import com.storyteller_f.file_system.util.buildFile
-import java.io.File
+import com.storyteller_f.file_system.util.buildPath
+import com.storyteller_f.file_system.util.parentPath
 import java.util.*
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
-@Suppress("HasPlatformType", "unused")
+@Suppress("unused")
 fun Context.getCurrentUserEmulatedPath() =
-    buildFile(LocalFileSystem.EMULATED_ROOT_PATH, getMyId().toString()).absolutePath
+    buildPath(LocalFileSystem.EMULATED_ROOT_PATH, getMyId().toString())
 
-@Suppress("HasPlatformType", "unused")
+@Suppress("unused")
 fun Context.getCurrentUserDataPath() =
-    buildFile(LocalFileSystem.USER_DATA, getMyId().toString()).absolutePath
+    buildPath(LocalFileSystem.USER_DATA, getMyId().toString())
 
 /**
  * 除非是根路径，否则最后一个字符不可以是/
@@ -125,75 +123,6 @@ private fun getPublicFileSystemInstance(context: Context, uri: Uri): FileInstanc
     }
 }
 
-/**
- * 如果是根目录，返回空。
- */
-fun getPrefix(
-    context: Context,
-    uri: Uri,
-): LocalFileSystemPrefix? {
-    val unsafePath = uri.path!!
-    assert(!unsafePath.endsWith("/") || unsafePath.length == 1) {
-        unsafePath
-    }
-    val path = simplePath(unsafePath)
-    /**
-     * 只有publicFileSystem 才会有prefix 的区别，其他的都不需要。
-     */
-    return when {
-        uri.scheme!! != ContentResolver.SCHEME_FILE -> null
-        else -> getPublicFileSystemPrefix(context, path)
-    }
-}
-
-@SuppressLint("SdCardPath")
-private fun getPublicFileSystemPrefix(context: Context, path: String): LocalFileSystemPrefix =
-    when {
-        LocalFileSystem.publicPath.any { path.startsWith(it) } -> LocalFileSystemPrefix.Public
-        path.startsWith(LocalFileSystemPrefix.SdCard.key) -> LocalFileSystemPrefix.SdCard
-        path.startsWith(context.appDataDir()) -> LocalFileSystemPrefix.AppData(context.appDataDir())
-        path.startsWith("/data/user/${context.getMyId()}/${context.packageName}") -> LocalFileSystemPrefix.SelfPackage(
-            context.getMyId(),
-            context.packageName
-        )
-
-        path.startsWith(LocalFileSystem.USER_EMULATED_FRONT_PATH) -> LocalFileSystemPrefix.SelfEmulated(
-            path.substring(
-                LocalFileSystem.USER_EMULATED_FRONT_PATH.length
-            ).substringAt("/").toLong()
-        )
-
-        path == LocalFileSystem.CURRENT_EMULATED_PATH -> LocalFileSystemPrefix.Self
-        path.startsWith(LocalFileSystem.CURRENT_EMULATED_PATH) -> LocalFileSystemPrefix.SelfPrimary
-        path == LocalFileSystemPrefix.EmulatedRoot.key -> LocalFileSystemPrefix.EmulatedRoot
-        path == LocalFileSystemPrefix.Storage.key -> LocalFileSystemPrefix.Storage
-        path.startsWith(LocalFileSystem.STORAGE_PATH) -> LocalFileSystemPrefix.Mounted(
-            extractSdPath(
-                path
-            )
-        )
-
-        path == LocalFileSystemPrefix.Root.key -> LocalFileSystemPrefix.Root
-        path == LocalFileSystemPrefix.Data.key -> LocalFileSystemPrefix.Data
-        path == LocalFileSystemPrefix.Data2.key -> LocalFileSystemPrefix.Data2
-        path == LocalFileSystemPrefix.DataUser.key -> LocalFileSystemPrefix.DataUser
-        path == "/data/user/${context.getMyId()}" -> LocalFileSystemPrefix.SelfDataRoot(context.getMyId())
-        path.startsWith(LocalFileSystemPrefix.InstalledApps.key) -> LocalFileSystemPrefix.InstalledApps
-        else -> throw Exception("unrecognized path $path")
-    }
-
-/**
- * /storage/XX44-XX55 或者是/storage/XX44-XX55/test。最终结果应该是/storage/XX44-XX55
- */
-private fun extractSdPath(path: String): String {
-    var endIndex = path.indexOf("/", LocalFileSystem.STORAGE_PATH.length + 1)
-    if (endIndex == -1) endIndex = path.length
-    return path.substring(0, endIndex)
-}
-
-@SuppressLint("SdCardPath")
-private fun Context.appDataDir() = "/data/data/$packageName"
-
 @Throws(Exception::class)
 suspend fun FileInstance.toChildEfficiently(
     context: Context,
@@ -209,7 +138,7 @@ suspend fun FileInstance.toChildEfficiently(
     if (name == "..") {
         return this.toParentEfficiently(context)
     }
-    val path = File(path, name).absolutePath
+    val path = buildPath(path, name)
     val childUri = uri.buildUpon().path(path).build()
 
     val currentPrefix = getPrefix(context, uri)
@@ -225,7 +154,7 @@ suspend fun FileInstance.toChildEfficiently(
 suspend fun FileInstance.toParentEfficiently(
     context: Context
 ): FileInstance {
-    val parentPath = File(path).parent
+    val parentPath = parentPath(path)
     val parentUri = uri.buildUpon().path(parentPath).build()
 
     val parentPrefix = getPrefix(context, parentUri)
