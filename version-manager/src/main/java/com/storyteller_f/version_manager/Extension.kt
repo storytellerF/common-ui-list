@@ -122,6 +122,9 @@ fun Project.baseApp() {
             }
         }
         buildTypes {
+            debug {
+                applicationIdSuffix = ".debug"
+            }
             release {
                 isMinifyEnabled = true
                 isShrinkResources = true

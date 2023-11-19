@@ -10,13 +10,12 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 buildscript {
     dependencies {
         val smlFolder: String by project
-        val navVersion = "2.7.4"
+        val navVersion = "2.7.5"
         classpath("androidx.navigation:navigation-safe-args-gradle-plugin:$navVersion")
-        classpath("app.cash.licensee:licensee-gradle-plugin:1.6.0")
     }
 }
 plugins {
-    val androidVersion = "8.3.0-alpha11"
+    val androidVersion = "8.3.0-alpha14"
     val kotlinVersion = "1.9.10"
     val kspVersion = "1.9.10-1.0.13"
     id("com.android.application") version androidVersion apply false
@@ -33,7 +32,7 @@ plugins {
 // }
 
 android {
-    compileSdk = 33
+    compileSdk = 34
     namespace = "com.root"
 }
 
