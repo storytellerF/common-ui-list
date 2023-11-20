@@ -80,20 +80,19 @@ class HttpFileInstance(context: Context, uri: Uri) : BaseContextFileInstance(con
     }
 
     override suspend fun getFile(): FileItemModel {
-        TODO("Not yet implemented")
+        val ensureFile = ensureFile()
+        val extension = ensureFile.extension
+        val name = ensureFile.name
+        return FileItemModel(name, uri, isHidden(), ensureFile.lastModified(), isSymbolicLink(), extension)
     }
 
     override suspend fun getDirectory(): DirectoryItemModel {
         TODO("Not yet implemented")
     }
 
-    override suspend fun getFileLength(): Long {
-        return ensureFile().length()
-    }
+    override suspend fun getFileLength() = ensureFile().length()
 
-    override suspend fun getFileInputStream(): FileInputStream {
-        return ensureFile().inputStream()
-    }
+    override suspend fun getFileInputStream() = ensureFile().inputStream()
 
     override suspend fun getFileOutputStream(): FileOutputStream {
         TODO("Not yet implemented")
@@ -106,45 +105,27 @@ class HttpFileInstance(context: Context, uri: Uri) : BaseContextFileInstance(con
         TODO("Not yet implemented")
     }
 
-    override suspend fun isFile(): Boolean {
-        return true
-    }
+    override suspend fun isFile() = true
 
-    override suspend fun exists(): Boolean {
-        TODO("Not yet implemented")
-    }
+    override suspend fun exists() = ensureFile().exists()
 
-    override suspend fun isDirectory(): Boolean {
-        TODO("Not yet implemented")
-    }
+    override suspend fun isDirectory() = false
 
-    override suspend fun deleteFileOrEmptyDirectory(): Boolean {
-        TODO("Not yet implemented")
-    }
+    override suspend fun deleteFileOrEmptyDirectory() = false
 
-    override suspend fun rename(newName: String): Boolean {
-        TODO("Not yet implemented")
-    }
+    override suspend fun rename(newName: String) = false
 
     override suspend fun toParent(): FileInstance {
         TODO("Not yet implemented")
     }
 
-    override suspend fun getDirectorySize(): Long {
-        TODO("Not yet implemented")
-    }
+    override suspend fun getDirectorySize() = 0L
 
-    override suspend fun createFile(): Boolean {
-        TODO("Not yet implemented")
-    }
+    override suspend fun createFile() = false
 
-    override suspend fun isHidden(): Boolean {
-        TODO("Not yet implemented")
-    }
+    override suspend fun isHidden() = false
 
-    override suspend fun createDirectory(): Boolean {
-        TODO("Not yet implemented")
-    }
+    override suspend fun createDirectory() = false
 
     override suspend fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
         TODO("Not yet implemented")
