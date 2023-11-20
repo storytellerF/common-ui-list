@@ -8,6 +8,8 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.AfterClass
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -47,7 +49,11 @@ class HttpTest {
                 val readText = it.readText()
                 assertEquals("hello world", readText)
             }
-
+            assertTrue(httpFileInstance.isFile())
+            assertFalse(httpFileInstance.isDirectory())
+            assertEquals(11, httpFileInstance.getFileLength())
+            assertFalse(httpFileInstance.createFile())
+            assertFalse(httpFileInstance.createDirectory())
         }
     }
 }
