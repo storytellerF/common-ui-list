@@ -4,15 +4,11 @@ import android.net.Uri
 import java.io.File
 
 open class FileItemModel : FileSystemItemModel {
-    /**
-     * message digest
-     */
-    var md: String? = null
 
     /**
      *  A file extension without the leading '.'
      */
-    val extension: String?
+    val extension: String
 
     constructor(
         file: File,
@@ -36,7 +32,7 @@ open class FileItemModel : FileSystemItemModel {
         isHidden: Boolean,
         lastModifiedTime: Long,
         isSymLink: Boolean,
-        extension: String? = null,
+        extension: String,
     ) : super(
         name,
         uri,
