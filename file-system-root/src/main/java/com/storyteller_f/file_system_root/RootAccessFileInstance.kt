@@ -5,6 +5,7 @@ import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.FilePermission
 import com.storyteller_f.file_system.instance.FilePermissions
+import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.util.addDirectory
@@ -23,6 +24,8 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
             extendedFile.canExecute()
         )
     )
+
+    override suspend fun fileTime() = FileTime(extendedFile.lastModified())
 
     override suspend fun getFile(): FileItemModel {
         return FileItemModel(

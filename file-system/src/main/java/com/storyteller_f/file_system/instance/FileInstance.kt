@@ -35,6 +35,9 @@ abstract class FileInstance(val uri: Uri) {
     abstract suspend fun filePermissions(): FilePermissions
 
     @WorkerThread
+    abstract suspend fun fileTime(): FileTime
+
+    @WorkerThread
     abstract suspend fun getFile(): FileItemModel
 
     @WorkerThread

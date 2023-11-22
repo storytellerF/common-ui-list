@@ -4,6 +4,7 @@ import android.net.Uri
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.FilePermissions
+import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import net.schmizz.sshj.SSHClient
@@ -51,6 +52,11 @@ class SFtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
 
     override suspend fun filePermissions() =
         FilePermissions.fromMask(FilePermission.toMask(reconnectIfNeed().second.permissions))
+
+    override suspend fun fileTime(): FileTime {
+        val attributes = reconnectIfNeed().second
+        return FileTime(attributes.mtime, attributes.atime)
+    }
 
     override suspend fun getFile(): FileItemModel {
         TODO("Not yet implemented")

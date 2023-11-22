@@ -4,6 +4,7 @@ import android.net.Uri
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.FilePermissions
+import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import kotlinx.coroutines.runBlocking
@@ -19,6 +20,10 @@ class WebDavFileInstance(private val spec: ShareSpec, uri: Uri) : FileInstance(u
         get() = super.path.substring(spec.share.length + 1).ifEmpty { "/" }
 
     override suspend fun filePermissions(): FilePermissions {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun fileTime(): FileTime {
         TODO("Not yet implemented")
     }
 

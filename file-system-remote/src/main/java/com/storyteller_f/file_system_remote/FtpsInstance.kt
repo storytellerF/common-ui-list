@@ -5,6 +5,7 @@ import android.util.Log
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.FilePermissions
+import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import org.apache.commons.net.PrintCommandListener
@@ -56,6 +57,11 @@ class FtpsFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
             ftpFile.filePermission(FTPFile.GROUP_ACCESS),
             ftpFile.filePermission(FTPFile.WORLD_ACCESS)
         )
+    }
+
+    override suspend fun fileTime(): FileTime {
+        val ftpFile1 = reconnectIfNeed()!!
+        return FileTime(ftpFile1.timestamp.timeInMillis)
     }
 
     override suspend fun getFile(): FileItemModel {
