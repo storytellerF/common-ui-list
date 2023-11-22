@@ -75,24 +75,6 @@ class HttpFileInstance(context: Context, uri: Uri) : BaseContextFileInstance(con
         TODO("Not yet implemented")
     }
 
-    override suspend fun getFile(): FileItemModel {
-        val ensureFile = createIfNeed()
-        val extension = ensureFile.extension
-        val name = ensureFile.name
-        return FileItemModel(
-            name,
-            uri,
-            isHidden(),
-            ensureFile.lastModified(),
-            isSymbolicLink(),
-            extension
-        )
-    }
-
-    override suspend fun getDirectory(): DirectoryItemModel {
-        TODO("Not yet implemented")
-    }
-
     override suspend fun getFileLength() = createIfNeed().length()
 
     override suspend fun getFileInputStream() = createIfNeed().inputStream()

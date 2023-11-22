@@ -47,9 +47,6 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
         }
     )
 
-    override suspend fun getDirectory(): DirectoryItemModel =
-        DirectoryItemModel("/", uri, false, -1, false)
-
     override suspend fun getFileInputStream(): FileInputStream = TODO("Not yet implemented")
 
     override suspend fun getFileOutputStream(): FileOutputStream = TODO("Not yet implemented")

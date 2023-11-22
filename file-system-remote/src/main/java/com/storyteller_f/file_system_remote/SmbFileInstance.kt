@@ -77,14 +77,6 @@ class SmbFileInstance(private val shareSpec: ShareSpec, uri: Uri) : FileInstance
         return share to information
     }
 
-    override suspend fun getFile(): FileItemModel {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun getDirectory(): DirectoryItemModel {
-        TODO("Not yet implemented")
-    }
-
     override suspend fun getFileLength(): Long {
         TODO("Not yet implemented")
     }

@@ -7,6 +7,7 @@ import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.FileSystemItemModel
 import com.storyteller_f.file_system.model.FileSystemPack
+import com.storyteller_f.file_system.util.getExtension
 import com.storyteller_f.file_system.util.parentPath
 import java.io.File
 import java.io.FileInputStream
@@ -38,13 +39,23 @@ abstract class FileInstance(val uri: Uri) {
     abstract suspend fun fileTime(): FileTime
 
     @WorkerThread
-    abstract suspend fun getFile(): FileItemModel
+    suspend fun getFile() =
+        FileItemModel(
+            name,
+            uri,
+            isHidden(),
+            fileTime().lastModified ?: 0,
+            isSymbolicLink(),
+            getExtension(name).orEmpty()
+        )
 
     @WorkerThread
-    abstract suspend fun getDirectory(): DirectoryItemModel
+    suspend fun getDirectory() =
+        DirectoryItemModel(name, uri, isHidden(), fileTime().lastModified ?: 0, isSymbolicLink())
 
     @WorkerThread
-    suspend fun getFileSystemItem(): FileSystemItemModel = if (isFile()) getFile() else getDirectory()
+    suspend fun getFileSystemItem(): FileSystemItemModel =
+        if (isFile()) getFile() else getDirectory()
 
     @WorkerThread
     abstract suspend fun getFileInputStream(): FileInputStream
