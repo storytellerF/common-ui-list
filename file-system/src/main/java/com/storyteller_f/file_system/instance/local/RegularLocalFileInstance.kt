@@ -13,7 +13,6 @@ import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.util.addDirectory
 import com.storyteller_f.file_system.util.addFile
-import com.storyteller_f.file_system.util.getExtension
 import com.storyteller_f.file_system.util.permissions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -105,31 +104,6 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
             }
         }
         return FileTime(innerFile.lastModified())
-    }
-
-    override suspend fun getFile(): FileItemModel {
-        val fileItemModel = FileItemModel(
-            innerFile.name,
-            uri,
-            innerFile.isHidden,
-            innerFile.lastModified(),
-            false,
-            getExtension(name).orEmpty()
-        )
-        fileItemModel.editAccessTime(innerFile)
-        return fileItemModel
-    }
-
-    override suspend fun getDirectory(): DirectoryItemModel {
-        val directoryItemModel = DirectoryItemModel(
-            innerFile.name,
-            uri,
-            innerFile.isHidden,
-            innerFile.lastModified(),
-            false
-        )
-        directoryItemModel.editAccessTime(innerFile)
-        return directoryItemModel
     }
 
     override suspend fun getFileLength(): Long = innerFile.length()

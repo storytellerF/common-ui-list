@@ -70,14 +70,6 @@ class FtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(uri
         return FileTime(lastModified.timestamp.timeInMillis)
     }
 
-    override suspend fun getFile(): FileItemModel {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun getDirectory(): DirectoryItemModel {
-        TODO("Not yet implemented")
-    }
-
     override suspend fun getFileLength(): Long {
         TODO("Not yet implemented")
     }

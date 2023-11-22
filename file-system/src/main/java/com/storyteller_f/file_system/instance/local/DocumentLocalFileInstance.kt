@@ -23,7 +23,6 @@ import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.util.addDirectory
 import com.storyteller_f.file_system.util.addFile
 import com.storyteller_f.file_system.util.buildPath
-import com.storyteller_f.file_system.util.getExtension
 import com.storyteller_f.file_system.util.parentPath
 import com.storyteller_f.file_system.util.permissions
 import kotlinx.coroutines.yield
@@ -349,27 +348,6 @@ class DocumentLocalFileInstance(
     )
 
     override suspend fun getFileLength(): Long = relinkIfNeed()!!.length()
-
-    override suspend fun getFile(): FileItemModel {
-        return FileItemModel(
-            name,
-            uri,
-            false,
-            relinkIfNeed()!!.lastModified(),
-            false,
-            getExtension(name).orEmpty()
-        )
-    }
-
-    override suspend fun getDirectory(): DirectoryItemModel {
-        return DirectoryItemModel(
-            name,
-            uri,
-            false,
-            relinkIfNeed()!!.lastModified(),
-            false
-        )
-    }
 
     companion object {
         @Suppress("SpellCheckingInspection")

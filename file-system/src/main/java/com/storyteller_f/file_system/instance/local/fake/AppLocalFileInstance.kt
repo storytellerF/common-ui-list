@@ -26,12 +26,6 @@ class AppLocalFileInstance(context: Context, uri: Uri) : BaseContextFileInstance
         TODO("Not yet implemented")
     }
 
-    override suspend fun getFile() = FileItemModel(name, uri, false, 0, false, "apk")
-
-    override suspend fun getDirectory(): DirectoryItemModel {
-        TODO("Not yet implemented")
-    }
-
     private val publicSourceDir: String =
         context.packageManager.getApplicationInfoCompat(name, 0).publicSourceDir
 

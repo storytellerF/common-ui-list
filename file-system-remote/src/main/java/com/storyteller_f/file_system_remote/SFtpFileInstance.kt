@@ -58,14 +58,6 @@ class SFtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
         return FileTime(attributes.mtime, attributes.atime)
     }
 
-    override suspend fun getFile(): FileItemModel {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun getDirectory(): DirectoryItemModel {
-        TODO("Not yet implemented")
-    }
-
     override suspend fun getFileLength(): Long {
         TODO("Not yet implemented")
     }
