@@ -8,11 +8,11 @@ import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileCreatePolicy.*
 import com.storyteller_f.file_system.instance.FilePermission
 import com.storyteller_f.file_system.instance.FilePermissions
-import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.util.addDirectory
 import com.storyteller_f.file_system.util.addFile
+import com.storyteller_f.file_system.util.fileTime
 import com.storyteller_f.file_system.util.permissions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -23,7 +23,6 @@ import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.IOException
 import java.nio.file.Files
-import java.nio.file.attribute.BasicFileAttributes
 
 @Suppress("unused")
 class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(context, uri) {
@@ -88,23 +87,15 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
     }
 
     override suspend fun filePermissions() =
-        FilePermissions(FilePermission(innerFile.canRead(), innerFile.canWrite(), innerFile.canExecute()))
+        FilePermissions(
+            FilePermission(
+                innerFile.canRead(),
+                innerFile.canWrite(),
+                innerFile.canExecute()
+            )
+        )
 
-    override suspend fun fileTime(): FileTime {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            try {
-                val basicFileAttributes =
-                    withContext(Dispatchers.IO) {
-                        Files.readAttributes(innerFile.toPath(), BasicFileAttributes::class.java)
-                    }
-                val createdTime = basicFileAttributes.creationTime().toMillis()
-                val lastAccessTime = basicFileAttributes.lastAccessTime().toMillis()
-                return FileTime(innerFile.lastModified(), lastAccessTime, createdTime)
-            } catch (_: IOException) {
-            }
-        }
-        return FileTime(innerFile.lastModified())
-    }
+    override suspend fun fileTime() = innerFile.fileTime()
 
     override suspend fun getFileLength(): Long = innerFile.length()
 
@@ -118,11 +109,12 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
             for (childFile in listFiles) {
                 val child = child(childFile.name)
                 val permissions = childFile.permissions()
+                val fileTime = child.first.fileTime()
                 (if (childFile.isDirectory) {
-                    addDirectory(directoryItems, child, permissions)
+                    addDirectory(directoryItems, child, permissions, fileTime)
                 } else {
-                    addFile(fileItems, child, permissions)
-                })?.editAccessTime(childFile)
+                    addFile(fileItems, child, permissions, fileTime)
+                })
             }
         }
     }

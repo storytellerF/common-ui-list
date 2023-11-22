@@ -55,7 +55,7 @@ class SFtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
 
     override suspend fun fileTime(): FileTime {
         val attributes = reconnectIfNeed().second
-        return FileTime(attributes.mtime, attributes.atime)
+        return attributes.fileTime()
     }
 
     override suspend fun getFileLength(): Long {
@@ -78,14 +78,15 @@ class SFtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
             val attributes = it.attributes
             val (file, child) = child(it.name)
             val isSymLink = attributes.mode.type == FileMode.Type.SYMLINK
+            val fileTime = attributes.fileTime()
             if (it.isDirectory) {
                 directoryItems.add(
                     DirectoryItemModel(
                         it.name,
                         child,
                         false,
-                        attributes.mtime,
-                        isSymLink
+                        isSymLink,
+                        fileTime
                     )
                 )
             } else {
@@ -94,9 +95,9 @@ class SFtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
                         it.name,
                         child,
                         false,
-                        attributes.mtime,
                         isSymLink,
-                        file.extension
+                        file.extension,
+                        fileTime
                     )
                 )
             }
@@ -165,4 +166,8 @@ fun RemoteSpec.sftpClient(): SFTPClient {
 
 fun RemoteSpec.checkSftp() {
     sftpClient()
+}
+
+private fun FileAttributes.fileTime(): FileTime {
+    return FileTime(mtime, atime)
 }

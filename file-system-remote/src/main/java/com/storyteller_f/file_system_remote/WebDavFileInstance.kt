@@ -56,10 +56,10 @@ class WebDavFileInstance(private val spec: ShareSpec, uri: Uri) : FileInstance(u
                     FileItemModel(
                         it.name,
                         child,
-                        false,
-                        it.lastModified,
-                        false,
-                        file.extension
+                        isHidden = false,
+                        isSymLink = false,
+                        extension = file.extension,
+                        time = FileTime()
                     )
                 )
             } else {
@@ -67,9 +67,9 @@ class WebDavFileInstance(private val spec: ShareSpec, uri: Uri) : FileInstance(u
                     DirectoryItemModel(
                         it.name,
                         child,
-                        false,
-                        it.lastModified,
-                        false
+                        isHidden = false,
+                        isSymLink = false,
+                        fileTime = FileTime()
                     )
                 )
             }

@@ -59,10 +59,7 @@ class FtpsFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
         )
     }
 
-    override suspend fun fileTime(): FileTime {
-        val ftpFile1 = reconnectIfNeed()!!
-        return FileTime(ftpFile1.timestamp.timeInMillis)
-    }
+    override suspend fun fileTime() = reconnectIfNeed()!!.fileTime()
 
     override suspend fun getFileLength(): Long {
         TODO("Not yet implemented")
@@ -84,16 +81,16 @@ class FtpsFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
         listFiles?.forEach {
             val name = it.name
             val (file, child) = child(name)
-            val lastModifiedTime = it.timestamp.timeInMillis
             val permission = it.permissions()
+            val time = it.fileTime()
             if (it.isFile) {
                 fileItems.add(FileItemModel(
                     name,
                     child,
                     false,
-                    lastModifiedTime,
                     it.isSymbolicLink,
-                    file.extension
+                    file.extension,
+                    time
                 ).apply {
                     permissions = permission
                 })
@@ -103,8 +100,8 @@ class FtpsFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
                         name,
                         child,
                         false,
-                        lastModifiedTime,
-                        it.isSymbolicLink
+                        it.isSymbolicLink,
+                        time
                     ).apply {
                         permissions = permission
                     }
@@ -234,3 +231,5 @@ class FtpsInstance(private val spec: RemoteSpec) {
         private const val TAG = "FtpInstance"
     }
 }
+
+fun FTPFile.fileTime() = FileTime(timestamp.timeInMillis)

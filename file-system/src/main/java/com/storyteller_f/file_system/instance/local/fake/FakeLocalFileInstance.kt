@@ -15,13 +15,15 @@ import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
+import com.storyteller_f.file_system.util.fileTime
 import com.storyteller_f.file_system.util.getStorageCompat
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 
 fun Context.getMyId() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-    ContextCompat.getSystemService(this, UserManager::class.java)!!.getSerialNumberForUser(Process.myUserHandle())
+    ContextCompat.getSystemService(this, UserManager::class.java)!!
+        .getSerialNumberForUser(Process.myUserHandle())
 } else {
     0L
 }
@@ -65,16 +67,21 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
         presetFiles[path]?.map { packageName ->
             val (file, child) = child(packageName)
             val length = getAppSize(packageName)
-            val lastModifiedTime = file.lastModified()
-            FileItemModel(packageName, child, false, lastModifiedTime, isSymLink = false, "apk").apply {
+            FileItemModel(
+                packageName,
+                child,
+                false,
+                isSymLink = false,
+                "apk",
+                file.fileTime()
+            ).apply {
                 size = length
-                editAccessTime(file)
             }
         }?.forEach(fileItems::add)
 
         (presetSystemDirectories[path] ?: presetDirectories[path])?.map {
             val (file, child) = child(it)
-            DirectoryItemModel(it, child, false, file.lastModified(), symLink.contains(it))
+            DirectoryItemModel(it, child, false, symLink.contains(it), file.fileTime())
         }?.forEach(directoryItems::add)
 
         if (path == LocalFileSystem.STORAGE_PATH) {
@@ -91,10 +98,16 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
         ).length()
     }
 
-    private fun storageVolumes(): List<DirectoryItemModel> {
+    private suspend fun storageVolumes(): List<DirectoryItemModel> {
         return context.getStorageCompat().map {
             val (file, child) = child(it.name)
-            DirectoryItemModel(it.name, child, false, file.lastModified(), false)
+            DirectoryItemModel(
+                it.name,
+                child,
+                isHidden = false,
+                isSymLink = false,
+                fileTime = file.fileTime()
+            )
         }
     }
 
