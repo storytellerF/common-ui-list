@@ -1,10 +1,33 @@
 package com.storyteller_f.file_system.util
 
 import android.net.Uri
+import android.os.Build
+import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.FileSystemItemModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.attribute.BasicFileAttributes
+
+suspend fun File.fileTime(): FileTime {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        try {
+            val basicFileAttributes =
+                withContext(Dispatchers.IO) {
+                    Files.readAttributes(toPath(), BasicFileAttributes::class.java)
+                }
+            val createdTime = basicFileAttributes.creationTime().toMillis()
+            val lastAccessTime = basicFileAttributes.lastAccessTime().toMillis()
+            return FileTime(lastModified(), lastAccessTime, createdTime)
+        } catch (_: IOException) {
+        }
+    }
+    return FileTime(lastModified())
+}
 
 /**
  * 添加普通文件，判断过滤监听事件
@@ -22,12 +45,12 @@ private fun addFile(
     uri: Uri?,
     name: String,
     isHidden: Boolean,
-    lastModifiedTime: Long,
     extension: String?,
     permission: String?,
-    size: Long
+    size: Long,
+    fileTime: FileTime,
 ): FileItemModel? {
-    val fileItemModel = FileItemModel(name, uri!!, isHidden, lastModifiedTime, false, extension.orEmpty())
+    val fileItemModel = FileItemModel(name, uri!!, isHidden, false, extension.orEmpty(), fileTime)
     fileItemModel.permissions = permission
     fileItemModel.size = size
     return if (files.add(fileItemModel)) fileItemModel else null
@@ -48,10 +71,10 @@ private fun addDirectory(
     uri: Uri?,
     directoryName: String,
     isHidden: Boolean,
-    lastModifiedTime: Long,
-    permissions: String?
+    permissions: String?,
+    fileTime: FileTime,
 ): FileSystemItemModel? {
-    val e = DirectoryItemModel(directoryName, uri!!, isHidden, lastModifiedTime, false)
+    val e = DirectoryItemModel(directoryName, uri!!, isHidden, false, fileTime)
     e.permissions = permissions
     return if (directories.add(e)) e else null
 }
@@ -62,13 +85,13 @@ private fun addDirectory(
 fun addDirectory(
     directories: MutableCollection<DirectoryItemModel>,
     uriPair: Pair<File?, Uri?>?,
-    permissions: String?
+    permissions: String?,
+    fileTime: FileTime,
 ): FileSystemItemModel? {
     val childDirectory = uriPair!!.first
     val hidden = childDirectory!!.isHidden
     val name = childDirectory.name
-    val lastModifiedTime = childDirectory.lastModified()
-    return addDirectory(directories, uriPair.second, name, hidden, lastModifiedTime, permissions)
+    return addDirectory(directories, uriPair.second, name, hidden, permissions, fileTime)
 }
 
 /**
@@ -77,13 +100,22 @@ fun addDirectory(
 fun addFile(
     directories: MutableCollection<FileItemModel>,
     uriPair: Pair<File, Uri>,
-    permissions: String?
+    permissions: String?,
+    fileTime: FileTime,
 ): FileSystemItemModel? {
     val childFile = uriPair.first
     val hidden = childFile.isHidden
     val name = childFile.name
-    val lastModifiedTime = childFile.lastModified()
     val extension = childFile.extension
     val length = childFile.length()
-    return addFile(directories, uriPair.second, name, hidden, lastModifiedTime, extension, permissions, length)
+    return addFile(
+        directories,
+        uriPair.second,
+        name,
+        hidden,
+        extension,
+        permissions,
+        length,
+        fileTime
+    )
 }

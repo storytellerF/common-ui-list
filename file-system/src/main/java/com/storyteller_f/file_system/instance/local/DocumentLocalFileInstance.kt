@@ -81,7 +81,7 @@ class DocumentLocalFileInstance(
         FilePermission(it.canRead(), it.canWrite())
     })
 
-    override suspend fun fileTime() = FileTime(relinkIfNeed()!!.lastModified())
+    override suspend fun fileTime() = relinkIfNeed()!!.fileTime()
 
     init {
         assert(uriFullPath.startsWith(prefix))
@@ -259,11 +259,12 @@ class DocumentLocalFileInstance(
             val documentFileName = documentFile.name!!
             val detailString = documentFile.permissions()
             val uriPair = child(documentFile, documentFileName)
+            val fileTime = documentFile.fileTime()
             if (documentFile.isFile) {
-                addFile(fileItems, uriPair, detailString)!!.size =
+                addFile(fileItems, uriPair, detailString, fileTime)!!.size =
                     documentFile.length()
             } else {
-                addDirectory(directoryItems, uriPair, detailString)
+                addDirectory(directoryItems, uriPair, detailString, fileTime)
             }
         }
     }
@@ -388,3 +389,6 @@ class DocumentLocalFileInstance(
         }
     }
 }
+
+private fun DocumentFile.fileTime() =
+    FileTime(lastModified())

@@ -41,15 +41,7 @@ class SmbFileInstance(private val shareSpec: ShareSpec, uri: Uri) : FileInstance
         TODO("Not yet implemented")
     }
 
-    override suspend fun fileTime(): FileTime {
-        val lastModified = reconnectIfNeed()
-        val basicInformation = lastModified.second.basicInformation
-        return FileTime(
-            basicInformation.changeTime.toEpochMillis(),
-            basicInformation.lastAccessTime.toEpochMillis(),
-            basicInformation.creationTime.toEpochMillis()
-        )
-    }
+    override suspend fun fileTime() = reconnectIfNeed().second.fileTime()
 
     private fun initCurrentFile(): Pair<DiskShare, FileAllInformation> {
         val connectShare = getDiskShare()
@@ -99,15 +91,16 @@ class SmbFileInstance(private val shareSpec: ShareSpec, uri: Uri) : FileInstance
         }.forEach {
             val (file, child) = child(it.fileName)
             val fileInformation = share.getFileInformation(file.absolutePath)
-            val lastModifiedTime = fileInformation.basicInformation.changeTime.windowsTimeStamp
+            val fileTime = fileInformation.fileTime()
             if (fileInformation.standardInformation.isDirectory) {
                 directoryItems.add(
                     DirectoryItemModel(
                         it.fileName,
                         child,
-                        false,
-                        lastModifiedTime,
-                        false
+                        isHidden = false,
+                        isSymLink = false,
+                        fileTime = fileTime
+
                     )
                 )
             } else {
@@ -116,9 +109,9 @@ class SmbFileInstance(private val shareSpec: ShareSpec, uri: Uri) : FileInstance
                         it.fileName,
                         child,
                         false,
-                        lastModifiedTime,
                         false,
-                        file.extension
+                        file.extension,
+                        fileTime
                     )
                 )
             }
@@ -169,4 +162,13 @@ class SmbFileInstance(private val shareSpec: ShareSpec, uri: Uri) : FileInstance
     override suspend fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
         TODO("Not yet implemented")
     }
+}
+
+private fun FileAllInformation.fileTime(): FileTime {
+    val basicInformation = basicInformation
+    return FileTime(
+        basicInformation.changeTime.toEpochMillis(),
+        basicInformation.lastAccessTime.toEpochMillis(),
+        basicInformation.creationTime.toEpochMillis()
+    )
 }

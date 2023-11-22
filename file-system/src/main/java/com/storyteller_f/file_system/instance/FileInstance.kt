@@ -44,14 +44,14 @@ abstract class FileInstance(val uri: Uri) {
             name,
             uri,
             isHidden(),
-            fileTime().lastModified ?: 0,
             isSymbolicLink(),
-            getExtension(name).orEmpty()
+            getExtension(name).orEmpty(),
+            fileTime()
         )
 
     @WorkerThread
     suspend fun getDirectory() =
-        DirectoryItemModel(name, uri, isHidden(), fileTime().lastModified ?: 0, isSymbolicLink())
+        DirectoryItemModel(name, uri, isHidden(), isSymbolicLink(), fileTime())
 
     @WorkerThread
     suspend fun getFileSystemItem(): FileSystemItemModel =
@@ -180,13 +180,9 @@ abstract class FileInstance(val uri: Uri) {
         return ObjectsCompat.hash(uri)
     }
 
-    private fun buildFilesContainer(): MutableList<FileItemModel> {
-        return mutableListOf()
-    }
+    private fun buildFilesContainer(): MutableList<FileItemModel> = mutableListOf()
 
-    private fun buildDirectoryContainer(): MutableList<DirectoryItemModel> {
-        return mutableListOf()
-    }
+    private fun buildDirectoryContainer(): MutableList<DirectoryItemModel> = mutableListOf()
 
     protected fun child(it: String): Pair<File, Uri> {
         val file = File(path, it)

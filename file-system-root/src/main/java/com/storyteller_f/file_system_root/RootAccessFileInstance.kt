@@ -12,6 +12,7 @@ import com.storyteller_f.file_system.util.addDirectory
 import com.storyteller_f.file_system.util.addFile
 import com.storyteller_f.file_system.util.buildPath
 import com.storyteller_f.file_system.util.permissions
+import com.topjohnwu.superuser.nio.ExtendedFile
 import com.topjohnwu.superuser.nio.FileSystemManager
 
 class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : FileInstance(uri) {
@@ -25,7 +26,7 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
         )
     )
 
-    override suspend fun fileTime() = FileTime(extendedFile.lastModified())
+    override suspend fun fileTime() = extendedFile.fileTime()
 
     override suspend fun getFileLength(): Long {
         return extendedFile.length()
@@ -44,10 +45,11 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
             val permissions = it.permissions()
             val (_, child) = child(it.name)
             val pair = it to child
+            val fileTime = it.fileTime()
             if (it.isFile) {
-                addFile(fileItems, pair, permissions)
+                addFile(fileItems, pair, permissions, fileTime)
             } else if (it.isDirectory) {
-                addDirectory(directoryItems, pair, permissions)
+                addDirectory(directoryItems, pair, permissions, fileTime)
             }
         }
     }
@@ -102,3 +104,5 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
         }
     }
 }
+
+private fun ExtendedFile.fileTime(): FileTime = FileTime(lastModified())

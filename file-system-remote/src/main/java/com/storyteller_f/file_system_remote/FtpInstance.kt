@@ -6,7 +6,6 @@ import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.FilePermission
 import com.storyteller_f.file_system.instance.FilePermissions
-import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.util.permissions
@@ -65,10 +64,7 @@ class FtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(uri
         )
     }
 
-    override suspend fun fileTime(): FileTime {
-        val lastModified = reconnectIfNeed()!!
-        return FileTime(lastModified.timestamp.timeInMillis)
-    }
+    override suspend fun fileTime() = reconnectIfNeed()!!.fileTime()
 
     override suspend fun getFileLength(): Long {
         TODO("Not yet implemented")
@@ -99,17 +95,17 @@ class FtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(uri
         listFiles?.forEach {
             val name = it.name
             val (file, child) = child(it.name)
-            val lastModifiedTime = it.timestamp.timeInMillis
             val permission = it.permissions()
+            val fileTime = it.fileTime()
             if (it.isFile) {
                 fileItems.add(
                     FileItemModel(
                         name,
                         child,
                         false,
-                        lastModifiedTime,
                         it.isSymbolicLink,
-                        file.extension
+                        file.extension,
+                        fileTime,
                     ).apply {
                         permissions = permission
                     }
@@ -120,8 +116,8 @@ class FtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(uri
                         name,
                         child,
                         false,
-                        lastModifiedTime,
-                        it.isSymbolicLink
+                        it.isSymbolicLink,
+                        fileTime
                     ).apply {
                         permissions = permission
                     }
