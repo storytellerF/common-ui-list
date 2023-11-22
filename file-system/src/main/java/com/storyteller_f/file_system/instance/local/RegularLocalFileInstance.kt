@@ -6,6 +6,8 @@ import android.os.Build
 import androidx.annotation.WorkerThread
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileCreatePolicy.*
+import com.storyteller_f.file_system.instance.FilePermission
+import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.util.addDirectory
@@ -83,6 +85,9 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
     override suspend fun getFileOutputStream(): FileOutputStream = withContext(Dispatchers.IO) {
         FileOutputStream(innerFile)
     }
+
+    override suspend fun filePermissions() =
+        FilePermissions(FilePermission(innerFile.canRead(), innerFile.canWrite(), innerFile.canExecute()))
 
     override suspend fun getFile(): FileItemModel {
         val fileItemModel = FileItemModel(

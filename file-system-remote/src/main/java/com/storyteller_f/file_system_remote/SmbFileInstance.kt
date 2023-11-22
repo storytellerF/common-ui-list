@@ -7,6 +7,7 @@ import com.hierynomus.smbj.auth.AuthenticationContext
 import com.hierynomus.smbj.share.DiskShare
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import java.io.FileInputStream
@@ -34,6 +35,10 @@ class SmbFileInstance(private val shareSpec: ShareSpec, uri: Uri) : FileInstance
     private var share: DiskShare? = null
     override val path: String
         get() = super.path.substring(shareSpec.share.length + 1).ifEmpty { "/" }
+
+    override suspend fun filePermissions(): FilePermissions {
+        TODO("Not yet implemented")
+    }
 
     private fun initCurrentFile(): Pair<DiskShare, FileAllInformation> {
         val connectShare = getDiskShare()
