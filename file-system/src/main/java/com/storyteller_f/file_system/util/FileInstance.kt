@@ -4,7 +4,6 @@ import android.net.Uri
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.model.FileSystemItemModel
-import com.storyteller_f.file_system.model.TorrentFileItemModel
 import java.io.File
 
 /**
@@ -28,11 +27,7 @@ private fun addFile(
     permission: String?,
     size: Long
 ): FileItemModel? {
-    val fileItemModel = if ("torrent" == extension) {
-        TorrentFileItemModel(name, uri!!, isHidden, lastModifiedTime, false)
-    } else {
-        FileItemModel(name, uri!!, isHidden, lastModifiedTime, false, extension)
-    }
+    val fileItemModel = FileItemModel(name, uri!!, isHidden, lastModifiedTime, false, extension.orEmpty())
     fileItemModel.permissions = permission
     fileItemModel.size = size
     return if (files.add(fileItemModel)) fileItemModel else null
