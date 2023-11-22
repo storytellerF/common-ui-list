@@ -8,6 +8,7 @@ import com.hierynomus.smbj.share.DiskShare
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.FilePermissions
+import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import java.io.FileInputStream
@@ -38,6 +39,16 @@ class SmbFileInstance(private val shareSpec: ShareSpec, uri: Uri) : FileInstance
 
     override suspend fun filePermissions(): FilePermissions {
         TODO("Not yet implemented")
+    }
+
+    override suspend fun fileTime(): FileTime {
+        val lastModified = reconnectIfNeed()
+        val basicInformation = lastModified.second.basicInformation
+        return FileTime(
+            basicInformation.changeTime.toEpochMillis(),
+            basicInformation.lastAccessTime.toEpochMillis(),
+            basicInformation.creationTime.toEpochMillis()
+        )
     }
 
     private fun initCurrentFile(): Pair<DiskShare, FileAllInformation> {

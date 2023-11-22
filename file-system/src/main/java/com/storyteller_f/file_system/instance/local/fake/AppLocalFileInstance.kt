@@ -10,6 +10,7 @@ import com.storyteller_f.file_system.instance.BaseContextFileInstance
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.FilePermissions
+import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import java.io.File
@@ -21,6 +22,9 @@ import java.io.FileOutputStream
  */
 class AppLocalFileInstance(context: Context, uri: Uri) : BaseContextFileInstance(context, uri) {
     override suspend fun filePermissions() = FilePermissions.USER_READABLE
+    override suspend fun fileTime(): FileTime {
+        TODO("Not yet implemented")
+    }
 
     override suspend fun getFile() = FileItemModel(name, uri, false, 0, false, "apk")
 

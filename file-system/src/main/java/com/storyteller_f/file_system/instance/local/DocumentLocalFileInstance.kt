@@ -16,6 +16,7 @@ import com.storyteller_f.file_system.instance.FileCreatePolicy.*
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.FilePermission
 import com.storyteller_f.file_system.instance.FilePermissions
+import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.instance.GetDocumentFile
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
@@ -80,6 +81,8 @@ class DocumentLocalFileInstance(
     override suspend fun filePermissions() = FilePermissions(relinkIfNeed()!!.let {
         FilePermission(it.canRead(), it.canWrite())
     })
+
+    override suspend fun fileTime() = FileTime(relinkIfNeed()!!.lastModified())
 
     init {
         assert(uriFullPath.startsWith(prefix))
@@ -354,7 +357,7 @@ class DocumentLocalFileInstance(
             false,
             relinkIfNeed()!!.lastModified(),
             false,
-            getExtension(name)
+            getExtension(name).orEmpty()
         )
     }
 

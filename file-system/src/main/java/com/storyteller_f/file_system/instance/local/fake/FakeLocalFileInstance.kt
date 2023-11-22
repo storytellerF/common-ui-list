@@ -12,6 +12,7 @@ import com.storyteller_f.file_system.LocalFileSystem
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.FilePermissions
+import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.util.getStorageCompat
@@ -55,6 +56,9 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
 
     override suspend fun getFileLength(): Long = -1
     override suspend fun filePermissions() = FilePermissions.USER_READABLE
+    override suspend fun fileTime(): FileTime {
+        TODO("Not yet implemented")
+    }
 
     @WorkerThread
     override suspend fun listInternal(
@@ -65,7 +69,7 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
             val (file, child) = child(packageName)
             val length = getAppSize(packageName)
             val lastModifiedTime = file.lastModified()
-            FileItemModel(packageName, child, false, lastModifiedTime, isSymLink = false).apply {
+            FileItemModel(packageName, child, false, lastModifiedTime, isSymLink = false, "apk").apply {
                 size = length
                 editAccessTime(file)
             }
