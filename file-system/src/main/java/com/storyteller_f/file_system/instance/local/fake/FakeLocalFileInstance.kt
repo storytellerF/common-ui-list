@@ -11,6 +11,7 @@ import androidx.core.content.ContextCompat
 import com.storyteller_f.file_system.LocalFileSystem
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.util.getStorageCompat
@@ -53,6 +54,7 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
     override suspend fun getFileOutputStream(): FileOutputStream = TODO("Not yet implemented")
 
     override suspend fun getFileLength(): Long = -1
+    override suspend fun filePermissions() = FilePermissions.USER_READABLE
 
     @WorkerThread
     override suspend fun listInternal(

@@ -8,6 +8,8 @@ import com.storyteller_f.file_system.ensureFile
 import com.storyteller_f.file_system.instance.BaseContextFileInstance
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system.instance.FilePermission
+import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import kotlinx.coroutines.yield
@@ -16,7 +18,6 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.ResponseBody
 import java.io.File
-import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.nio.ByteBuffer
 
@@ -30,7 +31,7 @@ class HttpFileInstance(context: Context, uri: Uri) : BaseContextFileInstance(con
         assert(uri.scheme == "http" || uri.scheme == "https")
     }
 
-    private suspend fun ensureFile(): File {
+    private suspend fun createIfNeed(): File {
         if (::tempFile.isInitialized) {
             return tempFile
         } else {
@@ -46,7 +47,8 @@ class HttpFileInstance(context: Context, uri: Uri) : BaseContextFileInstance(con
                 } else {
                     Log.i("TAG", "ensureFile: $body")
                     val file = createFile(execute).ensureFile()!!
-                    writeStream(body, file)
+                    file.write(body)
+                    tempFile = file
                     return file
                 }
             }
@@ -64,35 +66,31 @@ class HttpFileInstance(context: Context, uri: Uri) : BaseContextFileInstance(con
         )
     }
 
-    private suspend fun writeStream(body: ResponseBody, file: File) {
-        body.source().use { int ->
-            file.outputStream().channel.use { out ->
-                val byteBuffer = ByteBuffer.allocateDirect(1024)
-                while (int.read(byteBuffer) != -1) {
-                    yield()
-                    byteBuffer.flip()
-                    out.write(byteBuffer)
-                    byteBuffer.clear()
-                }
-                tempFile = file
-            }
-        }
-    }
+    override suspend fun filePermissions() = FilePermissions(createIfNeed().let {
+        FilePermission(it.canRead(), it.canWrite(), it.canExecute())
+    })
 
     override suspend fun getFile(): FileItemModel {
-        val ensureFile = ensureFile()
+        val ensureFile = createIfNeed()
         val extension = ensureFile.extension
         val name = ensureFile.name
-        return FileItemModel(name, uri, isHidden(), ensureFile.lastModified(), isSymbolicLink(), extension)
+        return FileItemModel(
+            name,
+            uri,
+            isHidden(),
+            ensureFile.lastModified(),
+            isSymbolicLink(),
+            extension
+        )
     }
 
     override suspend fun getDirectory(): DirectoryItemModel {
         TODO("Not yet implemented")
     }
 
-    override suspend fun getFileLength() = ensureFile().length()
+    override suspend fun getFileLength() = createIfNeed().length()
 
-    override suspend fun getFileInputStream() = ensureFile().inputStream()
+    override suspend fun getFileInputStream() = createIfNeed().inputStream()
 
     override suspend fun getFileOutputStream(): FileOutputStream {
         TODO("Not yet implemented")
@@ -107,7 +105,7 @@ class HttpFileInstance(context: Context, uri: Uri) : BaseContextFileInstance(con
 
     override suspend fun isFile() = true
 
-    override suspend fun exists() = ensureFile().exists()
+    override suspend fun exists() = createIfNeed().exists()
 
     override suspend fun isDirectory() = false
 
@@ -129,5 +127,19 @@ class HttpFileInstance(context: Context, uri: Uri) : BaseContextFileInstance(con
 
     override suspend fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
         TODO("Not yet implemented")
+    }
+}
+
+private suspend fun File.write(body: ResponseBody) {
+    body.source().use { int ->
+        outputStream().channel.use { out ->
+            val byteBuffer = ByteBuffer.allocateDirect(1024)
+            while (int.read(byteBuffer) != -1) {
+                yield()
+                byteBuffer.flip()
+                out.write(byteBuffer)
+                byteBuffer.clear()
+            }
+        }
     }
 }

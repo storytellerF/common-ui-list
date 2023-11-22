@@ -32,6 +32,9 @@ abstract class FileInstance(val uri: Uri) {
         get() = File(path).name
 
     @WorkerThread
+    abstract suspend fun filePermissions(): FilePermissions
+
+    @WorkerThread
     abstract suspend fun getFile(): FileItemModel
 
     @WorkerThread

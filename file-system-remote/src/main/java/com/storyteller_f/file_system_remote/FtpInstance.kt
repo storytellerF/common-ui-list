@@ -4,6 +4,8 @@ import android.net.Uri
 import android.util.Log
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system.instance.FilePermission
+import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.util.permissions
@@ -40,7 +42,7 @@ class FtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(uri
         }
     }
 
-    fun getInstance(): FtpInstance? {
+    private fun getInstance(): FtpInstance? {
         val ftpInstance = ftpClients.getOrPut(spec) {
             FtpInstance(spec)
         }
@@ -52,6 +54,15 @@ class FtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(uri
 
     val completePendingCommand
         get() = getInstance()?.completePendingCommand
+
+    override suspend fun filePermissions(): FilePermissions {
+        val ftpFile1 = reconnectIfNeed()!!
+        return FilePermissions(
+            ftpFile1.filePermission(FTPFile.USER_ACCESS),
+            ftpFile1.filePermission(FTPFile.GROUP_ACCESS),
+            ftpFile1.filePermission(FTPFile.WORLD_ACCESS)
+        )
+    }
 
     override suspend fun getFile(): FileItemModel {
         TODO("Not yet implemented")
@@ -247,9 +258,15 @@ class FtpInstance(private val spec: RemoteSpec) {
     }
 }
 
-private fun FTPFile.permissions(): String {
+fun FTPFile.permissions(): String {
     val canRead = hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION)
     val canWrite = hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)
     val canExecute = hasPermission(FTPFile.USER_ACCESS, FTPFile.EXECUTE_PERMISSION)
     return permissions(canRead, canWrite, canExecute, isFile)
 }
+
+fun FTPFile.filePermission(access: Int) = FilePermission(
+    hasPermission(access, FTPFile.READ_PERMISSION),
+    hasPermission(access, FTPFile.WRITE_PERMISSION),
+    hasPermission(access, FTPFile.EXECUTE_PERMISSION),
+)

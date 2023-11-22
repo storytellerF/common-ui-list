@@ -9,6 +9,7 @@ import android.os.Build
 import com.storyteller_f.file_system.instance.BaseContextFileInstance
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import java.io.File
@@ -19,6 +20,8 @@ import java.io.FileOutputStream
  * 标识一个apk 文件
  */
 class AppLocalFileInstance(context: Context, uri: Uri) : BaseContextFileInstance(context, uri) {
+    override suspend fun filePermissions() = FilePermissions.USER_READABLE
+
     override suspend fun getFile() = FileItemModel(name, uri, false, 0, false, "apk")
 
     override suspend fun getDirectory(): DirectoryItemModel {

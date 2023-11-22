@@ -3,6 +3,8 @@ package com.storyteller_f.file_system_root
 import android.net.Uri
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system.instance.FilePermission
+import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import com.storyteller_f.file_system.util.addDirectory
@@ -14,6 +16,14 @@ import com.topjohnwu.superuser.nio.FileSystemManager
 class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : FileInstance(uri) {
 
     private var extendedFile = remote.getFile(path)
+    override suspend fun filePermissions() = FilePermissions(
+        FilePermission(
+            extendedFile.canRead(),
+            extendedFile.canWrite(),
+            extendedFile.canExecute()
+        )
+    )
+
     override suspend fun getFile(): FileItemModel {
         return FileItemModel(
             extendedFile.name,

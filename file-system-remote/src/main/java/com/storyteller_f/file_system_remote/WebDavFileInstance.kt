@@ -3,6 +3,7 @@ package com.storyteller_f.file_system_remote
 import android.net.Uri
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import kotlinx.coroutines.runBlocking
@@ -16,6 +17,10 @@ class WebDavFileInstance(private val spec: ShareSpec, uri: Uri) : FileInstance(u
     private val instance = getWebDavInstance()
     override val path: String
         get() = super.path.substring(spec.share.length + 1).ifEmpty { "/" }
+
+    override suspend fun filePermissions(): FilePermissions {
+        TODO("Not yet implemented")
+    }
 
     private fun getWebDavInstance(): WebDavInstance {
         return webdavInstances.getOrPut(spec) {

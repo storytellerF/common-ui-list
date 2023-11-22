@@ -14,6 +14,8 @@ import com.storyteller_f.file_system.instance.BaseContextFileInstance
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileCreatePolicy.*
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system.instance.FilePermission
+import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.GetDocumentFile
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
@@ -75,11 +77,15 @@ class DocumentLocalFileInstance(
         pathRelativeRoot
     }
 
+    override suspend fun filePermissions() = FilePermissions(relinkIfNeed()!!.let {
+        FilePermission(it.canRead(), it.canWrite())
+    })
+
     init {
         assert(uriFullPath.startsWith(prefix))
     }
 
-    private suspend fun getInstanceRelinkIfNeed(): DocumentFile? {
+    private suspend fun relinkIfNeed(): DocumentFile? {
         val temp = _instance
         if (temp == null) {
             val documentFile = getDocumentFile(NotCreate)
@@ -163,7 +169,7 @@ class DocumentLocalFileInstance(
         }
     }
 
-    override suspend fun getDirectorySize(): Long = getDocumentFileSize(getInstanceRelinkIfNeed())
+    override suspend fun getDirectorySize(): Long = getDocumentFileSize(relinkIfNeed())
 
     private suspend fun getDocumentFileSize(documentFile: DocumentFile?): Long {
         var size: Long = 0
@@ -180,7 +186,7 @@ class DocumentLocalFileInstance(
     }
 
     override suspend fun createDirectory(): Boolean {
-        if (getInstanceRelinkIfNeed() != null) return true
+        if (relinkIfNeed() != null) return true
         val created = tryCreate(false)
         if (created != null) {
             _instance = created
@@ -190,7 +196,7 @@ class DocumentLocalFileInstance(
     }
 
     override suspend fun createFile(): Boolean {
-        if (getInstanceRelinkIfNeed() != null) return true
+        if (relinkIfNeed() != null) return true
         val created = tryCreate(true)
         if (created != null) {
             _instance = created
@@ -225,7 +231,7 @@ class DocumentLocalFileInstance(
      */
     @Throws(Exception::class)
     suspend fun getChild(name: String?, policy: FileCreatePolicy?): DocumentFile? {
-        val instanceRelinkIfNeed = getInstanceRelinkIfNeed()
+        val instanceRelinkIfNeed = relinkIfNeed()
         val file = instanceRelinkIfNeed!!.findFile(name!!)
         return file
             ?: if (policy !is Create) {
@@ -244,7 +250,7 @@ class DocumentLocalFileInstance(
         fileItems: MutableList<FileItemModel>,
         directoryItems: MutableList<DirectoryItemModel>
     ) {
-        val c = getInstanceRelinkIfNeed() ?: throw Exception("no permission")
+        val c = relinkIfNeed() ?: throw Exception("no permission")
         val documentFiles = c.listFiles()
         for (documentFile in documentFiles) {
             yield()
@@ -277,13 +283,13 @@ class DocumentLocalFileInstance(
     }
 
     override suspend fun deleteFileOrEmptyDirectory(): Boolean {
-        return getInstanceRelinkIfNeed()!!.delete()
+        return relinkIfNeed()!!.delete()
     }
 
     @Throws(Exception::class)
     override suspend fun toParent(): BaseContextFileInstance {
         val parentFile = parentPath(uriFullPath) ?: throw Exception("到头了，无法继续向上寻找")
-        val currentParentFile = getInstanceRelinkIfNeed()!!.parentFile
+        val currentParentFile = relinkIfNeed()!!.parentFile
         checkNotNull(currentParentFile) {
             "查找parent DocumentFile失败"
         }
@@ -298,7 +304,7 @@ class DocumentLocalFileInstance(
     }
 
     override suspend fun isFile(): Boolean {
-        val instanceRelinkIfNeed = getInstanceRelinkIfNeed()
+        val instanceRelinkIfNeed = relinkIfNeed()
         if (instanceRelinkIfNeed == null) {
             Log.e(TAG, "isFile: path:$uriFullPath")
         }
@@ -306,11 +312,11 @@ class DocumentLocalFileInstance(
     }
 
     override suspend fun exists(): Boolean {
-        return getInstanceRelinkIfNeed()?.exists() ?: false
+        return relinkIfNeed()?.exists() ?: false
     }
 
     override suspend fun isDirectory(): Boolean {
-        val instanceRelinkIfNeed = getInstanceRelinkIfNeed()
+        val instanceRelinkIfNeed = relinkIfNeed()
         if (instanceRelinkIfNeed == null) {
             Log.e(TAG, "isDirectory: isDirectory:$uriFullPath")
         }
@@ -318,7 +324,7 @@ class DocumentLocalFileInstance(
     }
 
     override suspend fun rename(newName: String): Boolean {
-        return getInstanceRelinkIfNeed()!!.renameTo(newName)
+        return relinkIfNeed()!!.renameTo(newName)
     }
 
     override suspend fun isHidden(): Boolean = false
@@ -326,7 +332,7 @@ class DocumentLocalFileInstance(
     @SuppressLint("Recycle")
     @Throws(FileNotFoundException::class)
     override suspend fun getFileInputStream(): FileInputStream {
-        val r = context.contentResolver.openFileDescriptor(getInstanceRelinkIfNeed()!!.uri, "r")
+        val r = context.contentResolver.openFileDescriptor(relinkIfNeed()!!.uri, "r")
         return FileInputStream(r!!.fileDescriptor)
     }
 
@@ -334,19 +340,19 @@ class DocumentLocalFileInstance(
     @Throws(FileNotFoundException::class)
     override suspend fun getFileOutputStream(): FileOutputStream = FileOutputStream(
         context.contentResolver.openFileDescriptor(
-            getInstanceRelinkIfNeed()!!.uri,
+            relinkIfNeed()!!.uri,
             "w"
         )!!.fileDescriptor
     )
 
-    override suspend fun getFileLength(): Long = getInstanceRelinkIfNeed()!!.length()
+    override suspend fun getFileLength(): Long = relinkIfNeed()!!.length()
 
     override suspend fun getFile(): FileItemModel {
         return FileItemModel(
             name,
             uri,
             false,
-            getInstanceRelinkIfNeed()!!.lastModified(),
+            relinkIfNeed()!!.lastModified(),
             false,
             getExtension(name)
         )
@@ -357,7 +363,7 @@ class DocumentLocalFileInstance(
             name,
             uri,
             false,
-            getInstanceRelinkIfNeed()!!.lastModified(),
+            relinkIfNeed()!!.lastModified(),
             false
         )
     }

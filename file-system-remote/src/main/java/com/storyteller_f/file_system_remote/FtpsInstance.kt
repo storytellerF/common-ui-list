@@ -4,9 +4,9 @@ import android.net.Uri
 import android.util.Log
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
-import com.storyteller_f.file_system.util.permissions
 import org.apache.commons.net.PrintCommandListener
 import org.apache.commons.net.ftp.FTPClientConfig
 import org.apache.commons.net.ftp.FTPFile
@@ -49,6 +49,15 @@ class FtpsFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
         return null
     }
 
+    override suspend fun filePermissions(): FilePermissions {
+        val ftpFile = reconnectIfNeed()!!
+        return FilePermissions(
+            ftpFile.filePermission(FTPFile.USER_ACCESS),
+            ftpFile.filePermission(FTPFile.GROUP_ACCESS),
+            ftpFile.filePermission(FTPFile.WORLD_ACCESS)
+        )
+    }
+
     override suspend fun getFile(): FileItemModel {
         TODO("Not yet implemented")
     }
@@ -78,7 +87,7 @@ class FtpsFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
             val name = it.name
             val (file, child) = child(name)
             val lastModifiedTime = it.timestamp.timeInMillis
-            val permission = it.getPermissions()
+            val permission = it.permissions()
             if (it.isFile) {
                 fileItems.add(FileItemModel(
                     name,
@@ -226,11 +235,4 @@ class FtpsInstance(private val spec: RemoteSpec) {
     companion object {
         private const val TAG = "FtpInstance"
     }
-}
-
-private fun FTPFile.getPermissions(): String {
-    val canRead = hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION)
-    val canWrite = hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)
-    val canExecute = hasPermission(FTPFile.USER_ACCESS, FTPFile.EXECUTE_PERMISSION)
-    return permissions(canRead, canWrite, canExecute, isFile)
 }

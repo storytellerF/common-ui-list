@@ -3,6 +3,7 @@ package com.storyteller_f.file_system_remote
 import android.net.Uri
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
 import net.schmizz.sshj.SSHClient
@@ -11,6 +12,7 @@ import net.schmizz.sshj.sftp.FileMode
 import net.schmizz.sshj.sftp.RemoteFile
 import net.schmizz.sshj.sftp.SFTPClient
 import net.schmizz.sshj.transport.verification.PromiscuousVerifier
+import net.schmizz.sshj.xfer.FilePermission
 import java.io.FileInputStream
 import java.io.FileOutputStream
 
@@ -46,6 +48,9 @@ class SFtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
         }
         return c to attributes
     }
+
+    override suspend fun filePermissions() =
+        FilePermissions.fromMask(FilePermission.toMask(reconnectIfNeed().second.permissions))
 
     override suspend fun getFile(): FileItemModel {
         TODO("Not yet implemented")
