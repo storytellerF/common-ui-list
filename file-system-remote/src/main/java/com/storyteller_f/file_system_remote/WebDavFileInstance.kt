@@ -8,7 +8,8 @@ import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.DirectoryItemModel
 import com.storyteller_f.file_system.model.FileItemModel
-import kotlinx.coroutines.runBlocking
+import com.thegrizzlylabs.sardineandroid.DavResource
+import com.thegrizzlylabs.sardineandroid.impl.OkHttpSardine
 import java.io.FileInputStream
 import java.io.FileOutputStream
 
@@ -56,7 +57,17 @@ class WebDavFileInstance(private val spec: ShareSpec, uri: Uri) : FileInstance(u
     ) {
         instance.list(path).forEach {
             val (file, child) = child(it.name)
-            if (it.isFile) {
+            if (it.isDirectory) {
+                directoryItems.add(
+                    DirectoryItemModel(
+                        it.name,
+                        child,
+                        isHidden = false,
+                        isSymLink = false,
+                        fileTime = FileTime()
+                    )
+                )
+            } else {
                 fileItems.add(
                     FileItemModel(
                         it.name,
@@ -65,16 +76,6 @@ class WebDavFileInstance(private val spec: ShareSpec, uri: Uri) : FileInstance(u
                         isSymLink = false,
                         extension = file.extension,
                         time = FileTime()
-                    )
-                )
-            } else {
-                directoryItems.add(
-                    DirectoryItemModel(
-                        it.name,
-                        child,
-                        isHidden = false,
-                        isSymLink = false,
-                        fileTime = FileTime()
                     )
                 )
             }
@@ -127,12 +128,10 @@ class WebDavFileInstance(private val spec: ShareSpec, uri: Uri) : FileInstance(u
 }
 
 class WebDavInstance(spec: ShareSpec) {
-    val instance =
-        WebDavClient("http://${spec.server}:${spec.port}/${spec.share}", spec.user, spec.password)
-
-    fun list(path: String): MutableList<WebDavDatum> {
-        return runBlocking {
-            instance.list(path)
-        }
+    private val baseUrl = "http://${spec.server}:${spec.port}/${spec.share}"
+    private val instance = OkHttpSardine().apply {
+        setCredentials(spec.user, spec.password)
     }
+
+    fun list(path: String): MutableList<DavResource> = instance.list(baseUrl + path)
 }
