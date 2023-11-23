@@ -4,6 +4,7 @@ import android.net.Uri
 import android.util.Log
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermission
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.model.DirectoryItemModel
@@ -65,6 +66,9 @@ class FtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(uri
     }
 
     override suspend fun fileTime() = reconnectIfNeed()!!.fileTime()
+    override suspend fun fileKind() = reconnectIfNeed()!!.let {
+        FileKind.build(it.isFile, it.isSymbolicLink)
+    }
 
     override suspend fun getFileLength(): Long {
         TODO("Not yet implemented")

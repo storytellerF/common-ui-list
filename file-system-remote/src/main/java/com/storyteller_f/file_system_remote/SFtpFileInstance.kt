@@ -1,8 +1,10 @@
 package com.storyteller_f.file_system_remote
 
 import android.net.Uri
+import com.storyteller_f.common_ktx.bit
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.DirectoryItemModel
@@ -58,6 +60,14 @@ class SFtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
         return attributes.fileTime()
     }
 
+    override suspend fun fileKind() = reconnectIfNeed().let {
+        val type = it.second.mode.type
+        FileKind.build(
+            type.toMask().bit(FileMode.Type.REGULAR.ordinal),
+            type.toMask().bit(FileMode.Type.SYMLINK.ordinal)
+        )
+    }
+
     override suspend fun getFileLength(): Long {
         TODO("Not yet implemented")
     }
@@ -77,7 +87,7 @@ class SFtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
         getInstance().ls(path).forEach {
             val attributes = it.attributes
             val (file, child) = child(it.name)
-            val isSymLink = attributes.mode.type == FileMode.Type.SYMLINK
+            val isSymLink = attributes.mode.type.toMask().bit(FileMode.Type.SYMLINK.ordinal)
             val fileTime = attributes.fileTime()
             if (it.isDirectory) {
                 directoryItems.add(

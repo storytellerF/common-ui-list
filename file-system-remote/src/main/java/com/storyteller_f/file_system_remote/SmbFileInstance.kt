@@ -7,6 +7,7 @@ import com.hierynomus.smbj.auth.AuthenticationContext
 import com.hierynomus.smbj.share.DiskShare
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.DirectoryItemModel
@@ -42,6 +43,9 @@ class SmbFileInstance(private val shareSpec: ShareSpec, uri: Uri) : FileInstance
     }
 
     override suspend fun fileTime() = reconnectIfNeed().second.fileTime()
+    override suspend fun fileKind() = reconnectIfNeed().let {
+        FileKind.build(!it.second.standardInformation.isDirectory, false)
+    }
 
     private fun initCurrentFile(): Pair<DiskShare, FileAllInformation> {
         val connectShare = getDiskShare()
