@@ -22,6 +22,7 @@ baseLibrary()
 
 dependencies {
 
+    implementation(project(":common-ktx"))
     commonAndroidDependency()
     implementation("androidx.room:room-common:${Versions.ROOM}")
     implementation("com.squareup.okhttp3:okhttp:4.11.0")

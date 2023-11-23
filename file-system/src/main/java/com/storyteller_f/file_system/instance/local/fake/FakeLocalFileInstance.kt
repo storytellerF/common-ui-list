@@ -11,6 +11,7 @@ import androidx.core.content.ContextCompat
 import com.storyteller_f.file_system.LocalFileSystem
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.DirectoryItemModel
@@ -58,6 +59,8 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
     override suspend fun fileTime(): FileTime {
         TODO("Not yet implemented")
     }
+
+    override suspend fun fileKind() = FileKind.build(false, false)
 
     @WorkerThread
     override suspend fun listInternal(

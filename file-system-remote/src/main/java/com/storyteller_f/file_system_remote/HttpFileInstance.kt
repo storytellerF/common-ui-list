@@ -8,6 +8,7 @@ import com.storyteller_f.file_system.ensureFile
 import com.storyteller_f.file_system.instance.BaseContextFileInstance
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermission
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
@@ -74,6 +75,8 @@ class HttpFileInstance(context: Context, uri: Uri) : BaseContextFileInstance(con
     override suspend fun fileTime(): FileTime {
         TODO("Not yet implemented")
     }
+
+    override suspend fun fileKind() = FileKind.build(true, false)
 
     override suspend fun getFileLength() = createIfNeed().length()
 

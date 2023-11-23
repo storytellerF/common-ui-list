@@ -3,6 +3,7 @@ package com.storyteller_f.file_system_root
 import android.net.Uri
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermission
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
@@ -27,6 +28,7 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
     )
 
     override suspend fun fileTime() = extendedFile.fileTime()
+    override suspend fun fileKind() = FileKind.build(extendedFile.isFile, extendedFile.isSymlink)
 
     override suspend fun getFileLength(): Long {
         return extendedFile.length()

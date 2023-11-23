@@ -6,6 +6,7 @@ import android.os.Build
 import androidx.annotation.WorkerThread
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileCreatePolicy.*
+import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermission
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.model.DirectoryItemModel
@@ -96,6 +97,8 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
         )
 
     override suspend fun fileTime() = innerFile.fileTime()
+    override suspend fun fileKind() =
+        FileKind.build(innerFile.isFile, innerFile.isSymbolicLink())
 
     override suspend fun getFileLength(): Long = innerFile.length()
 
@@ -161,20 +164,22 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
     }
 
     override suspend fun isSymbolicLink(): Boolean =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Files.isSymbolicLink(innerFile.toPath())
-        } else {
-            try {
-                innerFile.absolutePath == innerFile.canonicalPath
-            } catch (_: IOException) {
-                false
-            }
-        }
+        innerFile.isSymbolicLink()
 
     companion object {
         private const val TAG = "ExternalFileInstance"
         private fun getUri(subFile: File): Uri {
             return Uri.Builder().scheme("file").path(subFile.path).build()
         }
+    }
+}
+
+private fun File.isSymbolicLink() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+    Files.isSymbolicLink(toPath())
+} else {
+    try {
+        absolutePath == canonicalPath
+    } catch (_: IOException) {
+        false
     }
 }

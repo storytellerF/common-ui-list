@@ -14,6 +14,7 @@ import com.storyteller_f.file_system.instance.BaseContextFileInstance
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileCreatePolicy.*
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermission
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
@@ -82,6 +83,9 @@ class DocumentLocalFileInstance(
     })
 
     override suspend fun fileTime() = relinkIfNeed()!!.fileTime()
+    override suspend fun fileKind() = relinkIfNeed()!!.let {
+        FileKind.build(it.isFile, false)
+    }
 
     init {
         assert(uriFullPath.startsWith(prefix))

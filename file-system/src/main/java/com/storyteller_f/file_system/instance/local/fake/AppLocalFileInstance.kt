@@ -9,6 +9,7 @@ import android.os.Build
 import com.storyteller_f.file_system.instance.BaseContextFileInstance
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.DirectoryItemModel
@@ -25,6 +26,8 @@ class AppLocalFileInstance(context: Context, uri: Uri) : BaseContextFileInstance
     override suspend fun fileTime(): FileTime {
         TODO("Not yet implemented")
     }
+
+    override suspend fun fileKind() = FileKind.build(false, false)
 
     private val publicSourceDir: String =
         context.packageManager.getApplicationInfoCompat(name, 0).publicSourceDir
