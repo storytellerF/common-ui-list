@@ -39,4 +39,5 @@ dependencies {
 
     unitTestDependency()
     androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.11.0")
+    implementation("com.github.thegrizzlylabs:sardine-android:0.8")
 }
