@@ -15,8 +15,8 @@ import java.io.FileOutputStream
 
 val webdavInstances = mutableMapOf<ShareSpec, WebDavInstance>()
 
-class WebDavFileInstance(private val spec: ShareSpec, uri: Uri) : FileInstance(uri) {
-
+class WebDavFileInstance(uri: Uri) : FileInstance(uri) {
+    private val spec: ShareSpec = ShareSpec.parse(uri)
     private val instance = getWebDavInstance()
     override val path: String
         get() = super.path.substring(spec.share.length + 1).ifEmpty { "/" }

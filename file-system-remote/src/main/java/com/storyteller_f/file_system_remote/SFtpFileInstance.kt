@@ -21,7 +21,8 @@ import java.io.FileOutputStream
 
 val sftpChannels = mutableMapOf<RemoteSpec, SFTPClient>()
 
-class SFtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(uri) {
+class SFtpFileInstance(uri: Uri) : FileInstance(uri) {
+    private val spec: RemoteSpec = RemoteSpec.parse(uri)
     private var remoteFile: RemoteFile? = null
     private var attribute: FileAttributes? = null
 
