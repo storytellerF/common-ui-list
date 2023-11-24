@@ -1,15 +1,15 @@
 package com.storyteller_f.file_system.model
 
 import android.net.Uri
+import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FileTime
 
-open class FileSystemItemModel(
+open class FileSystemModel(
     name: String,
     uri: Uri,
-    val isHidden: Boolean,
-    val isSymLink: Boolean,
     val fileTime: FileTime,
-) : FileSystemItemModelLite(name, uri) {
+    val kind: FileKind,
+) : FileSystemModelLite(name, uri) {
 
     var size: Long = 0
     var formattedSize: String? = null

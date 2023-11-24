@@ -81,7 +81,6 @@ class FtpTest {
                     it.readText()
                 }
             )
-            foobarFile.isFile()
         }
     }
 

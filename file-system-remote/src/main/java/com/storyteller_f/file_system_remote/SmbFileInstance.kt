@@ -10,8 +10,8 @@ import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
-import com.storyteller_f.file_system.model.DirectoryItemModel
-import com.storyteller_f.file_system.model.FileItemModel
+import com.storyteller_f.file_system.model.DirectoryModel
+import com.storyteller_f.file_system.model.FileModel
 import java.io.FileInputStream
 import java.io.FileOutputStream
 
@@ -44,7 +44,7 @@ class SmbFileInstance(private val shareSpec: ShareSpec, uri: Uri) : FileInstance
 
     override suspend fun fileTime() = reconnectIfNeed().second.fileTime()
     override suspend fun fileKind() = reconnectIfNeed().let {
-        FileKind.build(!it.second.standardInformation.isDirectory, false)
+        FileKind.build(!it.second.standardInformation.isDirectory, false, false)
     }
 
     private fun initCurrentFile(): Pair<DiskShare, FileAllInformation> {
@@ -86,8 +86,8 @@ class SmbFileInstance(private val shareSpec: ShareSpec, uri: Uri) : FileInstance
     }
 
     override suspend fun listInternal(
-        fileItems: MutableList<FileItemModel>,
-        directoryItems: MutableList<DirectoryItemModel>
+        fileItems: MutableList<FileModel>,
+        directoryItems: MutableList<DirectoryModel>
     ) {
         val (share, _) = reconnectIfNeed()
         share.list(path).filter {
@@ -98,41 +98,29 @@ class SmbFileInstance(private val shareSpec: ShareSpec, uri: Uri) : FileInstance
             val fileTime = fileInformation.fileTime()
             if (fileInformation.standardInformation.isDirectory) {
                 directoryItems.add(
-                    DirectoryItemModel(
+                    DirectoryModel(
                         it.fileName,
                         child,
-                        isHidden = false,
-                        isSymLink = false,
-                        fileTime = fileTime
-
+                        fileTime = fileTime,
+                        FileKind.build(isFile = false, isSymbolicLink = false, isHidden = false)
                     )
                 )
             } else {
                 fileItems.add(
-                    FileItemModel(
+                    FileModel(
                         it.fileName,
                         child,
-                        false,
-                        false,
-                        file.extension,
-                        fileTime
+                        fileTime,
+                        FileKind.build(isFile = true, isSymbolicLink = false, isHidden = false),
+                        file.extension
                     )
                 )
             }
         }
     }
 
-    override suspend fun isFile(): Boolean {
-        return !isDirectory()
-    }
-
     override suspend fun exists(): Boolean {
         TODO("Not yet implemented")
-    }
-
-    override suspend fun isDirectory(): Boolean {
-        val reconnectIfNeed = reconnectIfNeed()
-        return reconnectIfNeed.second.standardInformation.isDirectory
     }
 
     override suspend fun deleteFileOrEmptyDirectory(): Boolean {

@@ -2,10 +2,11 @@ package com.storyteller_f.file_system.util
 
 import android.net.Uri
 import android.os.Build
+import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FileTime
-import com.storyteller_f.file_system.model.DirectoryItemModel
-import com.storyteller_f.file_system.model.FileItemModel
-import com.storyteller_f.file_system.model.FileSystemItemModel
+import com.storyteller_f.file_system.model.DirectoryModel
+import com.storyteller_f.file_system.model.FileModel
+import com.storyteller_f.file_system.model.FileSystemModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -36,12 +37,11 @@ suspend fun File.fileTime(): FileTime {
  * @param uri              绝对路径
  * @param name             文件名
  * @param isHidden           是否是隐藏文件
- * @param lastModifiedTime 上次访问时间
  * @param extension        文件后缀名
  * @return 返回添加的文件
  */
 private fun addFile(
-    files: MutableCollection<FileItemModel>,
+    files: MutableCollection<FileModel>,
     uri: Uri?,
     name: String,
     isHidden: Boolean,
@@ -49,8 +49,18 @@ private fun addFile(
     permission: String?,
     size: Long,
     fileTime: FileTime,
-): FileItemModel? {
-    val fileItemModel = FileItemModel(name, uri!!, isHidden, false, extension.orEmpty(), fileTime)
+): FileModel? {
+    val fileItemModel = FileModel(
+        name,
+        uri!!,
+        fileTime,
+        FileKind.build(
+            isFile = true,
+            isSymbolicLink = false,
+            isHidden = isHidden
+        ),
+        extension.orEmpty()
+    )
     fileItemModel.permissions = permission
     fileItemModel.size = size
     return if (files.add(fileItemModel)) fileItemModel else null
@@ -63,18 +73,26 @@ private fun addFile(
  * @param uri              绝对路径
  * @param directoryName    文件夹名
  * @param isHidden     是否是隐藏文件
- * @param lastModifiedTime 上次访问时间
  * @return 如果客户端不允许添加，返回null
  */
 private fun addDirectory(
-    directories: MutableCollection<DirectoryItemModel>,
+    directories: MutableCollection<DirectoryModel>,
     uri: Uri?,
     directoryName: String,
     isHidden: Boolean,
     permissions: String?,
     fileTime: FileTime,
-): FileSystemItemModel? {
-    val e = DirectoryItemModel(directoryName, uri!!, isHidden, false, fileTime)
+): FileSystemModel? {
+    val e = DirectoryModel(
+        directoryName,
+        uri!!,
+        fileTime,
+        FileKind.build(
+            isFile = false,
+            isSymbolicLink = false,
+            isHidden = isHidden
+        )
+    )
     e.permissions = permissions
     return if (directories.add(e)) e else null
 }
@@ -83,11 +101,11 @@ private fun addDirectory(
  * 添加普通目录，判断过滤监听事件
  */
 fun addDirectory(
-    directories: MutableCollection<DirectoryItemModel>,
+    directories: MutableCollection<DirectoryModel>,
     uriPair: Pair<File?, Uri?>?,
     permissions: String?,
     fileTime: FileTime,
-): FileSystemItemModel? {
+): FileSystemModel? {
     val childDirectory = uriPair!!.first
     val hidden = childDirectory!!.isHidden
     val name = childDirectory.name
@@ -98,11 +116,11 @@ fun addDirectory(
  * 添加普通目录，判断过滤监听事件
  */
 fun addFile(
-    directories: MutableCollection<FileItemModel>,
+    directories: MutableCollection<FileModel>,
     uriPair: Pair<File, Uri>,
     permissions: String?,
     fileTime: FileTime,
-): FileSystemItemModel? {
+): FileSystemModel? {
     val childFile = uriPair.first
     val hidden = childFile.isHidden
     val name = childFile.name

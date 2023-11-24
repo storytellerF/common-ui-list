@@ -49,8 +49,8 @@ class HttpTest {
                 val readText = it.readText()
                 assertEquals("hello world", readText)
             }
-            assertTrue(httpFileInstance.isFile())
-            assertFalse(httpFileInstance.isDirectory())
+            assertTrue(httpFileInstance.fileKind().isFile)
+            assertFalse(httpFileInstance.fileKind().isDirectory)
             assertEquals(11, httpFileInstance.getFileLength())
             assertFalse(httpFileInstance.createFile())
             assertFalse(httpFileInstance.createDirectory())

@@ -19,8 +19,8 @@ import com.storyteller_f.file_system.instance.FilePermission
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.instance.GetDocumentFile
-import com.storyteller_f.file_system.model.DirectoryItemModel
-import com.storyteller_f.file_system.model.FileItemModel
+import com.storyteller_f.file_system.model.DirectoryModel
+import com.storyteller_f.file_system.model.FileModel
 import com.storyteller_f.file_system.util.addDirectory
 import com.storyteller_f.file_system.util.addFile
 import com.storyteller_f.file_system.util.buildPath
@@ -84,7 +84,7 @@ class DocumentLocalFileInstance(
 
     override suspend fun fileTime() = relinkIfNeed()!!.fileTime()
     override suspend fun fileKind() = relinkIfNeed()!!.let {
-        FileKind.build(it.isFile, false)
+        FileKind.build(it.isFile, isSymbolicLink = false, isHidden = false)
     }
 
     init {
@@ -220,7 +220,7 @@ class DocumentLocalFileInstance(
             Log.e(TAG, "toChild: 未经过初始化或者文件不存在：$uriFullPath")
             return null
         }
-        if (isFile()) {
+        if (fileKind().isFile) {
             throw Exception("当前是一个文件，无法向下操作")
         }
 
@@ -253,8 +253,8 @@ class DocumentLocalFileInstance(
 
     @Throws(Exception::class)
     public override suspend fun listInternal(
-        fileItems: MutableList<FileItemModel>,
-        directoryItems: MutableList<DirectoryItemModel>
+        fileItems: MutableList<FileModel>,
+        directoryItems: MutableList<DirectoryModel>
     ) {
         val c = relinkIfNeed() ?: throw Exception("no permission")
         val documentFiles = c.listFiles()
@@ -310,24 +310,8 @@ class DocumentLocalFileInstance(
         return instance
     }
 
-    override suspend fun isFile(): Boolean {
-        val instanceRelinkIfNeed = relinkIfNeed()
-        if (instanceRelinkIfNeed == null) {
-            Log.e(TAG, "isFile: path:$uriFullPath")
-        }
-        return instanceRelinkIfNeed!!.isFile
-    }
-
     override suspend fun exists(): Boolean {
         return relinkIfNeed()?.exists() ?: false
-    }
-
-    override suspend fun isDirectory(): Boolean {
-        val instanceRelinkIfNeed = relinkIfNeed()
-        if (instanceRelinkIfNeed == null) {
-            Log.e(TAG, "isDirectory: isDirectory:$uriFullPath")
-        }
-        return instanceRelinkIfNeed!!.isDirectory
     }
 
     override suspend fun rename(newName: String): Boolean {

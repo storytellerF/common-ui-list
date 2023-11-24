@@ -7,8 +7,8 @@ import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
-import com.storyteller_f.file_system.model.DirectoryItemModel
-import com.storyteller_f.file_system.model.FileItemModel
+import com.storyteller_f.file_system.model.DirectoryModel
+import com.storyteller_f.file_system.model.FileModel
 import org.apache.commons.net.PrintCommandListener
 import org.apache.commons.net.ftp.FTPClientConfig
 import org.apache.commons.net.ftp.FTPFile
@@ -62,7 +62,7 @@ class FtpsFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
 
     override suspend fun fileTime() = reconnectIfNeed()!!.fileTime()
     override suspend fun fileKind() = reconnectIfNeed()!!.let {
-        FileKind.build(it.isFile, it.isSymbolicLink)
+        FileKind.build(it.isFile, it.isSymbolicLink, false)
     }
 
     override suspend fun getFileLength(): Long {
@@ -78,8 +78,8 @@ class FtpsFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
     }
 
     override suspend fun listInternal(
-        fileItems: MutableList<FileItemModel>,
-        directoryItems: MutableList<DirectoryItemModel>
+        fileItems: MutableList<FileModel>,
+        directoryItems: MutableList<DirectoryModel>
     ) {
         val listFiles = getInstance()?.listFiles(path)
         listFiles?.forEach {
@@ -88,35 +88,28 @@ class FtpsFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
             val permission = it.permissions()
             val time = it.fileTime()
             if (it.isFile) {
-                fileItems.add(FileItemModel(
+                fileItems.add(FileModel(
                     name,
                     child,
-                    false,
-                    it.isSymbolicLink,
-                    file.extension,
-                    time
+                    time,
+                    FileKind.build(true, it.isSymbolicLink, false),
+                    file.extension
                 ).apply {
                     permissions = permission
                 })
             } else if (it.isDirectory) {
                 directoryItems.add(
-                    DirectoryItemModel(
+                    DirectoryModel(
                         name,
                         child,
-                        false,
-                        it.isSymbolicLink,
-                        time
+                        time,
+                        FileKind.build(true, it.isSymbolicLink, false)
                     ).apply {
                         permissions = permission
                     }
                 )
             }
         }
-    }
-
-    override suspend fun isFile(): Boolean {
-        val current = reconnectIfNeed()
-        return current?.isFile == true
     }
 
     private fun reconnectIfNeed(): FTPFile? {
@@ -129,10 +122,6 @@ class FtpsFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
 
     override suspend fun exists(): Boolean {
         return reconnectIfNeed() != null
-    }
-
-    override suspend fun isDirectory(): Boolean {
-        return reconnectIfNeed()?.isDirectory == true
     }
 
     override suspend fun deleteFileOrEmptyDirectory(): Boolean {

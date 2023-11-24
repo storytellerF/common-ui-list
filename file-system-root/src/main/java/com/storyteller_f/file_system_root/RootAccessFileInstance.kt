@@ -7,8 +7,8 @@ import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermission
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
-import com.storyteller_f.file_system.model.DirectoryItemModel
-import com.storyteller_f.file_system.model.FileItemModel
+import com.storyteller_f.file_system.model.DirectoryModel
+import com.storyteller_f.file_system.model.FileModel
 import com.storyteller_f.file_system.util.addDirectory
 import com.storyteller_f.file_system.util.addFile
 import com.storyteller_f.file_system.util.buildPath
@@ -28,7 +28,8 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
     )
 
     override suspend fun fileTime() = extendedFile.fileTime()
-    override suspend fun fileKind() = FileKind.build(extendedFile.isFile, extendedFile.isSymlink)
+    override suspend fun fileKind() =
+        FileKind.build(extendedFile.isFile, extendedFile.isSymlink, extendedFile.isHidden)
 
     override suspend fun getFileLength(): Long {
         return extendedFile.length()
@@ -39,8 +40,8 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
     override suspend fun getFileOutputStream() = extendedFile.outputStream()
 
     override suspend fun listInternal(
-        fileItems: MutableList<FileItemModel>,
-        directoryItems: MutableList<DirectoryItemModel>
+        fileItems: MutableList<FileModel>,
+        directoryItems: MutableList<DirectoryModel>
     ) {
         val listFiles = extendedFile.listFiles()
         listFiles?.forEach {
@@ -56,11 +57,7 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
         }
     }
 
-    override suspend fun isFile(): Boolean = extendedFile.isFile
-
     override suspend fun exists(): Boolean = extendedFile.exists()
-
-    override suspend fun isDirectory(): Boolean = extendedFile.isDirectory
 
     override suspend fun deleteFileOrEmptyDirectory(): Boolean = extendedFile.delete()
 
@@ -91,8 +88,6 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
         val newUri = uri.buildUpon().path(buildPath(extendedFile.path, name)).build()
         return RootAccessFileInstance(remote, newUri)
     }
-
-    override suspend fun isSymbolicLink(): Boolean = extendedFile.isSymlink
 
     companion object {
         const val ROOT_FILESYSTEM_SCHEME = "root"

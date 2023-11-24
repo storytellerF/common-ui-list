@@ -1,15 +1,15 @@
 package com.storyteller_f.file_system.model
 
 class FileSystemPack(
-    val files: MutableList<FileItemModel>,
-    val directories: MutableList<DirectoryItemModel>
+    val files: MutableList<FileModel>,
+    val directories: MutableList<DirectoryModel>
 ) {
 
-    fun addFiles(fileItemModels: List<FileItemModel>?) {
+    fun addFiles(fileItemModels: List<FileModel>?) {
         files.addAll(fileItemModels!!)
     }
 
-    fun addDirectory(directoryItemModels: List<DirectoryItemModel>?) {
+    fun addDirectory(directoryItemModels: List<DirectoryModel>?) {
         directories.addAll(directoryItemModels!!)
     }
 

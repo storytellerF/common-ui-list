@@ -14,8 +14,8 @@ import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
-import com.storyteller_f.file_system.model.DirectoryItemModel
-import com.storyteller_f.file_system.model.FileItemModel
+import com.storyteller_f.file_system.model.DirectoryModel
+import com.storyteller_f.file_system.model.FileModel
 import com.storyteller_f.file_system.util.fileTime
 import com.storyteller_f.file_system.util.getStorageCompat
 import java.io.File
@@ -60,23 +60,26 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
         TODO("Not yet implemented")
     }
 
-    override suspend fun fileKind() = FileKind.build(false, false)
+    override suspend fun fileKind() = FileKind.build(
+        isFile = false,
+        isSymbolicLink = false,
+        isHidden = false
+    )
 
     @WorkerThread
     override suspend fun listInternal(
-        fileItems: MutableList<FileItemModel>,
-        directoryItems: MutableList<DirectoryItemModel>
+        fileItems: MutableList<FileModel>,
+        directoryItems: MutableList<DirectoryModel>
     ) {
         presetFiles[path]?.map { packageName ->
             val (file, child) = child(packageName)
             val length = getAppSize(packageName)
-            FileItemModel(
+            FileModel(
                 packageName,
                 child,
-                false,
-                isSymLink = false,
-                "apk",
-                file.fileTime()
+                file.fileTime(),
+                FileKind.build(isFile = true, isSymbolicLink = false, isHidden = false),
+                "apk"
             ).apply {
                 size = length
             }
@@ -84,7 +87,16 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
 
         (presetSystemDirectories[path] ?: presetDirectories[path])?.map {
             val (file, child) = child(it)
-            DirectoryItemModel(it, child, false, symLink.contains(it), file.fileTime())
+            DirectoryModel(
+                it,
+                child,
+                file.fileTime(),
+                FileKind.build(
+                    isFile = false,
+                    isSymbolicLink = symLink.contains(it),
+                    false
+                )
+            )
         }?.forEach(directoryItems::add)
 
         if (path == LocalFileSystem.STORAGE_PATH) {
@@ -101,15 +113,14 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
         ).length()
     }
 
-    private suspend fun storageVolumes(): List<DirectoryItemModel> {
+    private suspend fun storageVolumes(): List<DirectoryModel> {
         return context.getStorageCompat().map {
             val (file, child) = child(it.name)
-            DirectoryItemModel(
+            DirectoryModel(
                 it.name,
                 child,
-                isHidden = false,
-                isSymLink = false,
-                fileTime = file.fileTime()
+                fileTime = file.fileTime(),
+                FileKind.build(isFile = false, isSymbolicLink = false, isHidden = false)
             )
         }
     }

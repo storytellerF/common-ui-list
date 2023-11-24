@@ -2,17 +2,17 @@ package com.storyteller_f.file_system_ktx
 
 import android.widget.ImageView
 import com.storyteller_f.file_system.R
-import com.storyteller_f.file_system.model.DirectoryItemModel
-import com.storyteller_f.file_system.model.FileItemModel
-import com.storyteller_f.file_system.model.FileSystemItemModel
+import com.storyteller_f.file_system.model.DirectoryModel
+import com.storyteller_f.file_system.model.FileModel
+import com.storyteller_f.file_system.model.FileSystemModel
 
-val FileSystemItemModel.isFile
-    get() = this is FileItemModel
+val FileSystemModel.isFile
+    get() = this is FileModel
 
-val FileSystemItemModel.isDirectory get() = this is DirectoryItemModel
+val FileSystemModel.isDirectory get() = this is DirectoryModel
 
-fun ImageView.fileIcon(fileSystemItemModel: FileSystemItemModel) {
-    if (fileSystemItemModel is FileItemModel) {
+fun ImageView.fileIcon(fileSystemItemModel: FileSystemModel) {
+    if (fileSystemItemModel is FileModel) {
         if (fileSystemItemModel.fullPath.startsWith("/data/app/")) {
             setImageDrawable(context.packageManager.getApplicationIcon(fileSystemItemModel.name))
             return

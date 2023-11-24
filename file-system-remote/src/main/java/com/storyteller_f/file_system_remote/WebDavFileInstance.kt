@@ -6,8 +6,8 @@ import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
-import com.storyteller_f.file_system.model.DirectoryItemModel
-import com.storyteller_f.file_system.model.FileItemModel
+import com.storyteller_f.file_system.model.DirectoryModel
+import com.storyteller_f.file_system.model.FileModel
 import com.thegrizzlylabs.sardineandroid.DavResource
 import com.thegrizzlylabs.sardineandroid.impl.OkHttpSardine
 import java.io.FileInputStream
@@ -52,45 +52,35 @@ class WebDavFileInstance(private val spec: ShareSpec, uri: Uri) : FileInstance(u
     }
 
     override suspend fun listInternal(
-        fileItems: MutableList<FileItemModel>,
-        directoryItems: MutableList<DirectoryItemModel>
+        fileItems: MutableList<FileModel>,
+        directoryItems: MutableList<DirectoryModel>
     ) {
         instance.list(path).forEach {
             val (file, child) = child(it.name)
             if (it.isDirectory) {
                 directoryItems.add(
-                    DirectoryItemModel(
+                    DirectoryModel(
                         it.name,
                         child,
-                        isHidden = false,
-                        isSymLink = false,
-                        fileTime = FileTime()
+                        fileTime = FileTime(),
+                        FileKind.build(isFile = false, isSymbolicLink = false, isHidden = false)
                     )
                 )
             } else {
                 fileItems.add(
-                    FileItemModel(
+                    FileModel(
                         it.name,
                         child,
-                        isHidden = false,
-                        isSymLink = false,
-                        extension = file.extension,
-                        time = FileTime()
+                        time = FileTime(),
+                        FileKind.build(isFile = true, isSymbolicLink = false, isHidden = false),
+                        extension = file.extension
                     )
                 )
             }
         }
     }
 
-    override suspend fun isFile(): Boolean {
-        TODO("Not yet implemented")
-    }
-
     override suspend fun exists(): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun isDirectory(): Boolean {
         TODO("Not yet implemented")
     }
 

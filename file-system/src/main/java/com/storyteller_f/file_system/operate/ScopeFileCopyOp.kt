@@ -6,8 +6,8 @@ import com.storyteller_f.file_system.instance.FileCreatePolicy.Create
 import com.storyteller_f.file_system.instance.FileCreatePolicy.NotCreate
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.message.Message
-import com.storyteller_f.file_system.model.DirectoryItemModel
-import com.storyteller_f.file_system.model.FileItemModel
+import com.storyteller_f.file_system.model.DirectoryModel
+import com.storyteller_f.file_system.model.FileModel
 import com.storyteller_f.file_system.toChildEfficiently
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -69,7 +69,7 @@ open class ScopeFileCopyOp(
     context: Context
 ) : ScopeFileOperation(fileInstance, target, context) {
     override suspend fun call(): Boolean {
-        return if (fileInstance.isFile()) {
+        return if (fileInstance.fileKind().isFile) {
             // 新建一个文件
             copyFileFaster(fileInstance, target)
         } else {
@@ -197,7 +197,7 @@ class ScopeFileMoveOpInShell(
         val cmdFailed = mvResult != 0
         when {
             cmdFailed -> onError(Message("process return $mvResult"))
-            target.isFile() -> onFileDone(target, Message("success"), target.getFileLength())
+            target.fileKind().isFile -> onFileDone(target, Message("success"), target.getFileLength())
             else -> onDirectoryDone(fileInstance, Message("success"))
         }
         return !cmdFailed
@@ -251,7 +251,7 @@ class FileDeleteOp(
 
     private suspend fun deleteChildDirectory(
         fileInstance: FileInstance,
-        it: DirectoryItemModel
+        it: DirectoryModel
     ): Boolean {
         val childDirectory = fileInstance.toChildEfficiently(
             context,
@@ -270,7 +270,7 @@ class FileDeleteOp(
         return deleteDirectory
     }
 
-    private suspend fun deleteChildFile(fileInstance: FileInstance, it: FileItemModel): Boolean {
+    private suspend fun deleteChildFile(fileInstance: FileInstance, it: FileModel): Boolean {
         val childFile = fileInstance.toChildEfficiently(context, it.name, NotCreate)
         val deleteFileOrEmptyDirectory = childFile.deleteFileOrEmptyDirectory()
         if (deleteFileOrEmptyDirectory) {
