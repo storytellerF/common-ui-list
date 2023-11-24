@@ -12,8 +12,8 @@ import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermission
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
-import com.storyteller_f.file_system.model.DirectoryItemModel
-import com.storyteller_f.file_system.model.FileItemModel
+import com.storyteller_f.file_system.model.DirectoryModel
+import com.storyteller_f.file_system.model.FileModel
 import kotlinx.coroutines.yield
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -76,7 +76,11 @@ class HttpFileInstance(context: Context, uri: Uri) : BaseContextFileInstance(con
         TODO("Not yet implemented")
     }
 
-    override suspend fun fileKind() = FileKind.build(true, false)
+    override suspend fun fileKind() = FileKind.build(
+        isFile = true,
+        isSymbolicLink = false,
+        isHidden = false
+    )
 
     override suspend fun getFileLength() = createIfNeed().length()
 
@@ -87,17 +91,13 @@ class HttpFileInstance(context: Context, uri: Uri) : BaseContextFileInstance(con
     }
 
     override suspend fun listInternal(
-        fileItems: MutableList<FileItemModel>,
-        directoryItems: MutableList<DirectoryItemModel>
+        fileItems: MutableList<FileModel>,
+        directoryItems: MutableList<DirectoryModel>
     ) {
         TODO("Not yet implemented")
     }
 
-    override suspend fun isFile() = true
-
     override suspend fun exists() = createIfNeed().exists()
-
-    override suspend fun isDirectory() = false
 
     override suspend fun deleteFileOrEmptyDirectory() = false
 

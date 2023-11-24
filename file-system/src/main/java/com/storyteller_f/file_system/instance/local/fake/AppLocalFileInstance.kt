@@ -12,8 +12,8 @@ import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
-import com.storyteller_f.file_system.model.DirectoryItemModel
-import com.storyteller_f.file_system.model.FileItemModel
+import com.storyteller_f.file_system.model.DirectoryModel
+import com.storyteller_f.file_system.model.FileModel
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -27,7 +27,11 @@ class AppLocalFileInstance(context: Context, uri: Uri) : BaseContextFileInstance
         TODO("Not yet implemented")
     }
 
-    override suspend fun fileKind() = FileKind.build(false, false)
+    override suspend fun fileKind() = FileKind.build(
+        isFile = false,
+        isSymbolicLink = false,
+        isHidden = false
+    )
 
     private val publicSourceDir: String =
         context.packageManager.getApplicationInfoCompat(name, 0).publicSourceDir
@@ -39,17 +43,13 @@ class AppLocalFileInstance(context: Context, uri: Uri) : BaseContextFileInstance
     override suspend fun getFileOutputStream() = FileOutputStream(publicSourceDir)
 
     override suspend fun listInternal(
-        fileItems: MutableList<FileItemModel>,
-        directoryItems: MutableList<DirectoryItemModel>
+        fileItems: MutableList<FileModel>,
+        directoryItems: MutableList<DirectoryModel>
     ) {
         TODO("Not yet implemented")
     }
 
-    override suspend fun isFile() = true
-
     override suspend fun exists() = true
-
-    override suspend fun isDirectory() = false
 
     override suspend fun deleteFileOrEmptyDirectory(): Boolean {
         TODO("Not yet implemented")

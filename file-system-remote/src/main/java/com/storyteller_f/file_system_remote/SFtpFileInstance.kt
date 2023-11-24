@@ -7,8 +7,8 @@ import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
-import com.storyteller_f.file_system.model.DirectoryItemModel
-import com.storyteller_f.file_system.model.FileItemModel
+import com.storyteller_f.file_system.model.DirectoryModel
+import com.storyteller_f.file_system.model.FileModel
 import net.schmizz.sshj.SSHClient
 import net.schmizz.sshj.sftp.FileAttributes
 import net.schmizz.sshj.sftp.FileMode
@@ -64,7 +64,8 @@ class SFtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
         val type = it.second.mode.type
         FileKind.build(
             type.toMask().bit(FileMode.Type.REGULAR.ordinal),
-            type.toMask().bit(FileMode.Type.SYMLINK.ordinal)
+            type.toMask().bit(FileMode.Type.SYMLINK.ordinal),
+            false
         )
     }
 
@@ -81,8 +82,8 @@ class SFtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
     }
 
     override suspend fun listInternal(
-        fileItems: MutableList<FileItemModel>,
-        directoryItems: MutableList<DirectoryItemModel>
+        fileItems: MutableList<FileModel>,
+        directoryItems: MutableList<DirectoryModel>
     ) {
         getInstance().ls(path).forEach {
             val attributes = it.attributes
@@ -91,41 +92,29 @@ class SFtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
             val fileTime = attributes.fileTime()
             if (it.isDirectory) {
                 directoryItems.add(
-                    DirectoryItemModel(
+                    DirectoryModel(
                         it.name,
                         child,
-                        false,
-                        isSymLink,
-                        fileTime
+                        fileTime,
+                        FileKind.build(false, isSymLink, false)
                     )
                 )
             } else {
                 fileItems.add(
-                    FileItemModel(
+                    FileModel(
                         it.name,
                         child,
-                        false,
-                        isSymLink,
-                        file.extension,
-                        fileTime
+                        fileTime,
+                        FileKind.build(true, isSymLink, false),
+                        file.extension
                     )
                 )
             }
         }
     }
 
-    override suspend fun isFile(): Boolean {
-        val reconnectIfNeed = reconnectIfNeed()
-        return reconnectIfNeed.second.type == FileMode.Type.REGULAR
-    }
-
     override suspend fun exists(): Boolean {
         TODO("Not yet implemented")
-    }
-
-    override suspend fun isDirectory(): Boolean {
-        val reconnectIfNeed = reconnectIfNeed()
-        return reconnectIfNeed.second.type == FileMode.Type.DIRECTORY
     }
 
     override suspend fun deleteFileOrEmptyDirectory(): Boolean {
@@ -158,11 +147,6 @@ class SFtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(ur
 
     override suspend fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
         TODO("Not yet implemented")
-    }
-
-    override suspend fun isSymbolicLink(): Boolean {
-        val reconnectIfNeed = reconnectIfNeed()
-        return reconnectIfNeed.second.type == FileMode.Type.SYMLINK
     }
 }
 

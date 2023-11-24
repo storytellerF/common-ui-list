@@ -9,8 +9,8 @@ import com.storyteller_f.file_system.instance.FileCreatePolicy.*
 import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermission
 import com.storyteller_f.file_system.instance.FilePermissions
-import com.storyteller_f.file_system.model.DirectoryItemModel
-import com.storyteller_f.file_system.model.FileItemModel
+import com.storyteller_f.file_system.model.DirectoryModel
+import com.storyteller_f.file_system.model.FileModel
 import com.storyteller_f.file_system.util.addDirectory
 import com.storyteller_f.file_system.util.addFile
 import com.storyteller_f.file_system.util.fileTime
@@ -61,7 +61,7 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
     private suspend fun checkChildExistsOtherwiseCreate(file: File, policy: FileCreatePolicy) {
         when {
             !exists() -> throw IOException("当前文件或者文件夹不存在。path:$path")
-            isFile() -> throw IOException("当前是一个文件，无法向下操作")
+            fileKind().isFile -> throw IOException("当前是一个文件，无法向下操作")
             !file.exists() -> when {
                 policy !is Create -> throw IOException("不存在，且不能创建")
                 policy.isFile -> {
@@ -98,14 +98,14 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
 
     override suspend fun fileTime() = innerFile.fileTime()
     override suspend fun fileKind() =
-        FileKind.build(innerFile.isFile, innerFile.isSymbolicLink())
+        FileKind.build(innerFile.isFile, innerFile.isSymbolicLink(), innerFile.isHidden)
 
     override suspend fun getFileLength(): Long = innerFile.length()
 
     @WorkerThread
     public override suspend fun listInternal(
-        fileItems: MutableList<FileItemModel>,
-        directoryItems: MutableList<DirectoryItemModel>
+        fileItems: MutableList<FileModel>,
+        directoryItems: MutableList<DirectoryModel>
     ) {
         val listFiles = innerFile.listFiles() // 获取子文件
         if (listFiles != null) {
@@ -122,16 +122,8 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
         }
     }
 
-    override suspend fun isFile(): Boolean {
-        return innerFile.isFile
-    }
-
     override suspend fun exists(): Boolean {
         return innerFile.exists()
-    }
-
-    override suspend fun isDirectory(): Boolean {
-        return innerFile.isDirectory
     }
 
     override suspend fun deleteFileOrEmptyDirectory(): Boolean {
@@ -162,9 +154,6 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
         }
         return size
     }
-
-    override suspend fun isSymbolicLink(): Boolean =
-        innerFile.isSymbolicLink()
 
     companion object {
         private const val TAG = "ExternalFileInstance"

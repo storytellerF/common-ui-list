@@ -3,9 +3,8 @@ package com.storyteller_f.file_system.instance
 import android.net.Uri
 import androidx.annotation.WorkerThread
 import androidx.core.util.ObjectsCompat
-import com.storyteller_f.file_system.model.DirectoryItemModel
-import com.storyteller_f.file_system.model.FileItemModel
-import com.storyteller_f.file_system.model.FileSystemItemModel
+import com.storyteller_f.file_system.model.DirectoryModel
+import com.storyteller_f.file_system.model.FileModel
 import com.storyteller_f.file_system.model.FileSystemPack
 import com.storyteller_f.file_system.util.getExtension
 import com.storyteller_f.file_system.util.parentPath
@@ -43,22 +42,17 @@ abstract class FileInstance(val uri: Uri) {
 
     @WorkerThread
     suspend fun getFile() =
-        FileItemModel(
+        FileModel(
             name,
             uri,
-            isHidden(),
-            isSymbolicLink(),
-            getExtension(name).orEmpty(),
-            fileTime()
+            fileTime(),
+            fileKind(),
+            getExtension(name).orEmpty()
         )
 
     @WorkerThread
     suspend fun getDirectory() =
-        DirectoryItemModel(name, uri, isHidden(), isSymbolicLink(), fileTime())
-
-    @WorkerThread
-    suspend fun getFileSystemItem(): FileSystemItemModel =
-        if (isFile()) getFile() else getDirectory()
+        DirectoryModel(name, uri, fileTime(), fileKind())
 
     @WorkerThread
     abstract suspend fun getFileInputStream(): FileInputStream
@@ -77,27 +71,7 @@ abstract class FileInstance(val uri: Uri) {
     }
 
     @WorkerThread
-    open suspend fun isSymbolicLink(): Boolean = false
-
-    @WorkerThread
-    open suspend fun isSoftLink(): Boolean = false
-
-    @WorkerThread
-    open suspend fun isHardLink(): Boolean = false
-
-    @WorkerThread
     abstract suspend fun isHidden(): Boolean
-
-    /**
-     * 是否是文件
-     *
-     * @return true 代表是文件
-     */
-    @WorkerThread
-    abstract suspend fun isFile(): Boolean
-
-    @WorkerThread
-    abstract suspend fun isDirectory(): Boolean
 
     @WorkerThread
     abstract suspend fun getDirectorySize(): Long
@@ -110,8 +84,8 @@ abstract class FileInstance(val uri: Uri) {
      */
     @WorkerThread
     protected abstract suspend fun listInternal(
-        fileItems: MutableList<FileItemModel>,
-        directoryItems: MutableList<DirectoryItemModel>
+        fileItems: MutableList<FileModel>,
+        directoryItems: MutableList<DirectoryModel>
     )
 
     @WorkerThread
@@ -183,9 +157,9 @@ abstract class FileInstance(val uri: Uri) {
         return ObjectsCompat.hash(uri)
     }
 
-    private fun buildFilesContainer(): MutableList<FileItemModel> = mutableListOf()
+    private fun buildFilesContainer(): MutableList<FileModel> = mutableListOf()
 
-    private fun buildDirectoryContainer(): MutableList<DirectoryItemModel> = mutableListOf()
+    private fun buildDirectoryContainer(): MutableList<DirectoryModel> = mutableListOf()
 
     protected fun child(it: String): Pair<File, Uri> {
         val file = File(path, it)
