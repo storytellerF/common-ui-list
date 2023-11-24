@@ -62,11 +62,11 @@ val supportScheme = listOf("ftp", "smb", "sftp", "ftpes", "ftps", "webdav", "htt
 
 fun getRemoteInstance(uri: Uri): FileInstance {
     return when (uri.scheme) {
-        "ftp" -> FtpFileInstance(RemoteSpec.parse(uri), uri)
-        "smb" -> SmbFileInstance(ShareSpec.parse(uri), uri)
-        "sftp" -> SFtpFileInstance(RemoteSpec.parse(uri), uri)
-        "ftpes", "ftps" -> FtpsFileInstance(RemoteSpec.parse(uri), uri)
-        "webdav" -> WebDavFileInstance(ShareSpec.parse(uri), uri)
+        "ftp" -> FtpFileInstance(uri)
+        "smb" -> SmbFileInstance(uri)
+        "sftp" -> SFtpFileInstance(uri)
+        "ftpes", "ftps" -> FtpsFileInstance(uri)
+        "webdav" -> WebDavFileInstance(uri)
         else -> throw Exception(uri.scheme)
     }
 }

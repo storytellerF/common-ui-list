@@ -32,7 +32,8 @@ fun ShareSpec.checkSmb() {
 
 val smbSessions = mutableMapOf<ShareSpec, DiskShare>()
 
-class SmbFileInstance(private val shareSpec: ShareSpec, uri: Uri) : FileInstance(uri) {
+class SmbFileInstance(uri: Uri) : FileInstance(uri) {
+    private val shareSpec: ShareSpec = ShareSpec.parse(uri)
     private var information: FileAllInformation? = null
     private var share: DiskShare? = null
     override val path: String
@@ -49,8 +50,8 @@ class SmbFileInstance(private val shareSpec: ShareSpec, uri: Uri) : FileInstance
 
     private fun initCurrentFile(): Pair<DiskShare, FileAllInformation> {
         val connectShare = getDiskShare()
-        share = connectShare
         val fileInformation = connectShare.getFileInformation(path)
+        share = connectShare
         information = fileInformation
         return connectShare to fileInformation
     }

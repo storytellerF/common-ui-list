@@ -24,7 +24,8 @@ import java.io.PrintWriter
 
 val ftpClients = mutableMapOf<RemoteSpec, FtpInstance>()
 
-class FtpFileInstance(private val spec: RemoteSpec, uri: Uri) : FileInstance(uri) {
+class FtpFileInstance(uri: Uri) : FileInstance(uri) {
+    private val spec = RemoteSpec.parse(uri)
     private var ftpFile: FTPFile? = null
 
     companion object {
