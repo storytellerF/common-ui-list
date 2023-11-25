@@ -22,7 +22,8 @@ import java.io.FileOutputStream
 
 val sftpChannels = mutableMapOf<RemoteSpec, SFTPClient>()
 
-class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse(uri)) : FileInstance(uri) {
+class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse(uri)) :
+    FileInstance(uri) {
     private var remoteFile: RemoteFile? = null
     private var attribute: FileAttributes? = null
 
@@ -35,11 +36,8 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
         return open to fetchAttributes
     }
 
-    private fun getInstance(): SFTPClient {
-        val orPut = sftpChannels.getOrPut(spec) {
-            spec.sftpClient()
-        }
-        return orPut
+    private fun getInstance() = sftpChannels.getOrPut(spec) {
+        spec.sftpClient()
     }
 
     private fun reconnectIfNeed(): Pair<RemoteFile, FileAttributes> {

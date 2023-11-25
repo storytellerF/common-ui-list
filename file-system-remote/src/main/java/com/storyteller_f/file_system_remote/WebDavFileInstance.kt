@@ -16,7 +16,8 @@ import java.io.FileOutputStream
 
 val webdavInstances = mutableMapOf<ShareSpec, WebDavInstance>()
 
-class WebDavFileInstance(uri: Uri, private val spec: ShareSpec = ShareSpec.parse(uri)) : FileInstance(uri) {
+class WebDavFileInstance(uri: Uri, private val spec: ShareSpec = ShareSpec.parse(uri)) :
+    FileInstance(uri) {
     private val instance = getWebDavInstance()
     override val path: String
         get() = super.path.substring(spec.share.length + 1).ifEmpty { "/" }
@@ -33,10 +34,8 @@ class WebDavFileInstance(uri: Uri, private val spec: ShareSpec = ShareSpec.parse
         TODO("Not yet implemented")
     }
 
-    private fun getWebDavInstance(): WebDavInstance {
-        return webdavInstances.getOrPut(spec) {
-            WebDavInstance(spec)
-        }
+    private fun getWebDavInstance() = webdavInstances.getOrPut(spec) {
+        WebDavInstance(spec)
     }
 
     override suspend fun getFileLength(): Long {
@@ -59,12 +58,13 @@ class WebDavFileInstance(uri: Uri, private val spec: ShareSpec = ShareSpec.parse
             val fileName = it.name
             val child = childUri(fileName)
             val filePermissions = FilePermissions.USER_READABLE
+            val fileTime = FileTime(it.modified.time, created = it.creation.time)
             if (it.isDirectory) {
                 directoryItems.add(
                     DirectoryModel(
                         fileName,
                         child,
-                        fileTime = FileTime(),
+                        fileTime,
                         FileKind.build(isFile = false, isSymbolicLink = false, isHidden = false),
                         filePermissions
                     )
@@ -74,7 +74,7 @@ class WebDavFileInstance(uri: Uri, private val spec: ShareSpec = ShareSpec.parse
                     FileModel(
                         fileName,
                         child,
-                        time = FileTime(),
+                        fileTime,
                         FileKind.build(isFile = true, isSymbolicLink = false, isHidden = false),
                         filePermissions,
                         extension = getExtension(fileName).orEmpty(),
