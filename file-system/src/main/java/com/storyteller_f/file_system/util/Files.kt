@@ -12,10 +12,10 @@ import androidx.annotation.RequiresApi
 import androidx.documentfile.provider.DocumentFile
 import com.storyteller_f.file_system.LocalFileSystem
 import com.storyteller_f.file_system.LocalFileSystemPrefix
+import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.local.DocumentLocalFileInstance
 import com.storyteller_f.file_system.simplePath
 import java.io.File
-import java.util.Locale
 import java.util.Objects
 
 /**
@@ -38,17 +38,17 @@ fun parentPath(vararg part: String): String? {
     return currentPath.substring(0, index)
 }
 
-fun File.permissions(): String {
+fun File.permissions(): FilePermissions {
     val w = canWrite()
     val e = canExecute()
     val r = canRead()
-    return permissions(r, w, e, isFile)
+    return FilePermissions.permissions(r, w, e)
 }
 
-fun DocumentFile.permissions(): String {
+fun DocumentFile.permissions(): FilePermissions {
     val w = canWrite()
     val r = canRead()
-    return permissions(r, w, false, isFile)
+    return FilePermissions.permissions(r, w, false)
 }
 
 @RequiresApi(api = Build.VERSION_CODES.N)
@@ -144,15 +144,4 @@ fun getTotal(prefix: String?): Long {
     } else {
         stat.blockSize.toLong() * stat.blockCount.toLong()
     }
-}
-
-fun permissions(r: Boolean, w: Boolean, e: Boolean, isFile: Boolean): String {
-    return String.format(
-        Locale.CHINA,
-        "%c%c%c%c",
-        if (isFile) '-' else 'd',
-        if (r) 'r' else '-',
-        if (w) 'w' else '-',
-        if (e) 'e' else '-'
-    )
 }

@@ -28,5 +28,8 @@ class FilePermissions(
             val othersPermission = FilePermission.fromMask(value.ushr(0).and(0x111))
             return FilePermissions(userPermission, groupPermission, othersPermission)
         }
+
+        fun permissions(r: Boolean, w: Boolean, e: Boolean) =
+            FilePermissions(FilePermission(r, w, e))
     }
 }
