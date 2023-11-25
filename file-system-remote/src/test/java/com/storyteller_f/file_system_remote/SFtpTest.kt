@@ -7,6 +7,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.AfterClass
 import org.junit.Assert
 import org.junit.BeforeClass
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -15,8 +16,13 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 @Config(manifest = Config.NONE)
+@Ignore(
+    """java.lang.NullPointerException: Cannot invoke "org.robolectric.internal.TestEnvironment.resetState()" 
+    |because the return value of "org.robolectric.RobolectricTestRunner$
+    |RobolectricFrameworkMethod.getTestEnvironment()" is null"""
+)
 @RunWith(RobolectricTestRunner::class)
-class SmbTest {
+class SFtpTest {
     @get:Rule
     val mockkRule = MockKRule(this)
 
@@ -25,7 +31,7 @@ class SmbTest {
         @JvmStatic
         @BeforeClass
         fun setup() {
-            CommonFileSystem.setup("smb")
+            CommonFileSystem.setup("sftp")
         }
 
         @JvmStatic
@@ -39,14 +45,18 @@ class SmbTest {
     fun test() {
         val context = RuntimeEnvironment.getApplication()
 
-        val test1Spec = CommonFileSystem.smbSpec
-        val uri = test1Spec.toUri()
-        val smbFileInstance = SmbFileInstance(uri)
+        val test1Spec = CommonFileSystem.sftpSpec
+        val uri = test1Spec.toUri().buildUpon().appendPath("test1").build()
+        val sFtpFileInstance = SFtpFileInstance(uri)
         runBlocking {
-            val list = smbFileInstance.list()
+            val list = sFtpFileInstance.list()
             Assert.assertEquals(1, list.count)
             val childInstance =
-                smbFileInstance.toChildEfficiently(context, "hello.txt", FileCreatePolicy.NotCreate)
+                sFtpFileInstance.toChildEfficiently(
+                    context,
+                    "hello.txt",
+                    FileCreatePolicy.NotCreate
+                )
             val text = childInstance.getInputStream().bufferedReader().use {
                 it.readText()
             }

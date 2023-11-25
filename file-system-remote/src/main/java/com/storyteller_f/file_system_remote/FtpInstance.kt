@@ -32,11 +32,10 @@ class FtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse(
     }
 
     private fun initCurrentFile(): FTPFile? {
-        val ftpInstance = getInstance()
         return try {
-            val get = ftpInstance?.get(path)
-            ftpFile = get
-            get
+            getInstance()?.get(path)?.apply {
+                ftpFile = this
+            }
         } catch (e: Exception) {
             Log.e(TAG, "initCurrentFile: ", e)
             null
@@ -75,14 +74,9 @@ class FtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse(
         TODO("Not yet implemented")
     }
 
-    override suspend fun getInputStream(): InputStream {
-        return getInstance()!!.inputStream(path)!!
-    }
+    override suspend fun getInputStream() = getInstance()!!.inputStream(path)!!
 
-    override suspend fun getOutputStream(): OutputStream {
-        val instance = getInstance()!!
-        return instance.outputStream(path)!!
-    }
+    override suspend fun getOutputStream() = getInstance()!!.outputStream(path)!!
 
     override suspend fun listInternal(
         fileItems: MutableList<FileModel>,
@@ -94,13 +88,14 @@ class FtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse(
             val child = childUri(name)
             val permission = it.permissions()
             val fileTime = it.fileTime()
+            val isSymbolicLink = it.isSymbolicLink
             if (it.isFile) {
                 fileItems.add(
                     FileModel(
                         name,
                         child,
                         fileTime,
-                        FileKind.build(true, it.isSymbolicLink, false),
+                        FileKind.build(true, isSymbolicLink, false),
                         permission,
                         getExtension(name).orEmpty()
                     )
@@ -111,7 +106,7 @@ class FtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse(
                         name,
                         child,
                         fileTime,
-                        FileKind.build(false, it.isSymbolicLink, false),
+                        FileKind.build(false, isSymbolicLink, false),
                         permission,
                     )
                 )

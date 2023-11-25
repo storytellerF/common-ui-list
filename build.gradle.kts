@@ -111,7 +111,7 @@ subprojects {
             jvmModules.forEach(action)
         }
         if (androidLibModules.contains(name)) {
-            testImplementation("org.robolectric:robolectric:4.10.3")
+            testImplementation("org.robolectric:robolectric:4.11.1")
         }
     }
     koverReport {

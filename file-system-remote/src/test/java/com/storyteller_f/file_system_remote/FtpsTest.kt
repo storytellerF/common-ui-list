@@ -16,7 +16,7 @@ import org.robolectric.annotation.Config
 
 @Config(manifest = Config.NONE)
 @RunWith(RobolectricTestRunner::class)
-class SmbTest {
+class FtpsTest {
     @get:Rule
     val mockkRule = MockKRule(this)
 
@@ -25,7 +25,7 @@ class SmbTest {
         @JvmStatic
         @BeforeClass
         fun setup() {
-            CommonFileSystem.setup("smb")
+            CommonFileSystem.setup("ftps")
         }
 
         @JvmStatic
@@ -39,14 +39,14 @@ class SmbTest {
     fun test() {
         val context = RuntimeEnvironment.getApplication()
 
-        val test1Spec = CommonFileSystem.smbSpec
-        val uri = test1Spec.toUri()
-        val smbFileInstance = SmbFileInstance(uri)
+        val test1Spec = CommonFileSystem.ftpsSpec
+        val uri = test1Spec.toUri().buildUpon().appendPath("test1").build()
+        val ftpsFileInstance = FtpsFileInstance(uri)
         runBlocking {
-            val list = smbFileInstance.list()
+            val list = ftpsFileInstance.list()
             Assert.assertEquals(1, list.count)
             val childInstance =
-                smbFileInstance.toChildEfficiently(context, "hello.txt", FileCreatePolicy.NotCreate)
+                ftpsFileInstance.toChildEfficiently(context, "hello.txt", FileCreatePolicy.NotCreate)
             val text = childInstance.getInputStream().bufferedReader().use {
                 it.readText()
             }

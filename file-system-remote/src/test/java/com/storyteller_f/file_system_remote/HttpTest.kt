@@ -1,7 +1,6 @@
 package com.storyteller_f.file_system_remote
 
 import androidx.core.net.toUri
-import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -13,6 +12,7 @@ import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 @Config(manifest = Config.NONE)
@@ -43,7 +43,8 @@ class HttpTest {
 
     @Test
     fun test() {
-        val appContext = InstrumentationRegistry.getInstrumentation().targetContext
+        val appContext = RuntimeEnvironment.getApplication()
+
         val uri = "http://localhost:${server.port}".toUri()
         val httpFileInstance = HttpFileInstance(appContext, uri)
         runBlocking {

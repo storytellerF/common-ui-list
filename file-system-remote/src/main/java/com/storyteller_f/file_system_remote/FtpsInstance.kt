@@ -14,15 +14,17 @@ import org.apache.commons.net.ftp.FTPClientConfig
 import org.apache.commons.net.ftp.FTPFile
 import org.apache.commons.net.ftp.FTPReply
 import org.apache.commons.net.ftp.FTPSClient
-import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
 import java.io.PrintWriter
 
 val ftpsClients = mutableMapOf<RemoteSpec, FtpsInstance>()
 
-class FtpsFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse(uri)) : FileInstance(uri) {
+class FtpsFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse(uri)) :
+    FileInstance(uri) {
     private var ftpFile: FTPFile? = null
 
     companion object {
@@ -32,9 +34,9 @@ class FtpsFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
     private fun initCurrentFile(): FTPFile? {
         val ftpInstance = getInstance()
         return try {
-            val get = ftpInstance?.get(path)
-            ftpFile = get
-            get
+            ftpInstance?.get(path)?.apply {
+                ftpFile = this
+            }
         } catch (e: Exception) {
             Log.e(TAG, "initCurrentFile: ", e)
             null
@@ -70,6 +72,10 @@ class FtpsFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
         TODO("Not yet implemented")
     }
 
+    override suspend fun getInputStream() = getInstance()!!.inputStream(path)!!
+
+    override suspend fun getOutputStream() = getInstance()!!.outputStream(path)!!
+
     override suspend fun listInternal(
         fileItems: MutableList<FileModel>,
         directoryItems: MutableList<DirectoryModel>
@@ -80,22 +86,25 @@ class FtpsFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
             val child = childUri(name)
             val time = it.fileTime()
             val filePermissions = it.permissions()
+            val isSymbolicLink = it.isSymbolicLink
             if (it.isFile) {
-                fileItems.add(FileModel(
-                    name,
-                    child,
-                    time,
-                    FileKind.build(true, it.isSymbolicLink, false),
-                    filePermissions,
-                    getExtension(name).orEmpty()
-                ))
+                fileItems.add(
+                    FileModel(
+                        name,
+                        child,
+                        time,
+                        FileKind.build(true, isSymbolicLink, false),
+                        filePermissions,
+                        getExtension(name).orEmpty()
+                    )
+                )
             } else if (it.isDirectory) {
                 directoryItems.add(
                     DirectoryModel(
                         name,
                         child,
                         time,
-                        FileKind.build(true, it.isSymbolicLink, false),
+                        FileKind.build(true, isSymbolicLink, false),
                         filePermissions
                     )
                 )
@@ -139,9 +148,8 @@ class FtpsFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
         TODO("Not yet implemented")
     }
 
-    override suspend fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
-        TODO("Not yet implemented")
-    }
+    override suspend fun toChild(name: String, policy: FileCreatePolicy) =
+        FtpsFileInstance(childUri(name), spec)
 }
 
 class FtpsInstance(private val spec: RemoteSpec) {
@@ -179,21 +187,15 @@ class FtpsInstance(private val spec: RemoteSpec) {
     }
 
     @Throws(IOException::class)
-    fun listFiles(path: String?): Array<out FTPFile>? {
-        return ftps.listFiles(path)
-    }
+    fun listFiles(path: String?): Array<out FTPFile>? = ftps.listFiles(path)
 
-    @Throws(IOException::class)
-    fun downloadFile(source: String?, destination: String?) {
-        val out = FileOutputStream(destination)
-        ftps.retrieveFile(source, out)
-    }
+    fun inputStream(path: String): InputStream? = ftps.retrieveFileStream(path)
 
-    @Throws(IOException::class)
-    fun putFileToPath(file: File?, path: String?) {
-        ftps.storeFile(path, FileInputStream(file))
-    }
+    fun outputStream(path: String): OutputStream? = ftps.storeFileStream(path)
 
+    /**
+     * @return 返回是否可用
+     */
     fun connectIfNeed(): Boolean {
         return if (ftps.isAvailable) {
             true
