@@ -12,6 +12,8 @@ import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.DirectoryModel
 import com.storyteller_f.file_system.model.FileModel
+import com.storyteller_f.file_system.util.buildPath
+import com.storyteller_f.file_system.util.getExtension
 import java.io.FileInputStream
 import java.io.FileOutputStream
 
@@ -45,7 +47,10 @@ class SmbFileInstance(uri: Uri) : FileInstance(uri) {
 
     override suspend fun fileTime() = reconnectIfNeed().second.fileTime()
     override suspend fun fileKind() = reconnectIfNeed().let {
-        FileKind.build(!it.second.standardInformation.isDirectory, false, false)
+        FileKind.build(!it.second.standardInformation.isDirectory,
+            isSymbolicLink = false,
+            isHidden = false
+        )
     }
 
     private fun initCurrentFile(): Pair<DiskShare, FileAllInformation> {
@@ -94,13 +99,14 @@ class SmbFileInstance(uri: Uri) : FileInstance(uri) {
         share.list(path).filter {
             it.fileName != "." && it.fileName != ".."
         }.forEach {
-            val (file, child) = child(it.fileName)
-            val fileInformation = share.getFileInformation(file.absolutePath)
+            val fileName = it.fileName
+            val (_, child) = child(fileName)
+            val fileInformation = share.getFileInformation(buildPath(this.path, fileName))
             val fileTime = fileInformation.fileTime()
             if (fileInformation.standardInformation.isDirectory) {
                 directoryItems.add(
                     DirectoryModel(
-                        it.fileName,
+                        fileName,
                         child,
                         fileTime = fileTime,
                         FileKind.build(isFile = false, isSymbolicLink = false, isHidden = false)
@@ -109,11 +115,11 @@ class SmbFileInstance(uri: Uri) : FileInstance(uri) {
             } else {
                 fileItems.add(
                     FileModel(
-                        it.fileName,
+                        fileName,
                         child,
                         fileTime,
                         FileKind.build(isFile = true, isSymbolicLink = false, isHidden = false),
-                        file.extension
+                        getExtension(fileName).orEmpty()
                     )
                 )
             }
