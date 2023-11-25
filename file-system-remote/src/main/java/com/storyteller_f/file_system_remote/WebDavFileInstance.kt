@@ -8,6 +8,7 @@ import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.DirectoryModel
 import com.storyteller_f.file_system.model.FileModel
+import com.storyteller_f.file_system.util.getExtension
 import com.thegrizzlylabs.sardineandroid.DavResource
 import com.thegrizzlylabs.sardineandroid.impl.OkHttpSardine
 import java.io.FileInputStream
@@ -56,11 +57,12 @@ class WebDavFileInstance(uri: Uri) : FileInstance(uri) {
         directoryItems: MutableList<DirectoryModel>
     ) {
         instance.list(path).forEach {
-            val (file, child) = child(it.name)
+            val fileName = it.name
+            val (_, child) = child(fileName)
             if (it.isDirectory) {
                 directoryItems.add(
                     DirectoryModel(
-                        it.name,
+                        fileName,
                         child,
                         fileTime = FileTime(),
                         FileKind.build(isFile = false, isSymbolicLink = false, isHidden = false)
@@ -69,11 +71,11 @@ class WebDavFileInstance(uri: Uri) : FileInstance(uri) {
             } else {
                 fileItems.add(
                     FileModel(
-                        it.name,
+                        fileName,
                         child,
                         time = FileTime(),
                         FileKind.build(isFile = true, isSymbolicLink = false, isHidden = false),
-                        extension = file.extension
+                        extension = getExtension(fileName).orEmpty()
                     )
                 )
             }

@@ -9,6 +9,7 @@ import com.storyteller_f.file_system.instance.FilePermission
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.model.DirectoryModel
 import com.storyteller_f.file_system.model.FileModel
+import com.storyteller_f.file_system.util.getExtension
 import com.storyteller_f.file_system.util.permissions
 import org.apache.commons.net.PrintCommandListener
 import org.apache.commons.net.ftp.FTPClient
@@ -99,7 +100,7 @@ class FtpFileInstance(uri: Uri) : FileInstance(uri) {
         val listFiles = getInstance()?.listFiles(path)
         listFiles?.forEach {
             val name = it.name
-            val (file, child) = child(it.name)
+            val (_, child) = child(it.name)
             val permission = it.permissions()
             val fileTime = it.fileTime()
             if (it.isFile) {
@@ -109,7 +110,7 @@ class FtpFileInstance(uri: Uri) : FileInstance(uri) {
                         child,
                         fileTime,
                         FileKind.build(true, it.isSymbolicLink, false),
-                        file.extension
+                        getExtension(name).orEmpty()
                     ).apply {
                         permissions = permission
                     }
