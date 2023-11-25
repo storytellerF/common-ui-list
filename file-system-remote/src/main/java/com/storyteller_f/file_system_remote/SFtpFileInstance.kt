@@ -10,7 +10,6 @@ import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.DirectoryModel
 import com.storyteller_f.file_system.model.FileModel
 import com.storyteller_f.file_system.util.getExtension
-import com.storyteller_f.file_system.util.permissions
 import net.schmizz.sshj.SSHClient
 import net.schmizz.sshj.sftp.FileAttributes
 import net.schmizz.sshj.sftp.FileMode
@@ -23,8 +22,7 @@ import java.io.FileOutputStream
 
 val sftpChannels = mutableMapOf<RemoteSpec, SFTPClient>()
 
-class SFtpFileInstance(uri: Uri) : FileInstance(uri) {
-    private val spec: RemoteSpec = RemoteSpec.parse(uri)
+class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse(uri)) : FileInstance(uri) {
     private var remoteFile: RemoteFile? = null
     private var attribute: FileAttributes? = null
 
@@ -65,9 +63,10 @@ class SFtpFileInstance(uri: Uri) : FileInstance(uri) {
 
     override suspend fun fileKind() = reconnectIfNeed().let {
         val type = it.second.mode.type
+        val typeMask = type.toMask()
         FileKind.build(
-            type.toMask().bit(FileMode.Type.REGULAR.ordinal),
-            type.toMask().bit(FileMode.Type.SYMLINK.ordinal),
+            typeMask.bit(FileMode.Type.REGULAR.ordinal),
+            typeMask.bit(FileMode.Type.SYMLINK.ordinal),
             false
         )
     }
@@ -142,10 +141,6 @@ class SFtpFileInstance(uri: Uri) : FileInstance(uri) {
     }
 
     override suspend fun createFile(): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun isHidden(): Boolean {
         TODO("Not yet implemented")
     }
 

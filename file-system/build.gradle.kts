@@ -35,7 +35,7 @@ dependencies {
 
     unitTestDependency()
     // https://mvnrepository.com/artifact/androidx.test.uiautomator/uiautomator
-    androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0-alpha04")
+    androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0-alpha05")
     androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:${Versions.COROUTINES}")
 
 

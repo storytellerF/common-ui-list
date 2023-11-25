@@ -1,6 +1,5 @@
 package com.storyteller_f.file_system_remote
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
 import org.junit.AfterClass
 import org.junit.Assert.assertEquals
@@ -12,13 +11,15 @@ import org.mockftpserver.fake.UserAccount
 import org.mockftpserver.fake.filesystem.DirectoryEntry
 import org.mockftpserver.fake.filesystem.FileEntry
 import org.mockftpserver.fake.filesystem.UnixFakeFileSystem
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
-@RunWith(AndroidJUnit4::class)
+@Config(manifest = Config.NONE)
+@RunWith(RobolectricTestRunner::class)
 class FtpTest {
     companion object {
 
         private var fakeFtpServer: FakeFtpServer? = null
-        private var ftpInstance: FtpInstance? = null
 
         const val USERNAME = "user"
         const val PASSWORD = "password"
@@ -42,7 +43,6 @@ class FtpTest {
         @JvmStatic
         @AfterClass
         fun teardown() {
-            ftpInstance?.close()
             fakeFtpServer?.stop()
         }
     }
@@ -83,5 +83,4 @@ class FtpTest {
             )
         }
     }
-
 }

@@ -1,7 +1,6 @@
 package com.storyteller_f.file_system_remote
 
 import androidx.core.net.toUri
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockResponse
@@ -13,8 +12,11 @@ import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
-@RunWith(AndroidJUnit4::class)
+@Config(manifest = Config.NONE)
+@RunWith(RobolectricTestRunner::class)
 class HttpTest {
     companion object {
         private lateinit var server: MockWebServer

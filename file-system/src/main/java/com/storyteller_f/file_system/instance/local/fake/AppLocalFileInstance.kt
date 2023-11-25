@@ -71,10 +71,6 @@ class AppLocalFileInstance(context: Context, uri: Uri) : BaseContextFileInstance
         TODO("Not yet implemented")
     }
 
-    override suspend fun isHidden(): Boolean {
-        TODO("Not yet implemented")
-    }
-
     override suspend fun createDirectory(): Boolean {
         TODO("Not yet implemented")
     }

@@ -16,8 +16,7 @@ import java.io.FileOutputStream
 
 val webdavInstances = mutableMapOf<ShareSpec, WebDavInstance>()
 
-class WebDavFileInstance(uri: Uri) : FileInstance(uri) {
-    private val spec: ShareSpec = ShareSpec.parse(uri)
+class WebDavFileInstance(uri: Uri, private val spec: ShareSpec = ShareSpec.parse(uri)) : FileInstance(uri) {
     private val instance = getWebDavInstance()
     override val path: String
         get() = super.path.substring(spec.share.length + 1).ifEmpty { "/" }
@@ -106,10 +105,6 @@ class WebDavFileInstance(uri: Uri) : FileInstance(uri) {
     }
 
     override suspend fun createFile(): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun isHidden(): Boolean {
         TODO("Not yet implemented")
     }
 

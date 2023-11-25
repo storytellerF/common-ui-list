@@ -12,7 +12,6 @@ plugins {
 
 android {
     namespace = "com.storyteller_f.file_system_root"
-    compileSdk = 33
 
     defaultConfig {
         minSdk = 21

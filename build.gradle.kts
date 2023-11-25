@@ -55,7 +55,7 @@ subprojects {
 val detektReportMergeSarif by tasks.registering(ReportMergeTask::class) {
     output = layout.buildDirectory.file("reports/detekt/merge.sarif")
 }
-val androidModules = listOf(
+val androidLibModules = listOf(
     "common-ktx",
     "common-pr",
     "common-ui",
@@ -82,7 +82,7 @@ subprojects {
 
     apply(plugin = "io.gitlab.arturbosch.detekt")
     apply(plugin = "org.jetbrains.kotlinx.kover")
-    if (androidModules.contains(name)) {
+    if (androidLibModules.contains(name)) {
         apply(plugin = "com.android.library")
     }
     detekt {
@@ -107,15 +107,15 @@ subprojects {
                 kover(project(":$it"))
                 Unit
             }
-            androidModules.forEach(action)
+            androidLibModules.forEach(action)
             jvmModules.forEach(action)
         }
-        if (androidModules.contains(name)) {
+        if (androidLibModules.contains(name)) {
             testImplementation("org.robolectric:robolectric:4.10.3")
         }
     }
     koverReport {
-        if (androidModules.contains(name)) {
+        if (androidLibModules.contains(name)) {
             defaults {
                 mergeWith("release")
             }

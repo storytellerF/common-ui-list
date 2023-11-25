@@ -9,6 +9,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
+@Config(manifest = Config.NONE)
 @RunWith(RobolectricTestRunner::class)
 class FileInstanceTest {
     @Config(minSdk = Build.VERSION_CODES.JELLY_BEAN)

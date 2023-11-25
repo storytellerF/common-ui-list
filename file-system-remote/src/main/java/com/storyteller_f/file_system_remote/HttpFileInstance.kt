@@ -111,8 +111,6 @@ class HttpFileInstance(context: Context, uri: Uri) : BaseContextFileInstance(con
 
     override suspend fun createFile() = false
 
-    override suspend fun isHidden() = false
-
     override suspend fun createDirectory() = false
 
     override suspend fun toChild(name: String, policy: FileCreatePolicy): FileInstance {

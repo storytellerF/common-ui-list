@@ -136,8 +136,6 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
 
     override suspend fun getDirectorySize(): Long = TODO("Not yet implemented")
 
-    override suspend fun isHidden(): Boolean = false
-
     override suspend fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
         val (_, child) = child(name)
         return FakeLocalFileInstance(context, child)
