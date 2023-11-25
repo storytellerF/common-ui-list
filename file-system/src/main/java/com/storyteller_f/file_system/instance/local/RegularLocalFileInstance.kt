@@ -40,8 +40,6 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
         }
     }
 
-    override suspend fun isHidden(): Boolean = innerFile.isHidden
-
     override suspend fun createDirectory(): Boolean {
         return if (innerFile.exists()) true else innerFile.mkdirs()
     }

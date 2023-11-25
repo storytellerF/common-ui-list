@@ -22,8 +22,7 @@ import java.io.PrintWriter
 
 val ftpsClients = mutableMapOf<RemoteSpec, FtpsInstance>()
 
-class FtpsFileInstance(uri: Uri) : FileInstance(uri) {
-    private val spec: RemoteSpec = RemoteSpec.parse(uri)
+class FtpsFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse(uri)) : FileInstance(uri) {
     private var ftpFile: FTPFile? = null
 
     companion object {
@@ -133,10 +132,6 @@ class FtpsFileInstance(uri: Uri) : FileInstance(uri) {
     }
 
     override suspend fun createFile(): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun isHidden(): Boolean {
         TODO("Not yet implemented")
     }
 

@@ -72,9 +72,6 @@ abstract class FileInstance(val uri: Uri) {
     }
 
     @WorkerThread
-    abstract suspend fun isHidden(): Boolean
-
-    @WorkerThread
     abstract suspend fun getDirectorySize(): Long
 
     @WorkerThread

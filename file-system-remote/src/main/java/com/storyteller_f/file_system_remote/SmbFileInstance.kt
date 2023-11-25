@@ -1,7 +1,11 @@
 package com.storyteller_f.file_system_remote
 
 import android.net.Uri
+import com.hierynomus.msfscc.FileAttributes
 import com.hierynomus.msfscc.fileinformation.FileAllInformation
+import com.hierynomus.msfscc.fileinformation.FileIdBothDirectoryInformation
+import com.hierynomus.mssmb2.SMB2CreateDisposition
+import com.hierynomus.protocol.commons.EnumWithValue.EnumUtils
 import com.hierynomus.smbj.SMBClient
 import com.hierynomus.smbj.auth.AuthenticationContext
 import com.hierynomus.smbj.share.DiskShare
@@ -12,7 +16,6 @@ import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.DirectoryModel
 import com.storyteller_f.file_system.model.FileModel
-import com.storyteller_f.file_system.util.buildPath
 import com.storyteller_f.file_system.util.getExtension
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -34,8 +37,7 @@ fun ShareSpec.checkSmb() {
 
 val smbSessions = mutableMapOf<ShareSpec, DiskShare>()
 
-class SmbFileInstance(uri: Uri) : FileInstance(uri) {
-    private val shareSpec: ShareSpec = ShareSpec.parse(uri)
+class SmbFileInstance(uri: Uri, private val shareSpec: ShareSpec = ShareSpec.parse(uri)) : FileInstance(uri) {
     private var information: FileAllInformation? = null
     private var share: DiskShare? = null
     override val path: String
@@ -47,10 +49,14 @@ class SmbFileInstance(uri: Uri) : FileInstance(uri) {
 
     override suspend fun fileTime() = reconnectIfNeed().second.fileTime()
     override suspend fun fileKind() = reconnectIfNeed().let {
+        val second = it.second
         FileKind.build(
-            !it.second.standardInformation.isDirectory,
+            !second.standardInformation.isDirectory,
             isSymbolicLink = false,
-            isHidden = false
+            isHidden = EnumUtils.isSet(
+                second.basicInformation.fileAttributes,
+                FileAttributes.FILE_ATTRIBUTE_HIDDEN
+            )
         )
     }
 
@@ -84,6 +90,18 @@ class SmbFileInstance(uri: Uri) : FileInstance(uri) {
         TODO("Not yet implemented")
     }
 
+    override suspend fun getInputStream() = reconnectIfNeed().let {
+        val openFile = it.first.openFile(
+            path,
+            emptySet(),
+            emptySet(),
+            emptySet(),
+            SMB2CreateDisposition.FILE_OPEN,
+            emptySet()
+        )
+        openFile.inputStream
+    }
+
     override suspend fun getFileInputStream(): FileInputStream {
         TODO("Not yet implemented")
     }
@@ -102,10 +120,11 @@ class SmbFileInstance(uri: Uri) : FileInstance(uri) {
         }.forEach {
             val fileName = it.fileName
             val child = childUri(fileName)
-            val fileInformation = share.getFileInformation(buildPath(path, fileName))
-            val fileTime = fileInformation.fileTime()
+            val isDirectory =
+                EnumUtils.isSet(it.fileAttributes, FileAttributes.FILE_ATTRIBUTE_DIRECTORY)
+            val fileTime = it.fileTime()
             val filePermissions = FilePermissions.USER_READABLE
-            if (fileInformation.standardInformation.isDirectory) {
+            if (isDirectory) {
                 directoryItems.add(
                     DirectoryModel(
                         fileName,
@@ -154,18 +173,20 @@ class SmbFileInstance(uri: Uri) : FileInstance(uri) {
         TODO("Not yet implemented")
     }
 
-    override suspend fun isHidden(): Boolean {
-        TODO("Not yet implemented")
-    }
-
     override suspend fun createDirectory(): Boolean {
         TODO("Not yet implemented")
     }
 
-    override suspend fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
-        TODO("Not yet implemented")
-    }
+    override suspend fun toChild(name: String, policy: FileCreatePolicy) =
+        SmbFileInstance(childUri(name), shareSpec)
 }
+
+private fun FileIdBothDirectoryInformation.fileTime() =
+    FileTime(
+        changeTime.toEpochMillis(),
+        lastAccessTime.toEpochMillis(),
+        creationTime.toEpochMillis()
+    )
 
 private fun FileAllInformation.fileTime(): FileTime {
     val basicInformation = basicInformation

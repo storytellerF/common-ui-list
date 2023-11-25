@@ -323,8 +323,6 @@ class DocumentLocalFileInstance(
         return relinkIfNeed()!!.renameTo(newName)
     }
 
-    override suspend fun isHidden(): Boolean = false
-
     @SuppressLint("Recycle")
     @Throws(FileNotFoundException::class)
     override suspend fun getFileInputStream(): FileInputStream {

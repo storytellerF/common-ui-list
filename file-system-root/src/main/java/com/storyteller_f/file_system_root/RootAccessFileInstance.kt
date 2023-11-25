@@ -78,8 +78,6 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
         TODO("Not yet implemented")
     }
 
-    override suspend fun isHidden(): Boolean = extendedFile.isHidden
-
     override suspend fun createDirectory(): Boolean {
         TODO("Not yet implemented")
     }
