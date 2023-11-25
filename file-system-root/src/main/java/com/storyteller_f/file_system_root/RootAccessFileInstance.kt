@@ -46,13 +46,13 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
         val listFiles = extendedFile.listFiles()
         listFiles?.forEach {
             val permissions = it.permissions()
-            val (_, child) = child(it.name)
+            val child = childUri(it.name)
             val pair = it to child
             val fileTime = it.fileTime()
             if (it.isFile) {
-                addFile(fileItems, pair, permissions, fileTime)
+                fileItems.addFile(pair, permissions, fileTime)
             } else if (it.isDirectory) {
-                addDirectory(directoryItems, pair, permissions, fileTime)
+                directoryItems.addDirectory(pair, permissions, fileTime)
             }
         }
     }

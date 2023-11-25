@@ -10,7 +10,6 @@ import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.model.DirectoryModel
 import com.storyteller_f.file_system.model.FileModel
 import com.storyteller_f.file_system.util.getExtension
-import com.storyteller_f.file_system.util.permissions
 import org.apache.commons.net.PrintCommandListener
 import org.apache.commons.net.ftp.FTPClient
 import org.apache.commons.net.ftp.FTPFile
@@ -58,14 +57,7 @@ class FtpFileInstance(uri: Uri) : FileInstance(uri) {
     val completePendingCommand
         get() = getInstance()?.completePendingCommand
 
-    override suspend fun filePermissions(): FilePermissions {
-        val ftpFile1 = reconnectIfNeed()!!
-        return FilePermissions(
-            ftpFile1.filePermission(FTPFile.USER_ACCESS),
-            ftpFile1.filePermission(FTPFile.GROUP_ACCESS),
-            ftpFile1.filePermission(FTPFile.WORLD_ACCESS)
-        )
-    }
+    override suspend fun filePermissions() = reconnectIfNeed()!!.permissions()
 
     override suspend fun fileTime() = reconnectIfNeed()!!.fileTime()
     override suspend fun fileKind() = reconnectIfNeed()!!.let {
@@ -100,7 +92,7 @@ class FtpFileInstance(uri: Uri) : FileInstance(uri) {
         val listFiles = getInstance()?.listFiles(path)
         listFiles?.forEach {
             val name = it.name
-            val (_, child) = child(it.name)
+            val child = childUri(name)
             val permission = it.permissions()
             val fileTime = it.fileTime()
             if (it.isFile) {
@@ -110,10 +102,9 @@ class FtpFileInstance(uri: Uri) : FileInstance(uri) {
                         child,
                         fileTime,
                         FileKind.build(true, it.isSymbolicLink, false),
+                        permission,
                         getExtension(name).orEmpty()
-                    ).apply {
-                        permissions = permission
-                    }
+                    )
                 )
             } else {
                 directoryItems.add(
@@ -121,10 +112,9 @@ class FtpFileInstance(uri: Uri) : FileInstance(uri) {
                         name,
                         child,
                         fileTime,
-                        FileKind.build(false, it.isSymbolicLink, false)
-                    ).apply {
-                        permissions = permission
-                    }
+                        FileKind.build(false, it.isSymbolicLink, false),
+                        permission,
+                    )
                 )
             }
         }
@@ -247,12 +237,11 @@ class FtpInstance(private val spec: RemoteSpec) {
     }
 }
 
-fun FTPFile.permissions(): String {
-    val canRead = hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION)
-    val canWrite = hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION)
-    val canExecute = hasPermission(FTPFile.USER_ACCESS, FTPFile.EXECUTE_PERMISSION)
-    return permissions(canRead, canWrite, canExecute, isFile)
-}
+fun FTPFile.permissions() = FilePermissions(
+    filePermission(FTPFile.USER_ACCESS),
+    filePermission(FTPFile.GROUP_ACCESS),
+    filePermission(FTPFile.WORLD_ACCESS)
+)
 
 fun FTPFile.filePermission(access: Int) = FilePermission(
     hasPermission(access, FTPFile.READ_PERMISSION),

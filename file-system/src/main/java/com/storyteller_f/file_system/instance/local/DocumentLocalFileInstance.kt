@@ -24,10 +24,10 @@ import com.storyteller_f.file_system.model.FileModel
 import com.storyteller_f.file_system.util.addDirectory
 import com.storyteller_f.file_system.util.addFile
 import com.storyteller_f.file_system.util.buildPath
+import com.storyteller_f.file_system.util.getExtension
 import com.storyteller_f.file_system.util.parentPath
 import com.storyteller_f.file_system.util.permissions
 import kotlinx.coroutines.yield
-import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
@@ -261,32 +261,37 @@ class DocumentLocalFileInstance(
         for (documentFile in documentFiles) {
             yield()
             val documentFileName = documentFile.name!!
-            val detailString = documentFile.permissions()
-            val uriPair = child(documentFile, documentFileName)
+            val permissions = documentFile.permissions()
+            val uri = childUri(documentFileName)
             val fileTime = documentFile.fileTime()
             if (documentFile.isFile) {
-                addFile(fileItems, uriPair, detailString, fileTime)!!.size =
-                    documentFile.length()
+                fileItems.addFile(
+                    uri,
+                    documentFileName,
+                    getExtension(documentFileName),
+                    documentFile.length(),
+                    permissions,
+                    fileTime,
+                    FileKind.build(
+                        isFile = true,
+                        isSymbolicLink = false,
+                        isHidden = false
+                    )
+                )
             } else {
-                addDirectory(directoryItems, uriPair, detailString, fileTime)
+                directoryItems.addDirectory(
+                    uri,
+                    documentFileName,
+                    permissions,
+                    fileTime,
+                    FileKind.build(
+                        isFile = false,
+                        isSymbolicLink = false,
+                        isHidden = false
+                    )
+                )
             }
         }
-    }
-
-    private fun child(documentFile: DocumentFile, documentFileName: String): Pair<File, Uri> {
-        val child = child(documentFileName)
-        return Pair<File, Uri>(
-            object : File(child.first.absolutePath) {
-                override fun lastModified(): Long {
-                    return documentFile.lastModified()
-                }
-
-                override fun length(): Long {
-                    return documentFile.length()
-                }
-            },
-            child.second
-        )
     }
 
     override suspend fun deleteFileOrEmptyDirectory(): Boolean {

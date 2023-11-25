@@ -10,6 +10,7 @@ import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.DirectoryModel
 import com.storyteller_f.file_system.model.FileModel
 import com.storyteller_f.file_system.util.getExtension
+import com.storyteller_f.file_system.util.permissions
 import net.schmizz.sshj.SSHClient
 import net.schmizz.sshj.sftp.FileAttributes
 import net.schmizz.sshj.sftp.FileMode
@@ -90,16 +91,19 @@ class SFtpFileInstance(uri: Uri) : FileInstance(uri) {
         getInstance().ls(path).forEach {
             val attributes = it.attributes
             val fileName = it.name
-            val (_, child) = child(fileName)
+            val child = childUri(fileName)
             val isSymLink = attributes.mode.type.toMask().bit(FileMode.Type.SYMLINK.ordinal)
             val fileTime = attributes.fileTime()
+            val filePermissions =
+                FilePermissions.fromMask(FilePermission.toMask(attributes.permissions))
             if (it.isDirectory) {
                 directoryItems.add(
                     DirectoryModel(
                         fileName,
                         child,
                         fileTime,
-                        FileKind.build(false, isSymLink, false)
+                        FileKind.build(false, isSymLink, false),
+                        filePermissions
                     )
                 )
             } else {
@@ -109,6 +113,7 @@ class SFtpFileInstance(uri: Uri) : FileInstance(uri) {
                         child,
                         fileTime,
                         FileKind.build(true, isSymLink, false),
+                        filePermissions,
                         getExtension(fileName).orEmpty()
                     )
                 )

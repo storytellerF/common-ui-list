@@ -5,7 +5,6 @@ import android.util.Log
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.FileKind
-import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.DirectoryModel
 import com.storyteller_f.file_system.model.FileModel
@@ -53,14 +52,7 @@ class FtpsFileInstance(uri: Uri) : FileInstance(uri) {
         return null
     }
 
-    override suspend fun filePermissions(): FilePermissions {
-        val ftpFile = reconnectIfNeed()!!
-        return FilePermissions(
-            ftpFile.filePermission(FTPFile.USER_ACCESS),
-            ftpFile.filePermission(FTPFile.GROUP_ACCESS),
-            ftpFile.filePermission(FTPFile.WORLD_ACCESS)
-        )
-    }
+    override suspend fun filePermissions() = reconnectIfNeed()!!.permissions()
 
     override suspend fun fileTime() = reconnectIfNeed()!!.fileTime()
     override suspend fun fileKind() = reconnectIfNeed()!!.let {
@@ -86,29 +78,27 @@ class FtpsFileInstance(uri: Uri) : FileInstance(uri) {
         val listFiles = getInstance()?.listFiles(path)
         listFiles?.forEach {
             val name = it.name
-            val (_, child) = child(name)
-            val permission = it.permissions()
+            val child = childUri(name)
             val time = it.fileTime()
+            val filePermissions = it.permissions()
             if (it.isFile) {
                 fileItems.add(FileModel(
                     name,
                     child,
                     time,
                     FileKind.build(true, it.isSymbolicLink, false),
+                    filePermissions,
                     getExtension(name).orEmpty()
-                ).apply {
-                    permissions = permission
-                })
+                ))
             } else if (it.isDirectory) {
                 directoryItems.add(
                     DirectoryModel(
                         name,
                         child,
                         time,
-                        FileKind.build(true, it.isSymbolicLink, false)
-                    ).apply {
-                        permissions = permission
-                    }
+                        FileKind.build(true, it.isSymbolicLink, false),
+                        filePermissions
+                    )
                 )
             }
         }

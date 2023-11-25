@@ -79,6 +79,7 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
                 child,
                 file.fileTime(),
                 FileKind.build(isFile = true, isSymbolicLink = false, isHidden = false),
+                FilePermissions.USER_READABLE,
                 "apk"
             ).apply {
                 size = length
@@ -95,7 +96,8 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
                     isFile = false,
                     isSymbolicLink = symLink.contains(it),
                     false
-                )
+                ),
+                FilePermissions.USER_READABLE
             )
         }?.forEach(directoryItems::add)
 
@@ -120,7 +122,8 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
                 it.name,
                 child,
                 fileTime = file.fileTime(),
-                FileKind.build(isFile = false, isSymbolicLink = false, isHidden = false)
+                FileKind.build(isFile = false, isSymbolicLink = false, isHidden = false),
+                FilePermissions.USER_READABLE
             )
         }
     }

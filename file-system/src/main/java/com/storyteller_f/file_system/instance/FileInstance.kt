@@ -47,12 +47,13 @@ abstract class FileInstance(val uri: Uri) {
             uri,
             fileTime(),
             fileKind(),
+            filePermissions(),
             getExtension(name).orEmpty()
         )
 
     @WorkerThread
     suspend fun getDirectory() =
-        DirectoryModel(name, uri, fileTime(), fileKind())
+        DirectoryModel(name, uri, fileTime(), fileKind(), filePermissions())
 
     @WorkerThread
     abstract suspend fun getFileInputStream(): FileInputStream
@@ -165,5 +166,9 @@ abstract class FileInstance(val uri: Uri) {
         val file = File(path, it)
         val child = uri.buildUpon().path(file.absolutePath).build()
         return Pair(file, child)
+    }
+
+    protected fun childUri(name: String): Uri {
+        return uri.buildUpon().appendPath(name).build()
     }
 }

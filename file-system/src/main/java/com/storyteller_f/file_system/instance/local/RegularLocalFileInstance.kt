@@ -114,9 +114,9 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
                 val permissions = childFile.permissions()
                 val fileTime = child.first.fileTime()
                 (if (childFile.isDirectory) {
-                    addDirectory(directoryItems, child, permissions, fileTime)
+                    directoryItems.addDirectory(child, permissions, fileTime)
                 } else {
-                    addFile(fileItems, child, permissions, fileTime)
+                    fileItems.addFile(child, permissions, fileTime)
                 })
             }
         }

@@ -47,7 +47,8 @@ class SmbFileInstance(uri: Uri) : FileInstance(uri) {
 
     override suspend fun fileTime() = reconnectIfNeed().second.fileTime()
     override suspend fun fileKind() = reconnectIfNeed().let {
-        FileKind.build(!it.second.standardInformation.isDirectory,
+        FileKind.build(
+            !it.second.standardInformation.isDirectory,
             isSymbolicLink = false,
             isHidden = false
         )
@@ -100,16 +101,18 @@ class SmbFileInstance(uri: Uri) : FileInstance(uri) {
             it.fileName != "." && it.fileName != ".."
         }.forEach {
             val fileName = it.fileName
-            val (_, child) = child(fileName)
-            val fileInformation = share.getFileInformation(buildPath(this.path, fileName))
+            val child = childUri(fileName)
+            val fileInformation = share.getFileInformation(buildPath(path, fileName))
             val fileTime = fileInformation.fileTime()
+            val filePermissions = FilePermissions.USER_READABLE
             if (fileInformation.standardInformation.isDirectory) {
                 directoryItems.add(
                     DirectoryModel(
                         fileName,
                         child,
                         fileTime = fileTime,
-                        FileKind.build(isFile = false, isSymbolicLink = false, isHidden = false)
+                        FileKind.build(isFile = false, isSymbolicLink = false, isHidden = false),
+                        filePermissions
                     )
                 )
             } else {
@@ -119,6 +122,7 @@ class SmbFileInstance(uri: Uri) : FileInstance(uri) {
                         child,
                         fileTime,
                         FileKind.build(isFile = true, isSymbolicLink = false, isHidden = false),
+                        filePermissions,
                         getExtension(fileName).orEmpty()
                     )
                 )

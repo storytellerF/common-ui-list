@@ -58,14 +58,16 @@ class WebDavFileInstance(uri: Uri) : FileInstance(uri) {
     ) {
         instance.list(path).forEach {
             val fileName = it.name
-            val (_, child) = child(fileName)
+            val child = childUri(fileName)
+            val filePermissions = FilePermissions.USER_READABLE
             if (it.isDirectory) {
                 directoryItems.add(
                     DirectoryModel(
                         fileName,
                         child,
                         fileTime = FileTime(),
-                        FileKind.build(isFile = false, isSymbolicLink = false, isHidden = false)
+                        FileKind.build(isFile = false, isSymbolicLink = false, isHidden = false),
+                        filePermissions
                     )
                 )
             } else {
@@ -75,7 +77,8 @@ class WebDavFileInstance(uri: Uri) : FileInstance(uri) {
                         child,
                         time = FileTime(),
                         FileKind.build(isFile = true, isSymbolicLink = false, isHidden = false),
-                        extension = getExtension(fileName).orEmpty()
+                        filePermissions,
+                        extension = getExtension(fileName).orEmpty(),
                     )
                 )
             }
