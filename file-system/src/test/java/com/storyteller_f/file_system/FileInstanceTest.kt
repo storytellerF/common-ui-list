@@ -15,10 +15,10 @@ class FileInstanceTest {
     @Config(minSdk = Build.VERSION_CODES.JELLY_BEAN)
     @Test
     fun test() {
-        val parse = Uri.parse("file:///storage/emulated")
+        val uri = Uri.parse("file:///storage/emulated")
         val context = RuntimeEnvironment.getApplication()
         runBlocking {
-            assert(getLocalFileInstance(context, parse).list().count > 0)
+            assert(getLocalFileInstance(context, uri).list().count > 0)
         }
     }
 }

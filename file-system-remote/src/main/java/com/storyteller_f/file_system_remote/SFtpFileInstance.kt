@@ -28,12 +28,12 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
     private var attribute: FileAttributes? = null
 
     private fun initCurrent(): Pair<RemoteFile, FileAttributes> {
-        val orPut = getInstance()
-        val open = orPut.open(path)
-        val fetchAttributes = open.fetchAttributes()
-        remoteFile = open
+        val sftpClient = getInstance()
+        val remoteFile1 = sftpClient.open(path)
+        val fetchAttributes = remoteFile1.fetchAttributes()
+        remoteFile = remoteFile1
         attribute = fetchAttributes
-        return open to fetchAttributes
+        return remoteFile1 to fetchAttributes
     }
 
     private fun getInstance() = sftpChannels.getOrPut(spec) {
@@ -54,10 +54,7 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
     override suspend fun filePermissions() =
         FilePermissions.fromMask(FilePermission.toMask(reconnectIfNeed().second.permissions))
 
-    override suspend fun fileTime(): FileTime {
-        val attributes = reconnectIfNeed().second
-        return attributes.fileTime()
-    }
+    override suspend fun fileTime() = reconnectIfNeed().second.fileTime()
 
     override suspend fun fileKind() = reconnectIfNeed().let {
         val type = it.second.mode.type
@@ -72,6 +69,12 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
     override suspend fun getFileLength(): Long {
         TODO("Not yet implemented")
     }
+
+    override suspend fun getInputStream() =
+        reconnectIfNeed().first.RemoteFileInputStream()
+
+    override suspend fun getOutputStream() =
+        reconnectIfNeed().first.RemoteFileOutputStream()
 
     override suspend fun getFileInputStream(): FileInputStream {
         TODO("Not yet implemented")
@@ -146,16 +149,16 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
         TODO("Not yet implemented")
     }
 
-    override suspend fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
-        TODO("Not yet implemented")
-    }
+    override suspend fun toChild(name: String, policy: FileCreatePolicy) =
+        SFtpFileInstance(childUri(name), spec)
 }
 
 fun RemoteSpec.sftpClient(): SFTPClient {
-    val sshClient = SSHClient()
-    sshClient.addHostKeyVerifier(PromiscuousVerifier())
-    sshClient.connect(server, port)
-    sshClient.authPassword(user, password)
+    val sshClient = SSHClient().apply {
+        addHostKeyVerifier(PromiscuousVerifier())
+        connect(server, port)
+        authPassword(user, password)
+    }
     return sshClient.newSFTPClient()
 }
 
@@ -163,6 +166,4 @@ fun RemoteSpec.checkSftp() {
     sftpClient()
 }
 
-private fun FileAttributes.fileTime(): FileTime {
-    return FileTime(mtime, atime)
-}
+private fun FileAttributes.fileTime() = FileTime(mtime, atime)

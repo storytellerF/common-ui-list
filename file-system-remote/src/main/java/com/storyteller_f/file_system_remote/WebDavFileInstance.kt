@@ -54,7 +54,7 @@ class WebDavFileInstance(uri: Uri, private val spec: ShareSpec = ShareSpec.parse
         fileItems: MutableList<FileModel>,
         directoryItems: MutableList<DirectoryModel>
     ) {
-        instance.list(path).forEach {
+        getWebDavInstance().list(path).forEach {
             val fileName = it.name
             val child = childUri(fileName)
             val filePermissions = FilePermissions.USER_READABLE
