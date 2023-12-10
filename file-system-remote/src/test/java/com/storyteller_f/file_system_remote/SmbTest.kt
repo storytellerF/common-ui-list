@@ -1,11 +1,7 @@
 package com.storyteller_f.file_system_remote
 
-import com.storyteller_f.file_system.instance.FileCreatePolicy
-import com.storyteller_f.file_system.toChildEfficiently
 import io.mockk.junit4.MockKRule
-import kotlinx.coroutines.runBlocking
 import org.junit.AfterClass
-import org.junit.Assert
 import org.junit.BeforeClass
 import org.junit.Rule
 import org.junit.Test
@@ -42,15 +38,6 @@ class SmbTest {
         val test1Spec = CommonFileSystem.smbSpec
         val uri = test1Spec.toUri()
         val smbFileInstance = SmbFileInstance(uri)
-        runBlocking {
-            val list = smbFileInstance.list()
-            Assert.assertEquals(1, list.count)
-            val childInstance =
-                smbFileInstance.toChildEfficiently(context, "hello.txt", FileCreatePolicy.NotCreate)
-            val text = childInstance.getInputStream().bufferedReader().use {
-                it.readText()
-            }
-            Assert.assertEquals("world smb", text)
-        }
+        CommonFileSystem.commonTest(smbFileInstance, context)
     }
 }

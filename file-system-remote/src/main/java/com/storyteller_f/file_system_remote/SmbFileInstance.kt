@@ -1,6 +1,7 @@
 package com.storyteller_f.file_system_remote
 
 import android.net.Uri
+import com.hierynomus.msdtyp.AccessMask
 import com.hierynomus.msfscc.FileAttributes
 import com.hierynomus.msfscc.fileinformation.FileAllInformation
 import com.hierynomus.msfscc.fileinformation.FileIdBothDirectoryInformation
@@ -37,14 +38,21 @@ fun ShareSpec.checkSmb() {
 
 val smbSessions = mutableMapOf<ShareSpec, DiskShare>()
 
-class SmbFileInstance(uri: Uri, private val shareSpec: ShareSpec = ShareSpec.parse(uri)) : FileInstance(uri) {
+class SmbFileInstance(uri: Uri, private val shareSpec: ShareSpec = ShareSpec.parse(uri)) :
+    FileInstance(uri) {
     private var information: FileAllInformation? = null
     private var share: DiskShare? = null
     override val path: String
         get() = super.path.substring(shareSpec.share.length + 1).ifEmpty { "/" }
 
     override suspend fun filePermissions(): FilePermissions {
-        TODO("Not yet implemented")
+        val second = reconnectIfNeed().second
+        val accessFlags = second.accessInformation.accessFlags.toLong()
+        return FilePermissions.permissions(
+            EnumUtils.isSet(accessFlags, AccessMask.GENERIC_READ),
+            EnumUtils.isSet(accessFlags, AccessMask.GENERIC_READ),
+            EnumUtils.isSet(accessFlags, AccessMask.GENERIC_READ)
+        )
     }
 
     override suspend fun fileTime() = reconnectIfNeed().second.fileTime()
