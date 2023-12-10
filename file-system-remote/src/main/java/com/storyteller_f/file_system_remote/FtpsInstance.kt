@@ -1,7 +1,6 @@
 package com.storyteller_f.file_system_remote
 
 import android.net.Uri
-import android.util.Log
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.FileKind
@@ -27,30 +26,21 @@ class FtpsFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
     FileInstance(uri) {
     private var ftpFile: FTPFile? = null
 
-    companion object {
-        private const val TAG = "FtpInstance"
-    }
-
     private fun initCurrentFile(): FTPFile? {
         val ftpInstance = getInstance()
-        return try {
-            ftpInstance?.get(path)?.apply {
-                ftpFile = this
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "initCurrentFile: ", e)
-            null
+        return ftpInstance.getFile(path)?.apply {
+            ftpFile = this
         }
     }
 
-    private fun getInstance(): FtpsInstance? {
+    private fun getInstance(): FtpsInstance {
         val ftpInstance = ftpsClients.getOrPut(spec) {
             FtpsInstance(spec)
         }
         if (ftpInstance.connectIfNeed()) {
             return ftpInstance
         }
-        return null
+        throw Exception("login failed")
     }
 
     override suspend fun filePermissions() = reconnectIfNeed()!!.permissions()
@@ -72,15 +62,15 @@ class FtpsFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
         TODO("Not yet implemented")
     }
 
-    override suspend fun getInputStream() = getInstance()!!.inputStream(path)!!
+    override suspend fun getInputStream() = getInstance().inputStream(path)!!
 
-    override suspend fun getOutputStream() = getInstance()!!.outputStream(path)!!
+    override suspend fun getOutputStream() = getInstance().outputStream(path)!!
 
     override suspend fun listInternal(
         fileItems: MutableList<FileModel>,
         directoryItems: MutableList<DirectoryModel>
     ) {
-        val listFiles = getInstance()?.listFiles(path)
+        val listFiles = getInstance().listFiles(path)
         listFiles?.forEach {
             val name = it.name
             val child = childUri(name)
@@ -113,11 +103,7 @@ class FtpsFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
     }
 
     private fun reconnectIfNeed(): FTPFile? {
-        var current = ftpFile
-        if (current == null) {
-            current = initCurrentFile()
-        }
-        return current
+        return ftpFile ?: return initCurrentFile()
     }
 
     override suspend fun exists(): Boolean {
@@ -163,7 +149,9 @@ class FtpsInstance(private val spec: RemoteSpec) {
     fun open(): Boolean {
         connect()
         val login = ftps.login(spec.user, spec.password)
-        ftps.enterLocalPassiveMode()
+        if (login) {
+            ftps.enterLocalPassiveMode()
+        }
         return login
     }
 
@@ -177,7 +165,7 @@ class FtpsInstance(private val spec: RemoteSpec) {
         }
     }
 
-    fun get(path: String?): FTPFile? {
+    fun getFile(path: String?): FTPFile? {
         return ftps.mlistFile(path)
     }
 
@@ -200,17 +188,8 @@ class FtpsInstance(private val spec: RemoteSpec) {
         return if (ftps.isAvailable) {
             true
         } else {
-            try {
-                open()
-            } catch (e: Exception) {
-                Log.e(TAG, "connectIfNeed: ", e)
-                false
-            }
+            open()
         }
-    }
-
-    companion object {
-        private const val TAG = "FtpInstance"
     }
 }
 
