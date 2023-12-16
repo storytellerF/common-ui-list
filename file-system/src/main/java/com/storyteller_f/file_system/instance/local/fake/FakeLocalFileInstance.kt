@@ -14,8 +14,7 @@ import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
-import com.storyteller_f.file_system.model.DirectoryModel
-import com.storyteller_f.file_system.model.FileModel
+import com.storyteller_f.file_system.model.FileInfo
 import com.storyteller_f.file_system.util.fileTime
 import com.storyteller_f.file_system.util.getStorageCompat
 import java.io.File
@@ -68,19 +67,18 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
 
     @WorkerThread
     override suspend fun listInternal(
-        fileItems: MutableList<FileModel>,
-        directoryItems: MutableList<DirectoryModel>
+        fileItems: MutableList<FileInfo>,
+        directoryItems: MutableList<FileInfo>
     ) {
         presetFiles[path]?.map { packageName ->
             val (file, child) = child(packageName)
             val length = getAppSize(packageName)
-            FileModel(
+            FileInfo(
                 packageName,
                 child,
                 file.fileTime(),
                 FileKind.build(isFile = true, isSymbolicLink = false, isHidden = false),
                 FilePermissions.USER_READABLE,
-                "apk"
             ).apply {
                 size = length
             }
@@ -88,7 +86,7 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
 
         (presetSystemDirectories[path] ?: presetDirectories[path])?.map {
             val (file, child) = child(it)
-            DirectoryModel(
+            FileInfo(
                 it,
                 child,
                 file.fileTime(),
@@ -115,13 +113,13 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
         ).length()
     }
 
-    private suspend fun storageVolumes(): List<DirectoryModel> {
+    private suspend fun storageVolumes(): List<FileInfo> {
         return context.getStorageCompat().map {
             val (file, child) = child(it.name)
-            DirectoryModel(
+            FileInfo(
                 it.name,
                 child,
-                fileTime = file.fileTime(),
+                file.fileTime(),
                 FileKind.build(isFile = false, isSymbolicLink = false, isHidden = false),
                 FilePermissions.USER_READABLE
             )

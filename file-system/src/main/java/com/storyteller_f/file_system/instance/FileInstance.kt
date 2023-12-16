@@ -3,10 +3,8 @@ package com.storyteller_f.file_system.instance
 import android.net.Uri
 import androidx.annotation.WorkerThread
 import androidx.core.util.ObjectsCompat
-import com.storyteller_f.file_system.model.DirectoryModel
-import com.storyteller_f.file_system.model.FileModel
+import com.storyteller_f.file_system.model.FileInfo
 import com.storyteller_f.file_system.model.FileSystemPack
-import com.storyteller_f.file_system.util.getExtension
 import com.storyteller_f.file_system.util.parentPath
 import java.io.File
 import java.io.FileInputStream
@@ -41,19 +39,14 @@ abstract class FileInstance(val uri: Uri) {
     abstract suspend fun fileKind(): FileKind
 
     @WorkerThread
-    suspend fun getFile() =
-        FileModel(
+    suspend fun getFileInfo() =
+        FileInfo(
             name,
             uri,
             fileTime(),
             fileKind(),
             filePermissions(),
-            getExtension(name).orEmpty()
         )
-
-    @WorkerThread
-    suspend fun getDirectory() =
-        DirectoryModel(name, uri, fileTime(), fileKind(), filePermissions())
 
     @WorkerThread
     abstract suspend fun getFileInputStream(): FileInputStream
@@ -82,8 +75,8 @@ abstract class FileInstance(val uri: Uri) {
      */
     @WorkerThread
     protected abstract suspend fun listInternal(
-        fileItems: MutableList<FileModel>,
-        directoryItems: MutableList<DirectoryModel>
+        fileItems: MutableList<FileInfo>,
+        directoryItems: MutableList<FileInfo>
     )
 
     @WorkerThread
@@ -155,9 +148,9 @@ abstract class FileInstance(val uri: Uri) {
         return ObjectsCompat.hash(uri)
     }
 
-    private fun buildFilesContainer(): MutableList<FileModel> = mutableListOf()
+    private fun buildFilesContainer(): MutableList<FileInfo> = mutableListOf()
 
-    private fun buildDirectoryContainer(): MutableList<DirectoryModel> = mutableListOf()
+    private fun buildDirectoryContainer(): MutableList<FileInfo> = mutableListOf()
 
     protected fun child(it: String): Pair<File, Uri> {
         val file = File(path, it)

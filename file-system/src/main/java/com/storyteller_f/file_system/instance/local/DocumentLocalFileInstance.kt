@@ -19,12 +19,10 @@ import com.storyteller_f.file_system.instance.FilePermission
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.instance.GetDocumentFile
-import com.storyteller_f.file_system.model.DirectoryModel
-import com.storyteller_f.file_system.model.FileModel
+import com.storyteller_f.file_system.model.FileInfo
 import com.storyteller_f.file_system.util.addDirectory
 import com.storyteller_f.file_system.util.addFile
 import com.storyteller_f.file_system.util.buildPath
-import com.storyteller_f.file_system.util.getExtension
 import com.storyteller_f.file_system.util.parentPath
 import com.storyteller_f.file_system.util.permissions
 import kotlinx.coroutines.yield
@@ -253,8 +251,8 @@ class DocumentLocalFileInstance(
 
     @Throws(Exception::class)
     public override suspend fun listInternal(
-        fileItems: MutableList<FileModel>,
-        directoryItems: MutableList<DirectoryModel>
+        fileItems: MutableList<FileInfo>,
+        directoryItems: MutableList<FileInfo>
     ) {
         val c = relinkIfNeed() ?: throw Exception("no permission")
         val documentFiles = c.listFiles()
@@ -268,7 +266,6 @@ class DocumentLocalFileInstance(
                 fileItems.addFile(
                     uri,
                     documentFileName,
-                    getExtension(documentFileName),
                     documentFile.length(),
                     permissions,
                     fileTime,

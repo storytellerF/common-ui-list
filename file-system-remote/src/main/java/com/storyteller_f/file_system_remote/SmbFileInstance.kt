@@ -15,9 +15,7 @@ import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
-import com.storyteller_f.file_system.model.DirectoryModel
-import com.storyteller_f.file_system.model.FileModel
-import com.storyteller_f.file_system.util.getExtension
+import com.storyteller_f.file_system.model.FileInfo
 import java.io.FileInputStream
 import java.io.FileOutputStream
 
@@ -119,8 +117,8 @@ class SmbFileInstance(uri: Uri, private val shareSpec: ShareSpec = ShareSpec.par
     }
 
     override suspend fun listInternal(
-        fileItems: MutableList<FileModel>,
-        directoryItems: MutableList<DirectoryModel>
+        fileItems: MutableList<FileInfo>,
+        directoryItems: MutableList<FileInfo>
     ) {
         val (share, _) = reconnectIfNeed()
         share.list(path).filter {
@@ -134,23 +132,22 @@ class SmbFileInstance(uri: Uri, private val shareSpec: ShareSpec = ShareSpec.par
             val filePermissions = FilePermissions.USER_READABLE
             if (isDirectory) {
                 directoryItems.add(
-                    DirectoryModel(
+                    FileInfo(
                         fileName,
                         child,
-                        fileTime = fileTime,
+                        fileTime,
                         FileKind.build(isFile = false, isSymbolicLink = false, isHidden = false),
                         filePermissions
                     )
                 )
             } else {
                 fileItems.add(
-                    FileModel(
+                    FileInfo(
                         fileName,
                         child,
                         fileTime,
                         FileKind.build(isFile = true, isSymbolicLink = false, isHidden = false),
                         filePermissions,
-                        getExtension(fileName).orEmpty()
                     )
                 )
             }

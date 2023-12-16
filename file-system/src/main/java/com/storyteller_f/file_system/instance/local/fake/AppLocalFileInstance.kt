@@ -12,8 +12,7 @@ import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
-import com.storyteller_f.file_system.model.DirectoryModel
-import com.storyteller_f.file_system.model.FileModel
+import com.storyteller_f.file_system.model.FileInfo
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -43,8 +42,8 @@ class AppLocalFileInstance(context: Context, uri: Uri) : BaseContextFileInstance
     override suspend fun getFileOutputStream() = FileOutputStream(publicSourceDir)
 
     override suspend fun listInternal(
-        fileItems: MutableList<FileModel>,
-        directoryItems: MutableList<DirectoryModel>
+        fileItems: MutableList<FileInfo>,
+        directoryItems: MutableList<FileInfo>
     ) {
         TODO("Not yet implemented")
     }

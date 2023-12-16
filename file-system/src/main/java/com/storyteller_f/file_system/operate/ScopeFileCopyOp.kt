@@ -6,8 +6,7 @@ import com.storyteller_f.file_system.instance.FileCreatePolicy.Create
 import com.storyteller_f.file_system.instance.FileCreatePolicy.NotCreate
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.message.Message
-import com.storyteller_f.file_system.model.DirectoryModel
-import com.storyteller_f.file_system.model.FileModel
+import com.storyteller_f.file_system.model.FileInfo
 import com.storyteller_f.file_system.toChildEfficiently
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -251,7 +250,7 @@ class FileDeleteOp(
 
     private suspend fun deleteChildDirectory(
         fileInstance: FileInstance,
-        it: DirectoryModel
+        it: FileInfo
     ): Boolean {
         val childDirectory = fileInstance.toChildEfficiently(
             context,
@@ -270,7 +269,7 @@ class FileDeleteOp(
         return deleteDirectory
     }
 
-    private suspend fun deleteChildFile(fileInstance: FileInstance, it: FileModel): Boolean {
+    private suspend fun deleteChildFile(fileInstance: FileInstance, it: FileInfo): Boolean {
         val childFile = fileInstance.toChildEfficiently(context, it.name, NotCreate)
         val deleteFileOrEmptyDirectory = childFile.deleteFileOrEmptyDirectory()
         if (deleteFileOrEmptyDirectory) {

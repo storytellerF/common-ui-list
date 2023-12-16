@@ -22,6 +22,9 @@ sealed class FileKind(open val linkType: SymbolicLinkType? = null, open val isHi
     val isFile get() = this is File
     val isDirectory get() = this is Directory
 
+    val symbolicLink: Boolean
+        get() = linkType != null
+
     companion object {
         fun build(isFile: Boolean, isSymbolicLink: Boolean, isHidden: Boolean): FileKind {
             val linkType = if (isSymbolicLink) SymbolicLinkType.Soft("") else null

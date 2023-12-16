@@ -7,8 +7,7 @@ import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermission
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
-import com.storyteller_f.file_system.model.DirectoryModel
-import com.storyteller_f.file_system.model.FileModel
+import com.storyteller_f.file_system.model.FileInfo
 import com.storyteller_f.file_system.util.addDirectory
 import com.storyteller_f.file_system.util.addFile
 import com.storyteller_f.file_system.util.buildPath
@@ -40,8 +39,8 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
     override suspend fun getFileOutputStream() = extendedFile.outputStream()
 
     override suspend fun listInternal(
-        fileItems: MutableList<FileModel>,
-        directoryItems: MutableList<DirectoryModel>
+        fileItems: MutableList<FileInfo>,
+        directoryItems: MutableList<FileInfo>
     ) {
         val listFiles = extendedFile.listFiles()
         listFiles?.forEach {
