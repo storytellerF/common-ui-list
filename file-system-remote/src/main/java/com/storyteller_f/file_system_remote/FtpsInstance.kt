@@ -5,9 +5,7 @@ import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FileTime
-import com.storyteller_f.file_system.model.DirectoryModel
-import com.storyteller_f.file_system.model.FileModel
-import com.storyteller_f.file_system.util.getExtension
+import com.storyteller_f.file_system.model.FileInfo
 import org.apache.commons.net.PrintCommandListener
 import org.apache.commons.net.ftp.FTPClientConfig
 import org.apache.commons.net.ftp.FTPFile
@@ -67,8 +65,8 @@ class FtpsFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
     override suspend fun getOutputStream() = getInstance().outputStream(path)!!
 
     override suspend fun listInternal(
-        fileItems: MutableList<FileModel>,
-        directoryItems: MutableList<DirectoryModel>
+        fileItems: MutableList<FileInfo>,
+        directoryItems: MutableList<FileInfo>
     ) {
         val listFiles = getInstance().listFiles(path)
         listFiles?.forEach {
@@ -79,18 +77,17 @@ class FtpsFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
             val isSymbolicLink = it.isSymbolicLink
             if (it.isFile) {
                 fileItems.add(
-                    FileModel(
+                    FileInfo(
                         name,
                         child,
                         time,
                         FileKind.build(true, isSymbolicLink, false),
                         filePermissions,
-                        getExtension(name).orEmpty()
                     )
                 )
             } else if (it.isDirectory) {
                 directoryItems.add(
-                    DirectoryModel(
+                    FileInfo(
                         name,
                         child,
                         time,

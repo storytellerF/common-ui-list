@@ -5,9 +5,7 @@ import android.os.Build
 import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
-import com.storyteller_f.file_system.model.DirectoryModel
-import com.storyteller_f.file_system.model.FileModel
-import com.storyteller_f.file_system.model.FileSystemModel
+import com.storyteller_f.file_system.model.FileInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -34,11 +32,11 @@ suspend fun File.fileTime(): FileTime {
 /**
  * 添加普通目录，判断过滤监听事件
  */
-fun MutableCollection<DirectoryModel>.addDirectory(
+fun MutableCollection<FileInfo>.addDirectory(
     uriPair: Pair<File, Uri>,
     permissions: FilePermissions,
     fileTime: FileTime,
-): FileSystemModel? {
+): FileInfo? {
     val (childDirectory, uri) = uriPair
 
     return addDirectory(
@@ -57,16 +55,15 @@ fun MutableCollection<DirectoryModel>.addDirectory(
 /**
  * 添加普通目录，判断过滤监听事件
  */
-fun MutableCollection<FileModel>.addFile(
+fun MutableCollection<FileInfo>.addFile(
     uriPair: Pair<File, Uri>,
     permissions: FilePermissions,
     fileTime: FileTime,
-): FileSystemModel? {
+): FileInfo? {
     val (childFile, uri) = uriPair
     return addFile(
         uri,
         childFile.name,
-        childFile.extension,
         childFile.length(),
         permissions,
         fileTime,

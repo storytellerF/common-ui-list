@@ -9,8 +9,7 @@ import com.storyteller_f.file_system.instance.FileCreatePolicy.*
 import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermission
 import com.storyteller_f.file_system.instance.FilePermissions
-import com.storyteller_f.file_system.model.DirectoryModel
-import com.storyteller_f.file_system.model.FileModel
+import com.storyteller_f.file_system.model.FileInfo
 import com.storyteller_f.file_system.util.addDirectory
 import com.storyteller_f.file_system.util.addFile
 import com.storyteller_f.file_system.util.fileTime
@@ -102,8 +101,8 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
 
     @WorkerThread
     public override suspend fun listInternal(
-        fileItems: MutableList<FileModel>,
-        directoryItems: MutableList<DirectoryModel>
+        fileItems: MutableList<FileInfo>,
+        directoryItems: MutableList<FileInfo>
     ) {
         val listFiles = innerFile.listFiles() // 获取子文件
         if (listFiles != null) {

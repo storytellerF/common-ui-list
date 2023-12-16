@@ -6,9 +6,7 @@ import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
-import com.storyteller_f.file_system.model.DirectoryModel
-import com.storyteller_f.file_system.model.FileModel
-import com.storyteller_f.file_system.util.getExtension
+import com.storyteller_f.file_system.model.FileInfo
 import com.thegrizzlylabs.sardineandroid.DavResource
 import com.thegrizzlylabs.sardineandroid.impl.OkHttpSardine
 import java.io.FileInputStream
@@ -51,8 +49,8 @@ class WebDavFileInstance(uri: Uri, private val spec: ShareSpec = ShareSpec.parse
     }
 
     override suspend fun listInternal(
-        fileItems: MutableList<FileModel>,
-        directoryItems: MutableList<DirectoryModel>
+        fileItems: MutableList<FileInfo>,
+        directoryItems: MutableList<FileInfo>
     ) {
         getWebDavInstance().list(path).forEach {
             val fileName = it.name
@@ -61,7 +59,7 @@ class WebDavFileInstance(uri: Uri, private val spec: ShareSpec = ShareSpec.parse
             val fileTime = FileTime(it.modified.time, created = it.creation.time)
             if (it.isDirectory) {
                 directoryItems.add(
-                    DirectoryModel(
+                    FileInfo(
                         fileName,
                         child,
                         fileTime,
@@ -71,13 +69,12 @@ class WebDavFileInstance(uri: Uri, private val spec: ShareSpec = ShareSpec.parse
                 )
             } else {
                 fileItems.add(
-                    FileModel(
+                    FileInfo(
                         fileName,
                         child,
                         fileTime,
                         FileKind.build(isFile = true, isSymbolicLink = false, isHidden = false),
                         filePermissions,
-                        extension = getExtension(fileName).orEmpty(),
                     )
                 )
             }

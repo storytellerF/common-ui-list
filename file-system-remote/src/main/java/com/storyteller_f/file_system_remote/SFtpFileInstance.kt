@@ -7,9 +7,7 @@ import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
-import com.storyteller_f.file_system.model.DirectoryModel
-import com.storyteller_f.file_system.model.FileModel
-import com.storyteller_f.file_system.util.getExtension
+import com.storyteller_f.file_system.model.FileInfo
 import net.schmizz.sshj.SSHClient
 import net.schmizz.sshj.sftp.FileAttributes
 import net.schmizz.sshj.sftp.FileMode
@@ -85,8 +83,8 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
     }
 
     override suspend fun listInternal(
-        fileItems: MutableList<FileModel>,
-        directoryItems: MutableList<DirectoryModel>
+        fileItems: MutableList<FileInfo>,
+        directoryItems: MutableList<FileInfo>
     ) {
         getInstance().ls(path).forEach {
             val attributes = it.attributes
@@ -98,7 +96,7 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
                 FilePermissions.fromMask(FilePermission.toMask(attributes.permissions))
             if (it.isDirectory) {
                 directoryItems.add(
-                    DirectoryModel(
+                    FileInfo(
                         fileName,
                         child,
                         fileTime,
@@ -108,13 +106,12 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
                 )
             } else {
                 fileItems.add(
-                    FileModel(
+                    FileInfo(
                         fileName,
                         child,
                         fileTime,
                         FileKind.build(true, isSymLink, false),
                         filePermissions,
-                        getExtension(fileName).orEmpty()
                     )
                 )
             }
