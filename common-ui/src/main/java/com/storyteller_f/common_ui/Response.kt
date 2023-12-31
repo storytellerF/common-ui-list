@@ -31,10 +31,10 @@ interface ResponseFragment {
     val vm: StateValueModel<UUID?>
 }
 
-data class RequestKey(private val uuid: UUID?)
+data class FragmentRequest(private val uuid: UUID?)
 
-internal val ResponseFragment.requestKey: RequestKey
-    get() = RequestKey(vm.data.value)
+internal val ResponseFragment.fragmentRequest: FragmentRequest
+    get() = FragmentRequest(vm.data.value)
 
 /**
  * 可以发起请求，发起的请求通过registryKey 辨别
@@ -46,13 +46,13 @@ interface Registry {
     fun registryKey(): String = "${this.javaClass.simpleName}-registry"
 }
 
-fun <T : Parcelable> Fragment.setFragmentResult(requestKey: RequestKey, result: T) =
-    fm.setFragmentResult(requestKey.toString(), Bundle().apply {
+fun <T : Parcelable> Fragment.setFragmentResult(fragmentRequest: FragmentRequest, result: T) =
+    fm.setFragmentResult(fragmentRequest.toString(), Bundle().apply {
         putParcelable(fragmentResultKey, result)
     })
 
 fun <T, F> F.setFragmentResult(result: T) where T : Parcelable, F : Fragment, F : ResponseFragment =
-    setFragmentResult(requestKey, result)
+    setFragmentResult(fragmentRequest, result)
 
 val fragmentResultKey
     get() = "result"
@@ -100,11 +100,11 @@ inline fun <T : Parcelable, A> A.buildCallback(
  * 如果启动是通过navigation 启动dialog，需要使用parentFragmentManager 接受结果
  */
 fun <T : Parcelable, F> F.waitingResponseInFragment(
-    requestKey: RequestKey,
+    fragmentRequest: FragmentRequest,
     action: F.(T) -> Unit,
     callback: (String, Bundle) -> Unit
 ) where F : Registry, F : Fragment {
-    val key = requestKey.toString()
+    val key = fragmentRequest.toString()
     val registerKey = registryKey()
 
     @Suppress("UNCHECKED_CAST")
@@ -116,11 +116,11 @@ fun <T : Parcelable, F> F.waitingResponseInFragment(
 }
 
 private fun <A, T : Parcelable> A.waitingResponseInActivity(
-    requestKey: RequestKey,
+    fragmentRequest: FragmentRequest,
     action: A.(T) -> Unit,
     callback: (String, Bundle) -> Unit
 ) where A : FragmentActivity, A : Registry {
-    val key = requestKey.toString()
+    val key = fragmentRequest.toString()
     val registerKey = registryKey()
 
     @Suppress("UNCHECKED_CAST")
@@ -150,7 +150,7 @@ fun NavController.request(
     args: Bundle = Bundle(),
     navOptions: NavOptions? = null,
     navigatorExtras: Navigator.Extras? = null
-): RequestKey {
+): FragmentRequest {
     val randomUUID = UUID.randomUUID()
     args.putSerializable("uuid", randomUUID)
     navigate(resId, args, navOptions, navigatorExtras)
@@ -160,43 +160,43 @@ fun NavController.request(
 fun <F> F.request(
     dialog: KClass<out CommonDialogFragment>,
     parameters: Bundle = Bundle()
-): RequestKey where F : LifecycleOwner = show(dialog.java, parameters).requestKey()
+): FragmentRequest where F : LifecycleOwner = show(dialog.java, parameters).requestKey()
 
 fun <F> F.request(
     dialog: Class<out CommonDialogFragment>,
     parameters: Bundle = Bundle()
-): RequestKey where F : LifecycleOwner = show(dialog, parameters).requestKey()
+): FragmentRequest where F : LifecycleOwner = show(dialog, parameters).requestKey()
 
-private fun UUID.requestKey(): RequestKey = RequestKey(this)
+private fun UUID.requestKey(): FragmentRequest = FragmentRequest(this)
 
 fun <T : Parcelable, F> F.observeResponse(
-    requestKey: RequestKey,
+    fragmentRequest: FragmentRequest,
     result: KClass<T>,
     action: F.(T) -> Unit
-) where F : Fragment, F : Registry = observeResponse(requestKey, result.java, action)
+) where F : Fragment, F : Registry = observeResponse(fragmentRequest, result.java, action)
 
 fun <T : Parcelable, F> F.observeResponse(
-    requestKey: RequestKey,
+    fragmentRequest: FragmentRequest,
     result: Class<T>,
     action: F.(T) -> Unit
 ) where F : Fragment, F : Registry {
     val callback = buildCallback(result, action)
-    waitingResponseInFragment(requestKey, action, callback)
+    waitingResponseInFragment(fragmentRequest, action, callback)
 }
 
 fun <T : Parcelable, A> A.observeResponse(
-    requestKey: RequestKey,
+    fragmentRequest: FragmentRequest,
     result: KClass<T>,
     action: A.(T) -> Unit
-) where A : FragmentActivity, A : Registry = observeResponse(requestKey, result.java, action)
+) where A : FragmentActivity, A : Registry = observeResponse(fragmentRequest, result.java, action)
 
 fun <T : Parcelable, A> A.observeResponse(
-    requestKey: RequestKey,
+    fragmentRequest: FragmentRequest,
     result: Class<T>,
     action: A.(T) -> Unit
 ) where A : FragmentActivity, A : Registry {
     val callback = buildCallback(result, action)
-    waitingResponseInActivity(requestKey, action, callback)
+    waitingResponseInActivity(fragmentRequest, action, callback)
 }
 
 internal fun <A> A.observeResponse() where A : FragmentActivity, A : Registry {

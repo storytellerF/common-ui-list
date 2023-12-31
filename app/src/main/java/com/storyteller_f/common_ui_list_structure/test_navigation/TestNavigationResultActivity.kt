@@ -6,7 +6,7 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import com.google.android.material.snackbar.Snackbar
-import com.storyteller_f.common_pr.observe
+import com.storyteller_f.common_pr.response
 import com.storyteller_f.common_ui.CommonActivity
 import com.storyteller_f.common_ui.request
 import com.storyteller_f.common_ui_list_structure.R
@@ -28,8 +28,7 @@ class TestNavigationResultActivity : CommonActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
 
         binding.fab.setOnClickListener { view ->
-            val requestKey = request(TestDialog2::class.java)
-            requestKey.observe(TestDialog2.Result::class.java) {
+            request(TestDialog2::class.java).response(TestDialog2.Result::class.java) {
                 Snackbar.make(view, it.test, Snackbar.LENGTH_LONG)
                     .setAction("activity->dialog", null).show()
             }
