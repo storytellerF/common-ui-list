@@ -16,11 +16,11 @@ object Versions {
     const val CORE = "1.12.0"
     const val RECYCLERVIEW = "1.3.2"
     const val CONSTRAINTLAYOUT = "2.1.4"
-    const val MATERIAL = "1.10.0"
+    const val MATERIAL = "1.11.0"
     const val ACTIVITY_KTX = "1.8.0"
     const val FRAGMENT_KTX = "1.6.1"
     const val LIFECYCLE = "2.6.2"
-    const val ROOM = "2.6.0"
+    const val ROOM = "2.6.1"
     const val PAGING = "3.2.1"
     const val RETROFIT = "2.9.0"
     const val OKHTTP_LOGGING_INTERCEPTOR = "5.0.0-alpha.6"
@@ -38,7 +38,7 @@ object Versions {
     const val TEST_ESPRESSO = "3.4.0"
     const val MULTI_DEX = "2.0.1"
     const val BAO = "2.3.0"
-    const val NAVIGATION = "2.7.4"
+    const val NAVIGATION = "2.7.6"
     const val SWIPE_REFRESH = "1.1.0"
 }
 

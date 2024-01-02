@@ -27,10 +27,6 @@ plugins {
     id("org.jetbrains.kotlinx.kover") version "0.7.4"
 }
 
-// tasks.register("clean", Delete::class) {
-//     delete(rootProject.layout.buildDirectory)
-// }
-
 android {
     compileSdk = 34
     namespace = "com.root"
@@ -99,9 +95,11 @@ subprojects {
     }
 
     dependencies {
-        detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.1")
-        detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules-libraries:1.23.1")
-        detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules-ruleauthors:1.23.1")
+        val detektVersion = "1.23.1"
+
+        detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:$detektVersion")
+        detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules-libraries:$detektVersion")
+        detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules-ruleauthors:$detektVersion")
         if (name == "app") {
             val action = { it: String ->
                 kover(project(":$it"))
@@ -111,7 +109,8 @@ subprojects {
             jvmModules.forEach(action)
         }
         if (androidLibModules.contains(name)) {
-            testImplementation("org.robolectric:robolectric:4.11.1")
+            val robolectricVersion = "4.11.1"
+            testImplementation("org.robolectric:robolectric:$robolectricVersion")
         }
     }
     koverReport {
