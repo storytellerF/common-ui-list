@@ -13,23 +13,25 @@ import androidx.viewbinding.ViewBinding
 
 typealias BuildViewHolderFunction = (ViewGroup, String) -> AbstractViewHolder<out DataItemHolder>
 
+data class VariantBuildViewHolderFunction(val variant: String, val functionPosition: Int)
+
 /**
  * 不可以手动直接修改
  */
 val list = mutableListOf<BuildViewHolderFunction>()
 
 /**
- * 不直接存放BuildViewHolderFunction，使用Int 作为指针指向list，并且没有偏移
+ * 不直接存储BuildViewHolderFunction，而是存储BuildViewHolderFunction 的索引
  */
-val secondList = mutableListOf<Pair<String, Int>>()
+val secondList = mutableListOf<VariantBuildViewHolderFunction>()
 
 /**
- * value 存储指向list 中元素的指针。且作为viewType
+ * value 存储指向list 中元素的索引。且作为viewType
  */
 val registerCenter = mutableMapOf<Class<out DataItemHolder>, Int>()
 
 /**
- * value 作为viewType，一定是大于list.size的。指向second list 中的元素
+ * value 作为viewType，为了确认指定的viewType 是存储在secondRegisterCenter 中，增加了偏移，偏移值是list.size
  */
 val secondRegisterCenter = mutableMapOf<SecondRegisterKey, Int>()
 
@@ -41,15 +43,12 @@ fun holders(vararg blocks: (Int) -> Int) {
     }
 }
 
-interface DataItemHolder {
-
-    val variant: String
-        get() = ""
+abstract class DataItemHolder(val variant: String = "") {
 
     /**
      * 可以直接进行强制类型转换，无需判断
      */
-    fun areItemsTheSame(other: DataItemHolder): Boolean
+    abstract fun areItemsTheSame(other: DataItemHolder): Boolean
     fun areContentsTheSame(other: DataItemHolder): Boolean = this == other
 }
 
@@ -119,7 +118,12 @@ open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(priv
         return if (item.variant.isNotEmpty()) {
             val secondRegisterKey = SecondRegisterKey(ihClass, item.variant)
             secondRegisterCenter.getOrPut(secondRegisterKey) {
-                secondList.add(secondRegisterKey.variant to functionPosition)
+                secondList.add(
+                    VariantBuildViewHolderFunction(
+                        secondRegisterKey.variant,
+                        functionPosition
+                    )
+                )
                 (secondList.size - 1) + list.size
             }
         } else {
