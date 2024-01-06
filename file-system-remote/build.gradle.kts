@@ -22,12 +22,13 @@ baseLibrary()
 
 dependencies {
 
-    implementation(project(":common-ktx"))
+    implModule(":common-ktx")
+    implModule(":file-system")
+    unitTestDependency()
     commonAndroidDependency()
     implementation("androidx.room:room-common:${Versions.ROOM}")
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    implModule(":file-system")
 
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
     // https://mvnrepository.com/artifact/commons-net/commons-net
     implementation("commons-net:commons-net:3.10.0")
     // https://mvnrepository.com/artifact/org.mockftpserver/MockFtpServer
@@ -36,10 +37,9 @@ dependencies {
     implementation("com.hierynomus:smbj:0.13.0")
     // https://mvnrepository.com/artifact/com.hierynomus/sshj
     implementation("com.hierynomus:sshj:0.38.0")
-
-    unitTestDependency()
-    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
     implementation("com.github.thegrizzlylabs:sardine-android:0.8")
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+
 
     val mockkVersion = "1.13.8"
     testImplementation("io.mockk:mockk-android:${mockkVersion}")

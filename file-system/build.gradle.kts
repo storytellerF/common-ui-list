@@ -29,7 +29,6 @@ baseLibrary()
 dependencies {
     implModule(":common-ktx")
     implModule(":compat-ktx")
-    implModule(":multi-core")
 
     implementation("com.google.android.material:material:${Versions.MATERIAL}")
 

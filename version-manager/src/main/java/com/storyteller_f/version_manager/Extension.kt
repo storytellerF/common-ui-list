@@ -258,7 +258,6 @@ fun Project.constraintCommonUIListVersion(
                 "file-system-ktx",
                 "file-system-remote",
                 "file-system-root",
-                "multi-core",
                 "slim-ktx",
                 "ui-list",
                 "ui-list-annotation-common",

@@ -136,7 +136,7 @@ class FtpsFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
 }
 
 class FtpsInstance(private val spec: RemoteSpec) {
-    private val ftps: FTPSClient = FTPSClient(spec.type == RemoteAccessType.ftps).apply {
+    private val ftps: FTPSClient = FTPSClient(spec.type == RemoteAccessType.FTPS).apply {
         addProtocolCommandListener(PrintCommandListener(PrintWriter(System.out)))
         val ftpClientConfig = FTPClientConfig()
         configure(ftpClientConfig)

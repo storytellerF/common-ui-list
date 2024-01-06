@@ -40,7 +40,6 @@ include(":composite-compiler")
 
 include(":common-vm-ktx")
 include(":common-ui")
-include(":multi-core")
 include(":common-ktx")
 include(":common-pr")
 include(":slim-ktx")
