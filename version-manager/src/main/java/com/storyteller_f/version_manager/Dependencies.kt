@@ -154,7 +154,6 @@ fun DependencyHandlerScope.dataBindingDependency() {
 }
 
 fun Project.workerDependency() {
-    implModule(":multi-core")
     dependencies {
         "implementation"("androidx.work:work-runtime-ktx:${Versions.WORK}")
         "androidTestImplementation"("androidx.work:work-testing:${Versions.WORK}")

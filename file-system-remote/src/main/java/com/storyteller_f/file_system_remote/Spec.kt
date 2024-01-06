@@ -15,17 +15,20 @@ data class ShareSpec(
         return Uri.parse("$type://$user:$password@$server:$port/$share")!!
     }
 
-    fun toRemote(): RemoteAccessSpec {
-        return RemoteAccessSpec(server, port, user, password, share, type)
-    }
-
     companion object {
         fun parse(uri: Uri): ShareSpec {
             val authority = uri.authority!!
             val split = authority.split("@")
             val (user, pass) = split.first().split(":")
             val (server, port) = split.last().split(":")
-            return ShareSpec(server, port.toInt(), user, pass, uri.scheme!!, uri.path!!.substring(1))
+            return ShareSpec(
+                server,
+                port.toInt(),
+                user,
+                pass,
+                uri.scheme!!,
+                uri.path!!.substring(1)
+            )
         }
     }
 }
@@ -42,31 +45,36 @@ data class RemoteSpec(
         return Uri.parse("$scheme://$user:$password@$server:$port/")!!
     }
 
-    fun toRemote(): RemoteAccessSpec {
-        return RemoteAccessSpec(server, port, user, password, type = type)
-    }
-
     companion object {
         fun parse(parse: Uri): RemoteSpec {
             val scheme = parse.scheme!!
             val authority = parse.authority!!
-            val split = authority.split("@")
-            val (user, pass) = split.first().split(":")
-            val (server, port) = split.last().split(":")
+            val (userConfig, serverConfig) = authority.split("@")
+            val (user, pass) = userConfig.split(":")
+            val (server, port) = serverConfig.split(":")
             return RemoteSpec(server, port.toInt(), user, pass, type = scheme)
         }
     }
 }
 
-val supportScheme = listOf("ftp", "smb", "sftp", "ftpes", "ftps", "webdav", "http", "https")
+val supportScheme = listOf(
+    RemoteAccessType.FTP,
+    RemoteAccessType.SMB,
+    RemoteAccessType.SFTP,
+    RemoteAccessType.FTP_ES,
+    RemoteAccessType.FTPS,
+    RemoteAccessType.WEB_DAV,
+    "http",
+    "https"
+)
 
 fun getRemoteInstance(uri: Uri): FileInstance {
     return when (uri.scheme) {
-        "ftp" -> FtpFileInstance(uri)
-        "smb" -> SmbFileInstance(uri)
-        "sftp" -> SFtpFileInstance(uri)
-        "ftpes", "ftps" -> FtpsFileInstance(uri)
-        "webdav" -> WebDavFileInstance(uri)
+        RemoteAccessType.FTP -> FtpFileInstance(uri)
+        RemoteAccessType.SMB -> SmbFileInstance(uri)
+        RemoteAccessType.SFTP -> SFtpFileInstance(uri)
+        RemoteAccessType.FTP_ES, RemoteAccessType.FTPS -> FtpsFileInstance(uri)
+        RemoteAccessType.WEB_DAV -> WebDavFileInstance(uri)
         else -> throw Exception(uri.scheme)
     }
 }
