@@ -19,6 +19,9 @@ val gradleVersion = "8.4"
 ## Build
 
 ```shell
+//build
+sh gradlew build
+//publish
 sh gradlew clean -Pgroup=com.github.storytellerF -xtest -xlint assemble publishToMavenLocal :version-manager:publishToMavenLocal
 ```
 
