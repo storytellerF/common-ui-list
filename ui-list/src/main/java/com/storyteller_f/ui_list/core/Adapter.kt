@@ -49,7 +49,7 @@ abstract class DataItemHolder(val variant: String = "") {
      * 可以直接进行强制类型转换，无需判断
      */
     abstract fun areItemsTheSame(other: DataItemHolder): Boolean
-    fun areContentsTheSame(other: DataItemHolder): Boolean = this == other
+    open fun areContentsTheSame(other: DataItemHolder): Boolean = this == other
 }
 
 abstract class AbstractViewHolder<IH : DataItemHolder>(val view: View) :
