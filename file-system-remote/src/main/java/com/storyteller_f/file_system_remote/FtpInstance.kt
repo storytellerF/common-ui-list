@@ -49,11 +49,11 @@ class FtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse(
 
     override suspend fun fileTime() = reconnectIfNeed()!!.fileTime()
     override suspend fun fileKind() = reconnectIfNeed()!!.let {
-        FileKind.build(it.isFile, it.isSymbolicLink, false)
+        FileKind.build(it.isFile, it.isSymbolicLink, false, getFileLength())
     }
 
     override suspend fun getFileLength(): Long {
-        TODO("Not yet implemented")
+        return reconnectIfNeed()!!.size
     }
 
     override suspend fun getFileInputStream(): FileInputStream {
@@ -85,7 +85,7 @@ class FtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse(
                         name,
                         child,
                         fileTime,
-                        FileKind.build(true, isSymbolicLink, false),
+                        FileKind.build(true, isSymbolicLink, false, it.size),
                         permission,
                     )
                 )
@@ -95,7 +95,7 @@ class FtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse(
                         name,
                         child,
                         fileTime,
-                        FileKind.build(false, isSymbolicLink, false),
+                        FileKind.build(false, isSymbolicLink, false, 0),
                         permission,
                     )
                 )
@@ -104,7 +104,7 @@ class FtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse(
     }
 
     private fun reconnectIfNeed(): FTPFile? {
-        return ftpFile ?: return initCurrentFile()
+        return ftpFile ?: initCurrentFile()
     }
 
     override suspend fun exists(): Boolean {

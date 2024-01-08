@@ -95,7 +95,7 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
 
     override suspend fun fileTime() = innerFile.fileTime()
     override suspend fun fileKind() =
-        FileKind.build(innerFile.isFile, innerFile.isSymbolicLink(), innerFile.isHidden)
+        FileKind.build(innerFile.isFile, innerFile.isSymbolicLink(), innerFile.isHidden, getFileLength())
 
     override suspend fun getFileLength(): Long = innerFile.length()
 

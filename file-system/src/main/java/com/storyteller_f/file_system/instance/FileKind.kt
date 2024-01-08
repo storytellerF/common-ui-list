@@ -11,7 +11,8 @@ sealed class SymbolicLinkType(open val origin: String) {
 sealed class FileKind(open val linkType: SymbolicLinkType? = null, open val isHidden: Boolean) {
     data class File(
         override val linkType: SymbolicLinkType? = null,
-        override val isHidden: Boolean
+        override val isHidden: Boolean,
+        val size: Long,
     ) : FileKind(linkType, isHidden)
 
     data class Directory(
@@ -26,9 +27,9 @@ sealed class FileKind(open val linkType: SymbolicLinkType? = null, open val isHi
         get() = linkType != null
 
     companion object {
-        fun build(isFile: Boolean, isSymbolicLink: Boolean, isHidden: Boolean): FileKind {
+        fun build(isFile: Boolean, isSymbolicLink: Boolean, isHidden: Boolean, size: Long): FileKind {
             val linkType = if (isSymbolicLink) SymbolicLinkType.Soft("") else null
-            return if (isFile) File(linkType, isHidden) else Directory(linkType, isHidden)
+            return if (isFile) File(linkType, isHidden, size) else Directory(linkType, isHidden)
         }
     }
 }

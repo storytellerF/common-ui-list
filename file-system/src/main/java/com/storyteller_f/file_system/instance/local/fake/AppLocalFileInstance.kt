@@ -29,7 +29,8 @@ class AppLocalFileInstance(context: Context, uri: Uri) : BaseContextFileInstance
     override suspend fun fileKind() = FileKind.build(
         isFile = false,
         isSymbolicLink = false,
-        isHidden = false
+        isHidden = false,
+        getFileLength()
     )
 
     private val publicSourceDir: String =

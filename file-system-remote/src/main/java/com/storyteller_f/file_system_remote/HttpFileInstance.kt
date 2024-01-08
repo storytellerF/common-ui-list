@@ -78,7 +78,8 @@ class HttpFileInstance(context: Context, uri: Uri) : BaseContextFileInstance(con
     override suspend fun fileKind() = FileKind.build(
         isFile = true,
         isSymbolicLink = false,
-        isHidden = false
+        isHidden = false,
+        getFileLength()
     )
 
     override suspend fun getFileLength() = createIfNeed().length()

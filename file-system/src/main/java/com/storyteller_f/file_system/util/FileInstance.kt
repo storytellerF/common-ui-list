@@ -16,7 +16,6 @@ import com.storyteller_f.file_system.model.FileInfo
 fun MutableCollection<FileInfo>.addFile(
     uri: Uri,
     name: String,
-    size: Long,
     permission: FilePermissions,
     fileTime: FileTime,
     fileKind: FileKind,
@@ -28,7 +27,6 @@ fun MutableCollection<FileInfo>.addFile(
         fileKind,
         permission,
     )
-    fileItemModel.size = size
     return if (add(fileItemModel)) fileItemModel else null
 }
 
