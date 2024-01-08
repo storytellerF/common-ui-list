@@ -28,7 +28,7 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
 
     override suspend fun fileTime() = extendedFile.fileTime()
     override suspend fun fileKind() =
-        FileKind.build(extendedFile.isFile, extendedFile.isSymlink, extendedFile.isHidden)
+        FileKind.build(extendedFile.isFile, extendedFile.isSymlink, extendedFile.isHidden, extendedFile.length())
 
     override suspend fun getFileLength(): Long {
         return extendedFile.length()

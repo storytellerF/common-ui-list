@@ -62,7 +62,8 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
     override suspend fun fileKind() = FileKind.build(
         isFile = false,
         isSymbolicLink = false,
-        isHidden = false
+        isHidden = false,
+        getFileLength()
     )
 
     @WorkerThread
@@ -77,11 +78,9 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
                 packageName,
                 child,
                 file.fileTime(),
-                FileKind.build(isFile = true, isSymbolicLink = false, isHidden = false),
+                FileKind.build(isFile = true, isSymbolicLink = false, isHidden = false, length),
                 FilePermissions.USER_READABLE,
-            ).apply {
-                size = length
-            }
+            )
         }?.forEach(fileItems::add)
 
         (presetSystemDirectories[path] ?: presetDirectories[path])?.map {
@@ -93,7 +92,8 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
                 FileKind.build(
                     isFile = false,
                     isSymbolicLink = symLink.contains(it),
-                    false
+                    false,
+                    0
                 ),
                 FilePermissions.USER_READABLE
             )
@@ -120,7 +120,7 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
                 it.name,
                 child,
                 file.fileTime(),
-                FileKind.build(isFile = false, isSymbolicLink = false, isHidden = false),
+                FileKind.build(isFile = false, isSymbolicLink = false, isHidden = false, 0),
                 FilePermissions.USER_READABLE
             )
         }

@@ -18,6 +18,7 @@ import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.FileInfo
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.io.InputStream
 
 val smbClient by lazy {
     SMBClient()
@@ -62,7 +63,8 @@ class SmbFileInstance(uri: Uri, private val shareSpec: ShareSpec = ShareSpec.par
             isHidden = EnumUtils.isSet(
                 second.basicInformation.fileAttributes,
                 FileAttributes.FILE_ATTRIBUTE_HIDDEN
-            )
+            ),
+            getFileLength()
         )
     }
 
@@ -92,11 +94,10 @@ class SmbFileInstance(uri: Uri, private val shareSpec: ShareSpec = ShareSpec.par
         return share to information
     }
 
-    override suspend fun getFileLength(): Long {
-        TODO("Not yet implemented")
-    }
+    override suspend fun getFileLength() =
+        reconnectIfNeed().second.standardInformation.allocationSize
 
-    override suspend fun getInputStream() = reconnectIfNeed().let {
+    override suspend fun getInputStream(): InputStream = reconnectIfNeed().let {
         val openFile = it.first.openFile(
             path,
             emptySet(),
@@ -136,7 +137,7 @@ class SmbFileInstance(uri: Uri, private val shareSpec: ShareSpec = ShareSpec.par
                         fileName,
                         child,
                         fileTime,
-                        FileKind.build(isFile = false, isSymbolicLink = false, isHidden = false),
+                        FileKind.build(isFile = false, isSymbolicLink = false, isHidden = false, it.allocationSize),
                         filePermissions
                     )
                 )
@@ -146,7 +147,7 @@ class SmbFileInstance(uri: Uri, private val shareSpec: ShareSpec = ShareSpec.par
                         fileName,
                         child,
                         fileTime,
-                        FileKind.build(isFile = true, isSymbolicLink = false, isHidden = false),
+                        FileKind.build(isFile = true, isSymbolicLink = false, isHidden = false, 0),
                         filePermissions,
                     )
                 )

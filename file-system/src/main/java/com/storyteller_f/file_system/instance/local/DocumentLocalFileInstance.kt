@@ -82,7 +82,7 @@ class DocumentLocalFileInstance(
 
     override suspend fun fileTime() = relinkIfNeed()!!.fileTime()
     override suspend fun fileKind() = relinkIfNeed()!!.let {
-        FileKind.build(it.isFile, isSymbolicLink = false, isHidden = false)
+        FileKind.build(it.isFile, isSymbolicLink = false, isHidden = false, getFileLength())
     }
 
     init {
@@ -266,13 +266,13 @@ class DocumentLocalFileInstance(
                 fileItems.addFile(
                     uri,
                     documentFileName,
-                    documentFile.length(),
                     permissions,
                     fileTime,
                     FileKind.build(
                         isFile = true,
                         isSymbolicLink = false,
-                        isHidden = false
+                        isHidden = false,
+                        documentFile.length()
                     )
                 )
             } else {
@@ -284,7 +284,8 @@ class DocumentLocalFileInstance(
                     FileKind.build(
                         isFile = false,
                         isSymbolicLink = false,
-                        isHidden = false
+                        isHidden = false,
+                        0
                     )
                 )
             }

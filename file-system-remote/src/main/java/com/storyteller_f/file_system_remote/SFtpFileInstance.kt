@@ -60,12 +60,13 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
         FileKind.build(
             typeMask.bit(FileMode.Type.REGULAR.ordinal),
             typeMask.bit(FileMode.Type.SYMLINK.ordinal),
-            false
+            false,
+            getFileLength()
         )
     }
 
     override suspend fun getFileLength(): Long {
-        TODO("Not yet implemented")
+        return reconnectIfNeed().second.size
     }
 
     override suspend fun getInputStream() =
@@ -100,7 +101,7 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
                         fileName,
                         child,
                         fileTime,
-                        FileKind.build(false, isSymLink, false),
+                        FileKind.build(false, isSymLink, false, it.attributes.size),
                         filePermissions
                     )
                 )
@@ -110,7 +111,7 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
                         fileName,
                         child,
                         fileTime,
-                        FileKind.build(true, isSymLink, false),
+                        FileKind.build(true, isSymLink, false, 0),
                         filePermissions,
                     )
                 )

@@ -62,7 +62,7 @@ class WebDavFileInstance(uri: Uri, private val spec: ShareSpec = ShareSpec.parse
                         fileName,
                         child,
                         fileTime,
-                        FileKind.build(isFile = false, isSymbolicLink = false, isHidden = false),
+                        FileKind.build(isFile = false, isSymbolicLink = false, isHidden = false, 0),
                         filePermissions
                     )
                 )
@@ -72,7 +72,7 @@ class WebDavFileInstance(uri: Uri, private val spec: ShareSpec = ShareSpec.parse
                         fileName,
                         child,
                         fileTime,
-                        FileKind.build(isFile = true, isSymbolicLink = false, isHidden = false),
+                        FileKind.build(isFile = true, isSymbolicLink = false, isHidden = false, 0),
                         filePermissions,
                     )
                 )

@@ -37,6 +37,7 @@ import java.util.Calendar
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createDirectory
 import kotlin.io.path.createFile
+import kotlin.io.path.fileSize
 import kotlin.io.path.inputStream
 import kotlin.io.path.isDirectory
 import kotlin.io.path.isExecutable
@@ -71,9 +72,9 @@ object CommonFileSystem {
         }
 
         when (type) {
-            "smb" -> bindSmbSession()
-            "sftp" -> bindSFtpSession()
-            "ftps" -> bindFtpsSession()
+            RemoteAccessType.SMB -> bindSmbSession()
+            RemoteAccessType.SFTP -> bindSFtpSession()
+            RemoteAccessType.FTPS -> bindFtpsSession()
         }
     }
 
@@ -85,12 +86,14 @@ object CommonFileSystem {
                 fileInstance.toChildEfficiently(context, "hello.txt", FileCreatePolicy.NotCreate)
             Assert.assertTrue(childInstance.fileKind().isFile)
 
+            val helloTxtLastModified = fs.getPath("/test1/hello.txt").readAttributes<BasicFileAttributes>()
+                .lastModifiedTime()
+                .toMillis()
             Assert.assertEquals(
-                fs.getPath("/test1/hello.txt").readAttributes<BasicFileAttributes>()
-                    .lastModifiedTime()
-                    .toMillis(),
+                helloTxtLastModified,
                 childInstance.fileTime().lastModified
             )
+            Assert.assertEquals(helloTxtLastModified, childInstance.getFileInfo().time.lastModified)
             Assert.assertTrue(childInstance.filePermissions().userPermission.readable)
             val text = childInstance.getInputStream().bufferedReader().use {
                 it.readText()
@@ -168,6 +171,9 @@ object CommonFileSystem {
             } returns Calendar.getInstance().apply {
                 timeInMillis = basicFileAttributes.lastModifiedTime().toMillis()
             }
+            every {
+                size
+            } returns p.fileSize()
         }
     }
 
@@ -379,6 +385,9 @@ object CommonFileSystem {
             every {
                 isDirectory
             } returns fs.getPath(buildPath).isDirectory()
+            every {
+                allocationSize
+            } returns fs.getPath(buildPath).fileSize()
         }
 
     private fun mockSmbInputStream(relativePath: String): File =
