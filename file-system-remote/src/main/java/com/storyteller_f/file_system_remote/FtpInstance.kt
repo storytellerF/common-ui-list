@@ -49,7 +49,7 @@ class FtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse(
 
     override suspend fun fileTime() = reconnectIfNeed()!!.fileTime()
     override suspend fun fileKind() = reconnectIfNeed()!!.let {
-        FileKind.build(it.isFile, it.isSymbolicLink, false, getFileLength())
+        FileKind.build(it.isFile, it.isSymbolicLink, false, it.fileLength())
     }
 
     override suspend fun getFileLength(): Long {
@@ -85,7 +85,7 @@ class FtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse(
                         name,
                         child,
                         fileTime,
-                        FileKind.build(true, isSymbolicLink, false, it.size),
+                        FileKind.build(true, isSymbolicLink, false, it.fileLength()),
                         permission,
                     )
                 )
@@ -223,3 +223,7 @@ fun FTPFile.filePermission(access: Int) = FilePermission(
     hasPermission(access, FTPFile.WRITE_PERMISSION),
     hasPermission(access, FTPFile.EXECUTE_PERMISSION),
 )
+
+fun FTPFile.fileLength(): Long {
+    return size
+}

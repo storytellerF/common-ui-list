@@ -18,7 +18,7 @@ import org.robolectric.annotation.Config
     |RobolectricFrameworkMethod.getTestEnvironment()" is null"""
 )
 @RunWith(RobolectricTestRunner::class)
-class SFtpTest {
+class WebDavTest {
     @get:Rule
     val mockkRule = MockKRule(this)
 
@@ -27,7 +27,7 @@ class SFtpTest {
         @JvmStatic
         @BeforeClass
         fun setup() {
-            CommonFileSystem.setup(RemoteAccessType.SFTP)
+            CommonFileSystem.setup(RemoteAccessType.WEB_DAV)
         }
 
         @JvmStatic
@@ -41,9 +41,9 @@ class SFtpTest {
     fun test() {
         val context = RuntimeEnvironment.getApplication()
 
-        val test1Spec = CommonFileSystem.sftpSpec
-        val uri = test1Spec.toUri().buildUpon().appendPath("test1").build()
-        val sFtpFileInstance = SFtpFileInstance(uri)
-        CommonFileSystem.commonTest(sFtpFileInstance, context)
+        val test1Spec = CommonFileSystem.webDavSpec
+        val uri = test1Spec.toUri()
+        val webDavFileInstance = WebDavFileInstance(uri)
+        CommonFileSystem.commonTest(webDavFileInstance, context)
     }
 }

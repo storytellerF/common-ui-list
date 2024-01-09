@@ -12,6 +12,7 @@ import net.schmizz.sshj.SSHClient
 import net.schmizz.sshj.sftp.FileAttributes
 import net.schmizz.sshj.sftp.FileMode
 import net.schmizz.sshj.sftp.RemoteFile
+import net.schmizz.sshj.sftp.RemoteResourceInfo
 import net.schmizz.sshj.sftp.SFTPClient
 import net.schmizz.sshj.transport.verification.PromiscuousVerifier
 import net.schmizz.sshj.xfer.FilePermission
@@ -55,18 +56,19 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
     override suspend fun fileTime() = reconnectIfNeed().second.fileTime()
 
     override suspend fun fileKind() = reconnectIfNeed().let {
-        val type = it.second.mode.type
+        val fileAttributes = it.second
+        val type = fileAttributes.mode.type
         val typeMask = type.toMask()
         FileKind.build(
             typeMask.bit(FileMode.Type.REGULAR.ordinal),
             typeMask.bit(FileMode.Type.SYMLINK.ordinal),
             false,
-            getFileLength()
+            fileAttributes.fileLength()
         )
     }
 
     override suspend fun getFileLength(): Long {
-        return reconnectIfNeed().second.size
+        return reconnectIfNeed().second.fileLength()
     }
 
     override suspend fun getInputStream() =
@@ -101,7 +103,7 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
                         fileName,
                         child,
                         fileTime,
-                        FileKind.build(false, isSymLink, false, it.attributes.size),
+                        FileKind.build(false, isSymLink, false, it.fileLength()),
                         filePermissions
                     )
                 )
@@ -165,3 +167,11 @@ fun RemoteSpec.checkSftp() {
 }
 
 private fun FileAttributes.fileTime() = FileTime(mtime, atime)
+
+fun FileAttributes.fileLength(): Long {
+    return size
+}
+
+fun RemoteResourceInfo.fileLength(): Long {
+    return attributes.size
+}

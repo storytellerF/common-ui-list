@@ -19,6 +19,15 @@ import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.toChildEfficiently
 import com.storyteller_f.file_system.util.buildPath
+import com.thegrizzlylabs.sardineandroid.DavAce
+import com.thegrizzlylabs.sardineandroid.DavAcl
+import com.thegrizzlylabs.sardineandroid.DavResource
+import com.thegrizzlylabs.sardineandroid.model.Ace
+import com.thegrizzlylabs.sardineandroid.model.Grant
+import com.thegrizzlylabs.sardineandroid.model.Principal
+import com.thegrizzlylabs.sardineandroid.model.Privilege
+import com.thegrizzlylabs.sardineandroid.model.Read
+import com.thegrizzlylabs.sardineandroid.model.Write
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
@@ -34,6 +43,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.Calendar
+import java.util.Date
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createDirectory
 import kotlin.io.path.createFile
@@ -54,11 +64,14 @@ import kotlin.io.path.walk
 object CommonFileSystem {
     private val fs: FileSystem = Jimfs.newFileSystem(Configuration.unix())
 
-    val smbSpec = ShareSpec("localhost", 0, "test", "test", "smb", "test1")
+    val smbSpec = ShareSpec("localhost", 0, "test", "test", RemoteAccessType.SMB, "test1")
 
-    val sftpSpec = RemoteSpec("localhost", 0, "test", "test", "sftp")
+    val sftpSpec = RemoteSpec("localhost", 0, "test", "test", RemoteAccessType.SFTP)
 
-    val ftpsSpec = RemoteSpec("localhost", 0, "test", "test", "ftps")
+    val ftpsSpec = RemoteSpec("localhost", 0, "test", "test", RemoteAccessType.FTPS)
+
+    val webDavSpec =
+        ShareSpec("localhost", 0, "test", "test", type = RemoteAccessType.WEB_DAV, "test1")
 
     fun setup(type: String) {
         fs.getPath("/test1").apply {
@@ -75,6 +88,7 @@ object CommonFileSystem {
             RemoteAccessType.SMB -> bindSmbSession()
             RemoteAccessType.SFTP -> bindSFtpSession()
             RemoteAccessType.FTPS -> bindFtpsSession()
+            RemoteAccessType.WEB_DAV -> bindWebDavSession()
         }
     }
 
@@ -86,9 +100,10 @@ object CommonFileSystem {
                 fileInstance.toChildEfficiently(context, "hello.txt", FileCreatePolicy.NotCreate)
             Assert.assertTrue(childInstance.fileKind().isFile)
 
-            val helloTxtLastModified = fs.getPath("/test1/hello.txt").readAttributes<BasicFileAttributes>()
-                .lastModifiedTime()
-                .toMillis()
+            val helloTxtLastModified =
+                fs.getPath("/test1/hello.txt").readAttributes<BasicFileAttributes>()
+                    .lastModifiedTime()
+                    .toMillis()
             Assert.assertEquals(
                 helloTxtLastModified,
                 childInstance.fileTime().lastModified
@@ -99,6 +114,85 @@ object CommonFileSystem {
                 it.readText()
             }
             Assert.assertEquals("world smb", text)
+        }
+    }
+
+    @OptIn(ExperimentalPathApi::class)
+    private fun bindWebDavSession() {
+        mockk<WebDavInstance> {
+            every {
+                list(any())
+            } answers {
+                val p = buildPath(webDavSpec.share, firstArg())
+                fs.getPath(p).walk().map {
+                    mockDavResources(it)
+                }.toMutableList()
+            }
+            every {
+                getInputStream(any())
+            } answers {
+                val p = buildPath(webDavSpec.share, firstArg())
+                fs.getPath(p).inputStream()
+            }
+            every {
+                acl(any())
+            } answers {
+                val p = buildPath(webDavSpec.share, firstArg())
+                mockAcl(p)
+            }
+            every {
+                resources(any())
+            } answers {
+                val p = buildPath(webDavSpec.share, firstArg())
+                mockDavResources(fs.getPath(p))
+            }
+        }.apply {
+            webdavInstances[webDavSpec] = this
+        }
+    }
+
+    private fun mockAcl(path: String): DavAcl {
+        val p = fs.getPath(path)
+        return mockk<DavAcl> {
+            every {
+                aces
+            } returns listOf(DavAce(Ace().apply {
+                principal = Principal()
+                grant = Grant().apply {
+                    privilege = listOf(Privilege().apply {
+                        if (p.isReadable()) {
+                            content.add(Read())
+                        }
+                        if (p.isWritable()) {
+                            content.add(Write())
+                        }
+                    })
+                }
+            }))
+        }
+    }
+
+    private fun mockDavResources(it: Path): DavResource {
+        val basicFileAttributes = it.readAttributes<BasicFileAttributes>()
+        return mockk<DavResource> {
+            every {
+                name
+            } returns it.name
+            every {
+                isDirectory
+            } returns it.isDirectory()
+            every {
+                modified
+            } returns Date(basicFileAttributes.lastModifiedTime().toMillis())
+            every {
+                creation
+            } returns Date(basicFileAttributes.creationTime().toMillis())
+            every {
+                path
+            } returns it.pathString
+            every {
+                contentLength
+            } returns it.fileSize()
         }
     }
 
@@ -244,7 +338,7 @@ object CommonFileSystem {
 
     private fun mockSFtpAttributes(
         pathObject: Path,
-        basicFileAttributes: BasicFileAttributes
+        basicFileAttributes: BasicFileAttributes,
     ): net.schmizz.sshj.sftp.FileAttributes = mockk {
         every {
             mode
@@ -400,7 +494,7 @@ object CommonFileSystem {
     @OptIn(ExperimentalPathApi::class)
     private fun mockSmbListResponse(
         shareSpec: ShareSpec,
-        relativePath: String
+        relativePath: String,
     ): List<FileIdBothDirectoryInformation> {
         val buildPath = buildPath(shareSpec.share, relativePath)
         return fs.getPath(buildPath).walk().filter {

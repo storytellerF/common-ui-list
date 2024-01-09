@@ -55,16 +55,15 @@ class SmbFileInstance(uri: Uri, private val shareSpec: ShareSpec = ShareSpec.par
     }
 
     override suspend fun fileTime() = reconnectIfNeed().second.fileTime()
-    override suspend fun fileKind() = reconnectIfNeed().let {
-        val second = it.second
+    override suspend fun fileKind() = reconnectIfNeed().let { (_, allInformation) ->
         FileKind.build(
-            !second.standardInformation.isDirectory,
+            !allInformation.standardInformation.isDirectory,
             isSymbolicLink = false,
             isHidden = EnumUtils.isSet(
-                second.basicInformation.fileAttributes,
+                allInformation.basicInformation.fileAttributes,
                 FileAttributes.FILE_ATTRIBUTE_HIDDEN
             ),
-            getFileLength()
+            allInformation.fileLength()
         )
     }
 
@@ -95,7 +94,7 @@ class SmbFileInstance(uri: Uri, private val shareSpec: ShareSpec = ShareSpec.par
     }
 
     override suspend fun getFileLength() =
-        reconnectIfNeed().second.standardInformation.allocationSize
+        reconnectIfNeed().second.fileLength()
 
     override suspend fun getInputStream(): InputStream = reconnectIfNeed().let {
         val openFile = it.first.openFile(
@@ -201,4 +200,8 @@ private fun FileAllInformation.fileTime(): FileTime {
         basicInformation.lastAccessTime.toEpochMillis(),
         basicInformation.creationTime.toEpochMillis()
     )
+}
+
+fun FileAllInformation.fileLength(): Long {
+    return standardInformation.allocationSize
 }
