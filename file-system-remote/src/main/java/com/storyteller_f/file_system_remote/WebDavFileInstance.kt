@@ -7,36 +7,80 @@ import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.FileInfo
+import com.thegrizzlylabs.sardineandroid.DavAcl
 import com.thegrizzlylabs.sardineandroid.DavResource
 import com.thegrizzlylabs.sardineandroid.impl.OkHttpSardine
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.io.InputStream
+import java.io.OutputStream
 
 val webdavInstances = mutableMapOf<ShareSpec, WebDavInstance>()
 
 class WebDavFileInstance(uri: Uri, private val spec: ShareSpec = ShareSpec.parse(uri)) :
     FileInstance(uri) {
+
+    private var resources: DavResource? = null
+    private var acl: DavAcl? = null
+
+    private fun reconnectResourcesIfNeed(): DavResource {
+        val r = resources
+        if (r == null) {
+            val resources1 = getWebDavInstance().resources(path)
+            resources = resources1
+            return resources1
+        }
+        return r
+    }
+
+    private fun reconnectAclIfNeed(): DavAcl {
+        val r = acl
+        if (r == null) {
+            val resources1 = getWebDavInstance().acl(path)!!
+            acl = resources1
+            return resources1
+        }
+        return r
+    }
+
     override val path: String
         get() = super.path.substring(spec.share.length + 1).ifEmpty { "/" }
 
-    override suspend fun filePermissions(): FilePermissions {
-        TODO("Not yet implemented")
+    override suspend fun filePermissions() = reconnectAclIfNeed().filePermissions()
+
+    private fun DavAcl.filePermissions(): FilePermissions {
+        val granted = aces.flatMap { ace ->
+            ace.granted
+        }
+        return FilePermissions.permissions(
+            granted.contains("read"),
+            granted.contains("write"),
+            false
+        )
     }
 
-    override suspend fun fileTime(): FileTime {
-        TODO("Not yet implemented")
+    override suspend fun fileTime() = reconnectResourcesIfNeed().let {
+        FileTime(it.modified.time, null, it.creation.time)
     }
 
     override suspend fun fileKind(): FileKind {
-        TODO("Not yet implemented")
+        return reconnectResourcesIfNeed().let {
+            FileKind.build(!it.isDirectory, false, isHidden = false, size = it.fileLength())
+        }
     }
 
     private fun getWebDavInstance() = webdavInstances.getOrPut(spec) {
         WebDavInstance(spec)
     }
 
-    override suspend fun getFileLength(): Long {
-        TODO("Not yet implemented")
+    override suspend fun getFileLength() = reconnectResourcesIfNeed().fileLength()
+
+    override suspend fun getInputStream(): InputStream {
+        return getWebDavInstance().getInputStream(path)!!
+    }
+
+    override suspend fun getOutputStream(): OutputStream {
+        return super.getOutputStream()
     }
 
     override suspend fun getFileInputStream(): FileInputStream {
@@ -49,12 +93,12 @@ class WebDavFileInstance(uri: Uri, private val spec: ShareSpec = ShareSpec.parse
 
     override suspend fun listInternal(
         fileItems: MutableList<FileInfo>,
-        directoryItems: MutableList<FileInfo>
+        directoryItems: MutableList<FileInfo>,
     ) {
         getWebDavInstance().list(path).forEach {
             val fileName = it.name
             val child = childUri(fileName)
-            val filePermissions = FilePermissions.USER_READABLE
+            val filePermissions = getWebDavInstance().acl(it.path)?.filePermissions()!!
             val fileTime = FileTime(it.modified.time, created = it.creation.time)
             if (it.isDirectory) {
                 directoryItems.add(
@@ -80,12 +124,11 @@ class WebDavFileInstance(uri: Uri, private val spec: ShareSpec = ShareSpec.parse
         }
     }
 
-    override suspend fun exists(): Boolean {
-        TODO("Not yet implemented")
-    }
+    override suspend fun exists() = getWebDavInstance().exists(path)
 
     override suspend fun deleteFileOrEmptyDirectory(): Boolean {
-        TODO("Not yet implemented")
+        getWebDavInstance().delete(path)
+        return true
     }
 
     override suspend fun rename(newName: String): Boolean {
@@ -105,11 +148,13 @@ class WebDavFileInstance(uri: Uri, private val spec: ShareSpec = ShareSpec.parse
     }
 
     override suspend fun createDirectory(): Boolean {
-        TODO("Not yet implemented")
+        getWebDavInstance().createDirectory(path)
+        return true
     }
 
     override suspend fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
-        TODO("Not yet implemented")
+        val new = childUri(name)
+        return WebDavFileInstance(new, spec)
     }
 }
 
@@ -119,5 +164,35 @@ class WebDavInstance(spec: ShareSpec) {
         setCredentials(spec.user, spec.password)
     }
 
-    fun list(path: String): MutableList<DavResource> = instance.list(baseUrl + path)
+    fun list(path: String): MutableList<DavResource> = instance.list(buildPath(path))
+
+    fun resources(path: String): DavResource {
+        return instance.getResources(buildPath(path)).filterNotNull().first()
+    }
+
+    fun getInputStream(path: String): InputStream? {
+        return instance.get(buildPath(path))
+    }
+
+    fun exists(path: String): Boolean {
+        return instance.exists(buildPath(path))
+    }
+
+    fun delete(path: String) {
+        instance.delete(buildPath(path))
+    }
+
+    fun createDirectory(path: String) {
+        instance.createDirectory(buildPath(path))
+    }
+
+    fun acl(path: String): DavAcl? {
+        return instance.getAcl(buildPath(path))
+    }
+
+    private fun buildPath(path: String) = baseUrl + path
+}
+
+fun DavResource.fileLength(): Long {
+    return contentLength ?: 0
 }

@@ -21,7 +21,7 @@ class FtpsTest {
         @JvmStatic
         @BeforeClass
         fun setup() {
-            CommonFileSystem.setup("ftps")
+            CommonFileSystem.setup(RemoteAccessType.FTPS)
         }
 
         @JvmStatic

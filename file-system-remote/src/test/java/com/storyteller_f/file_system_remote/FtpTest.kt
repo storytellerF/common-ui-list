@@ -24,7 +24,7 @@ class FtpTest {
         const val USERNAME = "user"
         const val PASSWORD = "password"
         const val SERVER = "localhost"
-        const val SCHEME = "ftp"
+        const val SCHEME = RemoteAccessType.FTP
 
         @JvmStatic
         @BeforeClass
