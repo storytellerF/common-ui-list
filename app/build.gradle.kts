@@ -1,4 +1,9 @@
-import com.storyteller_f.version_manager.*
+import com.storyteller_f.version_manager.Versions
+import com.storyteller_f.version_manager.baseApp
+import com.storyteller_f.version_manager.networkDependency
+import com.storyteller_f.version_manager.setupDataBinding
+import com.storyteller_f.version_manager.setupGeneric
+import com.storyteller_f.version_manager.setupPreviewFeature
 
 plugins {
     id("com.android.application")
@@ -7,6 +12,7 @@ plugins {
     id("kotlin-parcelize")
     id("com.storyteller_f.version_manager")
     id("kotlin-kapt")
+    id("com.starter.easylauncher") version ("6.2.0")
 }
 
 android {
