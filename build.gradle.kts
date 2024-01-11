@@ -9,13 +9,12 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     dependencies {
-        val smlFolder: String by project
-        val navVersion = "2.7.5"
+        val navVersion = "2.7.6"
         classpath("androidx.navigation:navigation-safe-args-gradle-plugin:$navVersion")
     }
 }
 plugins {
-    val androidVersion = "8.2.0"
+    val androidVersion = "8.2.1"
     val kotlinVersion = "1.9.20"
     val kspVersion = "1.9.20-1.0.14"
     id("com.android.application") version androidVersion apply false
