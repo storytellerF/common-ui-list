@@ -27,7 +27,6 @@ class FilePermission(
             return FilePermission(value.bit(1), value.bit(2), value.bit(4))
         }
     }
-
 }
 
 class FilePermissions(
