@@ -1,5 +1,6 @@
 import com.storyteller_f.version_manager.Versions
 import com.storyteller_f.version_manager.baseApp
+import com.storyteller_f.version_manager.fileSystemDependency
 import com.storyteller_f.version_manager.networkDependency
 import com.storyteller_f.version_manager.setupDataBinding
 import com.storyteller_f.version_manager.setupGeneric

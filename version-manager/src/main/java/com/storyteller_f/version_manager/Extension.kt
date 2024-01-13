@@ -152,12 +152,16 @@ fun Project.baseApp() {
     }
 
     dependencies {
-        val baoModule = findProject(":bao:startup")
-        if (baoModule != null)
-            "implementation"(baoModule)
-        else
-            "implementation"("com.github.storytellerF.Bao:startup:${Versions.BAO}")
+        loadBao(project)
     }
+}
+
+private fun DependencyHandlerScope.loadBao(project: Project) {
+    val baoModule = project.findProject(":bao:startup")
+    if (baoModule != null)
+        "implementation"(baoModule)
+    else
+        "implementation"("com.github.storytellerF.Bao:startup:${Versions.BAO}")
 }
 
 fun Project.baseLibrary() {

@@ -49,3 +49,8 @@ include(":file-system")
 include(":file-system-ktx")
 include(":file-system-remote")
 include(":file-system-root")
+
+
+//val userHome: String? = System.getProperty("user.home")
+//include("sardine-android")
+//project(":sardine-android").projectDir = file("$userHome/AndroidStudioProjects/sardine-android")

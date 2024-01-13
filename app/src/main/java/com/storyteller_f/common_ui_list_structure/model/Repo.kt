@@ -20,10 +20,8 @@ data class Repo(
     @field:SerializedName("language") val language: String?
 ) : Datum<RepoRemoteKey> {
     override fun commonId() = id.toString()
-    override fun produceRemoteKey(prevKey: Int?, nextKey: Int?) =
+    override fun remoteKey(prevKey: Int?, nextKey: Int?) =
         RepoRemoteKey(commonId(), prevKey, nextKey)
-
-    override fun remoteKeyId(): String = commonId()
 }
 
 @Entity(tableName = "repo_remote_keys")
