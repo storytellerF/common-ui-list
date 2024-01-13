@@ -37,7 +37,7 @@ dependencies {
     implementation("com.hierynomus:smbj:0.13.0")
     // https://mvnrepository.com/artifact/com.hierynomus/sshj
     implementation("com.hierynomus:sshj:0.38.0")
-    implementation("com.github.thegrizzlylabs:sardine-android:0.8")
+    loadSardine()
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
 
 
@@ -46,4 +46,14 @@ dependencies {
     testImplementation("io.mockk:mockk-agent:${mockkVersion}")
     testImplementation("com.google.jimfs:jimfs:1.3.0")
     testImplementation("com.github.tony19:logback-android:3.0.0")
+}
+
+fun DependencyHandlerScope.loadSardine() {
+    val project = findProject(":sardine-android")
+    if (project != null) {
+        implementation(project)
+    } else {
+        implementation("com.github.storytellerF:sardine-android:8c9cf3aa08")
+//        implementation("com.github.thegrizzlylabs:sardine-android:0.8")
+    }
 }

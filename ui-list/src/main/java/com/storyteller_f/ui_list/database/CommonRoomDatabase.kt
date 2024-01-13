@@ -4,7 +4,7 @@ import androidx.room.PrimaryKey
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import com.storyteller_f.ui_list.core.Datum
-import java.util.*
+import java.util.Date
 
 abstract class CommonRoomDatabase<D : Datum<RK>, RK : RemoteKey, DT : RoomDatabase>(val database: DT) {
     abstract suspend fun clearOld()
@@ -14,6 +14,7 @@ abstract class CommonRoomDatabase<D : Datum<RK>, RK : RemoteKey, DT : RoomDataba
     abstract suspend fun deleteItemBy(d: D)
 }
 
+@Suppress("unused")
 class DefaultTypeConverter {
     @TypeConverter
     fun convertTimestampToDate(timestamp: Long) = Date(timestamp)

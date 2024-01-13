@@ -29,6 +29,7 @@ data class CommonResponse<D : Datum<RK>, RK : RemoteKey>(
     val nextPage: Int? = null
 )
 
+@Keep
 data class SimpleResponse<D : Model>(
     @SerializedName("total_count") val total: Int = 0,
     @SerializedName("items") val items: List<D> = emptyList(),

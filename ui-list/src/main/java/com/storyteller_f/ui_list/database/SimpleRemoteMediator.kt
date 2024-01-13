@@ -60,7 +60,7 @@ class SimpleRemoteMediator<D : Datum<RK>, RK : RemoteKey, DT : RoomDatabase>(
                 val prevKey = if (page == STARTING_PAGE_INDEX) null else page - 1
                 val nextKey = if (endOfPaginationReached) null else page + 1
                 val keys = items.map {
-                    it.produceRemoteKey(prevKey, nextKey)
+                    it.remoteKey(prevKey, nextKey)
                 }
                 commonRoomDatabase.insertRemoteKey(keys)
                 commonRoomDatabase.insertAllData(items)
