@@ -4,6 +4,7 @@ import com.storyteller_f.composite_defination.Composite
 import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.SourceVersion
+import javax.lang.model.element.Element
 import javax.lang.model.element.Name
 import javax.lang.model.element.TypeElement
 
@@ -20,7 +21,6 @@ class CompositeProcessor : AbstractProcessor() {
         p0: MutableSet<out TypeElement>?,
         roundEnvironment: RoundEnvironment?
     ): Boolean {
-//        println("composite set:$p0 is over ${roundEnvironment?.processingOver()}")
 
         if (p0.isNullOrEmpty()) return false
         roundEnvironment?.getElementsAnnotatedWith(Composite::class.java)
@@ -28,25 +28,15 @@ class CompositeProcessor : AbstractProcessor() {
                 val packageElement = processingEnv.elementUtils.getPackageOf(ele)
                 val databaseClass = ele.asType().toString()
                 val dataDao = ele.enclosedElements?.firstOrNull { element ->
-                    element.simpleName.toString().contains("Dao") && !element.simpleName.toString()
-                        .contains("remoteKey")
+                    val simpleName = element.simpleName.toString()
+                    simpleName.contains("Dao") && !simpleName.contains("remoteKey")
                 }?.simpleName ?: return@ElementRound
-                val simpleName = ele.simpleName
+                val clazzList = importClazzList(ele)
                 val annotation = ele.getAnnotation(Composite::class.java)
-                val clazzList = ele.annotationMirrors.firstOrNull {
-                    val toString = it.annotationType.toString()
-                    toString.contains("Database")
-                }?.elementValues?.filter {
-                    it.key.toString().contains("entities")
-                }?.firstNotNullOf { it.value }?.toString()?.let { s ->
-                    s.substring(1, s.length - 1)
-                }?.split(",")
-                    ?.map { it.trim() }
-                    ?.map { "import ${it.substring(0, it.length - Companion.offset)};" }.orEmpty()
                 val name = if (annotation.name.trim().isNotEmpty()) {
                     annotation.name
                 } else {
-                    getName(simpleName.toString())
+                    getName(ele.simpleName.toString())
                 }
                 val packageName = packageElement.toString()
                 val fileContent =
@@ -62,6 +52,20 @@ class CompositeProcessor : AbstractProcessor() {
             }
 
         return true
+    }
+
+    private fun importClazzList(ele: Element): List<String> {
+        val clazzList = ele.annotationMirrors.firstOrNull {
+            val toString = it.annotationType.toString()
+            toString.contains("Database")
+        }?.elementValues?.filter {
+            it.key.toString().contains("entities")
+        }?.firstNotNullOf { it.value }?.toString()?.let { s ->
+            s.substring(1, s.length - 1)
+        }?.split(",")
+            ?.map { it.trim() }
+            ?.map { "import ${it.substring(0, it.length - offset)};" }.orEmpty()
+        return clazzList
     }
 
     private fun getName(origin: String): String {
@@ -112,7 +116,7 @@ public class ${name}Composite extends CommonRoomDatabase<$name, $remoteKeyType, 
 
     @Nullable
     @Override
-    public Object insertRemoteKey(@NonNull List<? extends $remoteKeyType> remoteKeys, @NonNull Continuation<? super Unit> ${"$"}completion) {
+    public Object insertRemoteKey(@NonNull List<$remoteKeyType> remoteKeys, @NonNull Continuation<? super Unit> ${"$"}completion) {
         getDatabase().remoteKeyDao().insertAll(remoteKeys, ${"$"}completion);
         return null;
     }
@@ -125,7 +129,7 @@ public class ${name}Composite extends CommonRoomDatabase<$name, $remoteKeyType, 
 
     @Nullable
     @Override
-    public Object insertAllData(@NonNull List<? extends $name> $dataParam, @NonNull Continuation<? super Unit> ${"$"}completion) {
+    public Object insertAllData(@NonNull List<$name> $dataParam, @NonNull Continuation<? super Unit> ${"$"}completion) {
         getDatabase().$dataDao().insertAll($dataParam, ${"$"}completion);
         return null;
     }

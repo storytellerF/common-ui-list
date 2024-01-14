@@ -3,10 +3,12 @@ package com.storyteller_f.ui_list_annotation_compiler_ksp
 import com.example.ui_list_annotation_common.Entry
 import com.example.ui_list_annotation_common.Event
 import com.example.ui_list_annotation_common.Holder
+import com.example.ui_list_annotation_common.JavaGenerator.Companion.CLASS_NAME
 import com.example.ui_list_annotation_common.UIListHolderZoom
 import com.example.ui_list_annotation_common.UiAdapterGenerator
 import com.example.ui_list_annotation_common.doubleLayerGroupBy
 import com.google.devtools.ksp.KspExperimental
+import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.getAnnotationsByType
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.Resolver
@@ -63,14 +65,14 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
         val clickEventCount = clickEvents.count()
         val longClickEventCount = longClickEvents.count()
 
-        logger.warn("round $count $viewHolderCount $clickEventCount $longClickEventCount")
-        logger.warn("round $count holder ${viewHolderMap[true]?.count()} ${viewHolderMap[false]?.size}")
-        logger.warn("round $count click: ${clickEventMap[true]?.count()} ${clickEventMap[false]?.size}")
-        logger.warn("round $count long ${longClickEventMap[true]?.count()} ${longClickEventMap[false]?.size}")
+        logger.warn("ui-list round $count $viewHolderCount $clickEventCount $longClickEventCount")
+        logger.warn("ui-list round $count holder ${viewHolderMap[true]?.count()} ${viewHolderMap[false]?.size}")
+        logger.warn("ui-list round $count click: ${clickEventMap[true]?.count()} ${clickEventMap[false]?.size}")
+        logger.warn("ui-list round $count long ${longClickEventMap[true]?.count()} ${longClickEventMap[false]?.size}")
         val invalidate =
             viewHolderMap[false].orEmpty() + clickEventMap[false].orEmpty() + longClickEventMap[false].orEmpty()
         invalidate.forEach {
-            logger.warn("invalidate $it")
+            logger.warn("ui-list invalidate $it")
         }
         if (viewHolderCount == 0 && clickEventCount == 0 && longClickEventCount == 0) {
             return emptyList()
@@ -82,14 +84,25 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
         zoom.addClickEvent(processEvent(clickEvents, isLong = false))
         zoom.addLongClick(processEvent(longClickEvents, isLong = true))
         val real = "$packageName.ui_list"
-        logger.warn("package $real")
+        logger.warn("ui-list package $real")
+        val dependencyFiles = (viewHolders + clickEvents + longClickEvents).mapNotNull {
+            it.containingFile
+        }.distinctBy {
+            it.filePath
+        }
         val dependencies =
-            Dependencies(aggregating = false, *resolver.getAllFiles().toList().toTypedArray())
-        val createNewFile = environment.codeGenerator.createNewFile(dependencies, real, CLASS_NAME)
+            Dependencies(aggregating = false, *dependencyFiles.toList().toTypedArray())
         val importBindingClass = zoom.importHolders()
         val importReceiverClass = zoom.importReceiverClass()
         val generator = KotlinGenerator()
-        BufferedWriter(OutputStreamWriter(createNewFile)).use { writer ->
+        BufferedWriter(
+            OutputStreamWriter(
+                environment.codeGenerator.createNewFile(
+                    dependencies,
+                    real,
+                    CLASS_NAME
+                )
+            )).use { writer ->
             writer.write("package $real")
             writer.write("//view holder count $viewHolderCount\n")
             writer.write("import com.storyteller_f.ui_list.event.ViewJava\n")
@@ -356,9 +369,6 @@ import com.storyteller_f.ui_list.core.registerCenter""")
         }
     }
 
-    companion object {
-        private const val CLASS_NAME = "Temp"
-    }
 }
 
 class ProcessingProvider : SymbolProcessorProvider {

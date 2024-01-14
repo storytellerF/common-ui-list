@@ -101,7 +101,7 @@ fun Project.baseAppDependency() {
     implModule(":ui-list-annotation-definition")
     kspModule(":ui-list-annotation-compiler-ksp")
     implModule(":composite-definition")
-    kaptModule(":composite-compiler")
+    kspModule(":composite-compiler-ksp")
 
     dependencies {
         commonAndroidDependency()

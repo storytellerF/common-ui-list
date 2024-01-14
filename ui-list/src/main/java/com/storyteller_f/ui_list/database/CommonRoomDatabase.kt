@@ -8,9 +8,9 @@ import java.util.Date
 
 abstract class CommonRoomDatabase<D : Datum<RK>, RK : RemoteKey, DT : RoomDatabase>(val database: DT) {
     abstract suspend fun clearOld()
-    abstract suspend fun insertRemoteKey(remoteKeys: List<RK>)
+    abstract suspend fun insertRemoteKey(remoteKeys: MutableList<RK>)
     abstract suspend fun getRemoteKey(id: String): RK?
-    abstract suspend fun insertAllData(repos: List<D>)
+    abstract suspend fun insertAllData(repos: MutableList<D>)
     abstract suspend fun deleteItemBy(d: D)
 }
 

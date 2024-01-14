@@ -4,6 +4,7 @@ import com.example.ui_list_annotation_common.Entry
 import com.example.ui_list_annotation_common.Event
 import com.example.ui_list_annotation_common.Holder
 import com.example.ui_list_annotation_common.JavaGenerator
+import com.example.ui_list_annotation_common.JavaGenerator.Companion.CLASS_NAME
 import com.example.ui_list_annotation_common.UIListHolderZoom
 import com.example.ui_list_annotation_common.doubleLayerGroupBy
 import com.storyteller_f.annotation_defination.BindClickEvent
@@ -21,10 +22,6 @@ import javax.lang.model.element.PackageElement
 import javax.lang.model.element.TypeElement
 
 class AdapterProcessor : AbstractProcessor() {
-
-    companion object {
-        const val CLASS_NAME = "HolderBuilder"
-    }
 
     private var count = 0
     private val zoom = UIListHolderZoom<Element>()

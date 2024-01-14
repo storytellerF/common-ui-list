@@ -63,13 +63,12 @@ val androidLibModules = listOf(
     "ui-list",
     "view-holder-compose"
 )
-val jvmModules = listOf("composite-compiler",
+val jvmModules = listOf("composite-compiler-ksp",
     "composite-definition",
     "ext-func-compiler",
     "ext-func-definition",
     "slim-ktx",
     "ui-list-annotation-common",
-    "ui-list-annotation-compiler",
     "ui-list-annotation-compiler-ksp",
     "ui-list-annotation-definition",)
 subprojects {
