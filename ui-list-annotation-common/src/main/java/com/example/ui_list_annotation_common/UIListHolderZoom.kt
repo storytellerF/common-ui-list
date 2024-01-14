@@ -89,6 +89,26 @@ class UIListHolderZoom<T> {
             "import $it;\n"
         }
     }
+
+    fun importComposeLibrary(): String {
+        return if (hasComposeView) {
+            "import androidx.compose.ui.platform.ComposeView;\n"
+        } else {
+            ""
+        }
+    }
+
+    fun importComposeRelatedLibrary(): String {
+        return if (hasComposeView) {
+            """
+                import com.storyteller_f.view_holder_compose.EDComposeView;
+                import kotlin.Unit;
+                import kotlin.jvm.functions.Function1;
+                """.trimIndent()
+        } else {
+            ""
+        }
+    }
 }
 
 inline fun <T, K1 : Any, K2 : Any, V> Iterable<T>.doubleLayerGroupBy(

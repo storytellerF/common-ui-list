@@ -4,6 +4,7 @@ import com.example.ui_list_annotation_common.Entry
 import com.example.ui_list_annotation_common.Event
 import com.example.ui_list_annotation_common.Holder
 import com.example.ui_list_annotation_common.UIListHolderZoom
+import com.example.ui_list_annotation_common.UiAdapterGenerator
 import com.example.ui_list_annotation_common.doubleLayerGroupBy
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getAnnotationsByType
@@ -22,13 +23,21 @@ import com.google.devtools.ksp.validate
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.annotation_defination.BindLongClickEvent
+import com.storyteller_f.slim_ktx.insertCode
+import com.storyteller_f.slim_ktx.no
+import com.storyteller_f.slim_ktx.trimInsertCode
+import com.storyteller_f.slim_ktx.yes
 import java.io.BufferedWriter
 import java.io.OutputStreamWriter
 
-class Identity(val fullName: String, val name: String)
+data class Identity(val fullName: String, val name: String)
+
+private fun BufferedWriter.writeLine(line: String = "") {
+    write("$line\n")
+}
 
 class Processing(private val environment: SymbolProcessorEnvironment) : SymbolProcessor {
-    private var count = 0
+    private var count: Int = 0
     private val zoom = UIListHolderZoom<KSAnnotated>()
 
     @Suppress("LongMethod")
@@ -76,39 +85,183 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
         logger.warn("package $real")
         val dependencies =
             Dependencies(aggregating = false, *resolver.getAllFiles().toList().toTypedArray())
-        val createNewFile = environment.codeGenerator.createNewFile(dependencies, real, className)
-        val importComposeLibrary = if (zoom.hasComposeView) {
-            "import androidx.compose.ui.platform.ComposeView;\n"
-        } else {
-            ""
-        }
+        val createNewFile = environment.codeGenerator.createNewFile(dependencies, real, CLASS_NAME)
         val importBindingClass = zoom.importHolders()
         val importReceiverClass = zoom.importReceiverClass()
+        val generator = KotlinGenerator()
         BufferedWriter(OutputStreamWriter(createNewFile)).use { writer ->
             writer.write("package $real")
             writer.write("//view holder count $viewHolderCount\n")
-            writer.write(importComposeLibrary)
+            writer.write("import com.storyteller_f.ui_list.event.ViewJava\n")
+            writer.write(zoom.importComposeLibrary())
             writer.write(importBindingClass)
             writer.write(importReceiverClass)
-            writer.write("class $className {\n")
-            writer.write(addFunction())
-            writer.write("}")
+            writer.writeLine(UiAdapterGenerator.commonImports.joinToString("\n"))
+            writer.writeLine("""import com.storyteller_f.ui_list.core.list
+import com.storyteller_f.ui_list.core.registerCenter""")
+            writer.writeLine()
+            writer.writeLine("object $CLASS_NAME {")
+            writer.writeLine(buildViewHolders())
+            writer.writeLine(generator.buildAddFunction(zoom.holderEntryTemp).prependIndent())
+            writer.writeLine("}")
+            writer.writeLine()
         }
         return emptyList()
     }
 
-    private fun addFunction(): String {
-        return """
-            fun add() {
-                
+    private fun buildViewHolders(): String {
+        return zoom.holderEntryTemp.joinToString("\n\n") { entry ->
+            createMultiViewHolder(entry)
+        }
+    }
+
+    private fun createMultiViewHolder(entry: Entry<KSAnnotated>): String {
+        val eventMapClick = zoom.clickEventMapTemp[entry.itemHolderFullName].orEmpty()
+        val eventMapLongClick = zoom.longClickEventMapTemp[entry.itemHolderFullName].orEmpty()
+        val viewHolderBuilderContent = entry.viewHolders.map {
+            val viewHolderContent = if (it.value.bindingName.endsWith(
+                    "Binding"
+                )
+            ) {
+                buildViewHolder(it.value, eventMapClick, eventMapLongClick)
+            } else {
+                buildComposeViewHolder(it.value, eventMapClick, eventMapLongClick)
             }
-        """.trimIndent()
+            """
+                    if (type.equals("${it.key}")) {
+                        $1
+                    }//type if end
+                """.trimIndent().insertCode(viewHolderContent.yes())
+        }.joinToString("\n")
+        return """
+                @Suppress("UNUSED_ANONYMOUS_PARAMETER")
+                fun buildFor${entry.itemHolderName}(view: ViewGroup, type: String) : AbstractViewHolder<*> {
+                    $1
+                    throw Exception("unrecognized type:[${'$'}type]")
+                }
+            """.trimIndent().insertCode(viewHolderBuilderContent.yes())
+    }
+
+    private fun buildComposeViewHolder(
+        it: Holder,
+        eventList: Map<String, List<Event<KSAnnotated>>>,
+        eventList2: Map<String, List<Event<KSAnnotated>>>,
+    ): String {
+        return """
+            val context = view.context
+            val composeView = EDComposeView(context)
+            @Suppress("UNUSED_VARIABLE") val v = composeView.composeView
+            val viewHolder = ${it.viewHolderName}(composeView)
+            composeView.clickListener = { s ->
+                $1
+            }
+            composeView.longClickListener = { s ->
+                $2
+            }
+            return viewHolder
+            """.trimInsertCode(
+            buildComposeClickListener(eventList).yes(2),
+            buildComposeClickListener(eventList2).yes(2)
+        )
+    }
+
+    private fun buildComposeClickListener(event: Map<String, List<Event<KSAnnotated>>>) =
+        event.map {
+            val clickBlock = it.value.joinToString("\n") { e ->
+                produceClickBlockForCompose(e)
+            }
+            """
+            if (s == "${it.key}") {
+                $1                
+            }//if end
+        """.trimInsertCode(clickBlock.yes())
+        }.joinToString("\n")
+
+    private fun produceClickBlockForCompose(e: Event<KSAnnotated>): String {
+        val parameterList = e.parameterList
+        return if (e.receiver.contains("Activity")) {
+            """
+            if("${e.group}".equals(viewHolder.grouped)) 
+                ViewJava.doWhenIs(context, ${e.receiver}::class.java, { activity ->
+                    activity.${e.functionName}($parameterList);
+                    null;//activity return
+                });//activity end
+            """.trimIndent()
+        } else {
+            """
+            if("${e.group}".equals(viewHolder.grouped)) 
+                ViewJava.findActionReceiverOrNull(composeView.getComposeView(), ${e.receiver}::class.java, { fragment ->
+                    fragment.${e.functionName}($parameterList);
+                    null;//fragment return
+                });//fragment end
+            """.trimIndent()
+        }
+    }
+
+    private fun buildViewHolder(
+        entry: Holder,
+        eventMapClick: Map<String, List<Event<KSAnnotated>>>,
+        eventMapLongClick: Map<String, List<Event<KSAnnotated>>>,
+    ): String {
+        return """
+            val context = view.context
+            val inflate = ${entry.bindingName}.inflate(LayoutInflater.from(context), view, false)
+            
+            val viewHolder = ${entry.viewHolderName}(inflate)
+            $1       
+            return viewHolder
+            """.trimInsertCode(buildInvokeClickEvent(eventMapClick, eventMapLongClick).no())
+    }
+
+    private fun buildInvokeClickEvent(
+        event: Map<String, List<Event<KSAnnotated>>>,
+        event2: Map<String, List<Event<KSAnnotated>>>,
+    ): String {
+        val singleClickListener = event.map(::produceClickListener).joinToString("\n")
+        val longClickListener = event2.map(::produceLongClickListener).joinToString("\n")
+        return singleClickListener + longClickListener
+    }
+
+    private fun produceClickListener(it: Map.Entry<String, List<Event<KSAnnotated>>>) = """
+            inflate.${it.key}.setOnClickListener { v ->
+                $1
+            }
+        """.trimInsertCode(buildInvokeClickEvent(it.value).yes())
+
+    private fun produceLongClickListener(it: Map.Entry<String, List<Event<KSAnnotated>>>) = """
+            inflate.${it.key}.setOnLongClickListener { v ->
+                $1
+                return true;
+            }
+        """.trimInsertCode(buildInvokeClickEvent(it.value).yes())
+
+    private fun buildInvokeClickEvent(events: List<Event<KSAnnotated>>): String {
+        return events.joinToString("\n") { event ->
+            val parameterList = event.parameterList
+            if (event.receiver.contains("Activity")) {
+                """
+                    if("${event.group}" == viewHolder.grouped) 
+                        ViewJava.doWhenIs(context, ${event.receiver}::class.java, { activity ->
+                            activity.${event.functionName}($parameterList);
+                            null;
+                        });
+                """.trimIndent()
+            } else {
+                """
+                    if("${event.group}" == viewHolder.grouped)
+                        ViewJava.findActionReceiverOrNull(v, ${event.receiver}::class.java, { fragment ->
+                            fragment.${event.functionName}($parameterList);
+                            null;
+                        });
+                """.trimIndent()
+            }
+        }
     }
 
     @OptIn(KspExperimental::class)
     private fun processEvent(
         clickEvents: Sequence<KSAnnotated>,
-        isLong: Boolean
+        isLong: Boolean,
     ): Map<String, Map<String, List<Event<KSAnnotated>>>> {
         return clickEvents.doubleLayerGroupBy({
             val (itemHolderFullName, _) = getItemHolderDetail(it)
@@ -125,9 +278,9 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
             val key = if (isLong) {
                 it.getAnnotationsByType(
                     BindLongClickEvent::class
-                ).first().key
+                ).first().group
             } else {
-                it.getAnnotationsByType(BindClickEvent::class).first().key
+                it.getAnnotationsByType(BindClickEvent::class).first().group
             }
             val parent = it.parent as KSClassDeclaration
             val r = parent.identity()
@@ -136,7 +289,7 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
                 if (asString.isNullOrEmpty()) {
                     ""
                 } else if (asString == "itemHolder") {
-                    "viewHolder.getItemHolder()"
+                    "viewHolder.itemHolder"
                 } else if (asString == "binding") {
                     "inflate"
                 } else {
@@ -154,10 +307,8 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
         }
     }
 
-    fun KSDeclaration.identity() =
+    private fun KSDeclaration.identity() =
         Identity("${packageName.asString()}.${simpleName.asString()}", simpleName.asString())
-
-    fun Identity.toPair() = fullName to name
 
     @OptIn(KspExperimental::class)
     private fun processEntry(viewHolders: Sequence<KSAnnotated>): Sequence<Entry<KSAnnotated>> {
@@ -166,7 +317,7 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
             val type = viewHolder.getAnnotationsByType(BindItemHolder::class).first().type
             val (itemHolderFullName, itemHolderName) = getItemHolderDetail(viewHolder)
             val (bindingName, bindingFullName) = getBindingDetail(viewHolder)
-            val (viewHolderFullName, viewHolderName) = viewHolder.identity().toPair()
+            val (viewHolderFullName, viewHolderName) = viewHolder.identity()
             Entry(
                 itemHolderName,
                 itemHolderFullName,
@@ -206,7 +357,7 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
     }
 
     companion object {
-        private const val className = "Temp"
+        private const val CLASS_NAME = "Temp"
     }
 }
 

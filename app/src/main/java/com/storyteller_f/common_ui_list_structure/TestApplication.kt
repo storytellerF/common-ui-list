@@ -8,6 +8,9 @@ class TestApplication : MultiDexApplication() {
     override fun onCreate() {
         super.onCreate()
         DynamicColors.applyToActivitiesIfAvailable(this)
-        holders(com.storyteller_f.common_ui_list_structure.ui_list.HolderBuilder::add)
+        holders(
+//            com.storyteller_f.common_ui_list_structure.ui_list.HolderBuilder::add,
+            com.storyteller_f.common_ui_list_structure.ui_list.Temp::add
+        )
     }
 }
