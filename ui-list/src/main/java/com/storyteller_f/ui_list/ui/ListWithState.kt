@@ -34,15 +34,13 @@ import com.storyteller_f.ui_list.source.isError
 import com.storyteller_f.ui_list.source.isLoading
 import com.storyteller_f.ui_list.source.isNotLoading
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
@@ -95,18 +93,11 @@ class ListWithState @JvmOverloads constructor(
             refresh,
             plugLayoutManager
         )
-        val callbackFlow = callbackFlow {
-            val listener: (CombinedLoadStates) -> Unit = {
-                trySend(it)
-            }
-            adapter.addLoadStateListener(listener)
-            awaitClose { adapter.removeLoadStateListener(listener) }
-        }
         lifecycleOwner.lifecycleScope.launch {
             lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-//                autoScrollToTop(callbackFlow, lifecycleOwner)
+                autoScrollToTop(adapter.loadStateFlow)
                 launch {
-                    callbackFlow.map {
+                    adapter.loadStateFlow.map {
                         Log.d(TAG, "sourceUp: ${it.debugEmoji()}")
                         flash(it, adapter.itemCount)
                     }.stateIn(
@@ -175,20 +166,16 @@ class ListWithState @JvmOverloads constructor(
 
     @Suppress("UnusedPrivateMember")
     private fun CoroutineScope.autoScrollToTop(
-        callbackFlow: Flow<CombinedLoadStates>,
-        lifecycleOwner: LifecycleOwner
+        statesFlow: Flow<CombinedLoadStates>
     ) {
         launch {
-            callbackFlow.distinctUntilChanged { old, new ->
-                old.mediator?.refresh.isLoading == new.mediator?.refresh.isLoading
-            }.shareIn(lifecycleOwner.lifecycleScope, SharingStarted.WhileSubscribed())
-                .collectLatest {
-                    val notLoading = it.mediator?.refresh.isNotLoading
-                    Log.d(TAG, "sourceUp: scroll to position if $notLoading")
-                    if (notLoading) {
-                        binding.list.smoothScrollToPosition(0)
-                    }
-                }
+            statesFlow.filter {
+                val mediator = it.mediator
+                mediator != null && mediator.refresh.isNotLoading && it.source.refresh.isNotLoading
+            }.take(1).collect {
+                Log.i(TAG, "autoScrollToTop: ${it.debugEmoji()}")
+                binding.list.smoothScrollToPosition(0)
+            }
         }
     }
 

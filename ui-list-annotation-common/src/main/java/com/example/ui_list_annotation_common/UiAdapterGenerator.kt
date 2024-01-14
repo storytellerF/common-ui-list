@@ -21,8 +21,6 @@ abstract class UiAdapterGenerator<T> {
     }
 }
 
-
-
 class JavaGenerator : UiAdapterGenerator<Element>() {
     override fun buildAddFunction(entry: List<Entry<Element>>): String {
         var index = 0

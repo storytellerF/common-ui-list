@@ -32,7 +32,6 @@ class Processing(val environment: SymbolProcessorEnvironment) :
         val composites =
             resolver.getSymbolsWithAnnotation(Composite::class.java.canonicalName)
         composites.forEach {
-            logger.warn(it::class.qualifiedName.toString())
             it as KSClassDeclaration
             val clazzList = (it.annotations.first { ksAnnotation ->
                 ksAnnotation.toString() == "@Database"
@@ -40,8 +39,8 @@ class Processing(val environment: SymbolProcessorEnvironment) :
                 argument.name?.asString() == "entities"
             }.value as ArrayList<*>).filterIsInstance<KSType>().mapNotNull { ksType ->
                 ksType.declaration.qualifiedName?.asString()
-            }.map {
-                "import $it"
+            }.map { s ->
+                "import $s"
             }
             val annotationsByType = it.getAnnotationsByType(Composite::class).first()
             val name = annotationsByType.name.ifEmpty {
@@ -127,12 +126,11 @@ class ${name}Composite(database: $databaseType) : CommonRoomDatabase<$name, $rem
         database.$dataDao().insertAll($dataParam);
     }
 
-    override suspend fun deleteItemBy($lower: $name) {
-        database.$dataDao().delete($lower);
-        database.remoteKeyDao().delete($lower.remoteKeyId());
+    override suspend fun deleteItemBy(d: $name) {
+        database.$dataDao().delete(d);
+        database.remoteKeyDao().delete(d.remoteKeyId());
     }
 
 }"""
     }
-
 }

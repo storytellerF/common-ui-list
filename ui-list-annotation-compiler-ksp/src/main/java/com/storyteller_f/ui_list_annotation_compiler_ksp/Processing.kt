@@ -75,6 +75,7 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
             logger.warn("ui-list invalidate $it")
         }
         if (viewHolderCount == 0 && clickEventCount == 0 && longClickEventCount == 0) {
+            logger.warn("ui-list round $count exit")
             return emptyList()
         }
         val packageName = viewHolders.map {
@@ -102,7 +103,8 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
                     real,
                     CLASS_NAME
                 )
-            )).use { writer ->
+            )
+        ).use { writer ->
             writer.write("package $real")
             writer.write("//view holder count $viewHolderCount\n")
             writer.write("import com.storyteller_f.ui_list.event.ViewJava\n")
@@ -144,7 +146,7 @@ import com.storyteller_f.ui_list.core.registerCenter""")
                     if (type.equals("${it.key}")) {
                         $1
                     }//type if end
-                """.trimIndent().insertCode(viewHolderContent.yes())
+            """.trimIndent().insertCode(viewHolderContent.yes())
         }.joinToString("\n")
         return """
                 @Suppress("UNUSED_ANONYMOUS_PARAMETER")
@@ -152,7 +154,7 @@ import com.storyteller_f.ui_list.core.registerCenter""")
                     $1
                     throw Exception("unrecognized type:[${'$'}type]")
                 }
-            """.trimIndent().insertCode(viewHolderBuilderContent.yes())
+        """.trimIndent().insertCode(viewHolderBuilderContent.yes())
     }
 
     private fun buildComposeViewHolder(
@@ -368,7 +370,6 @@ import com.storyteller_f.ui_list.core.registerCenter""")
             Pair(bindingName, bindingFullName)
         }
     }
-
 }
 
 class ProcessingProvider : SymbolProcessorProvider {

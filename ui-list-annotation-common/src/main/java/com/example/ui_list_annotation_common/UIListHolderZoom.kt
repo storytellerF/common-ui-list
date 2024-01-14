@@ -104,7 +104,7 @@ class UIListHolderZoom<T> {
                 import com.storyteller_f.view_holder_compose.EDComposeView;
                 import kotlin.Unit;
                 import kotlin.jvm.functions.Function1;
-                """.trimIndent()
+            """.trimIndent()
         } else {
             ""
         }
