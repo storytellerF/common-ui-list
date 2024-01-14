@@ -29,14 +29,15 @@ if (System.getenv()["JITPACK"] == null) {
 
 include(":ui-list")
 include(":view-holder-compose")
-include(":ui-list-annotation-compiler")
 include(":ui-list-annotation-definition")
+//include(":ui-list-annotation-compiler")
 include(":ui-list-annotation-compiler-ksp")
 include(":ui-list-annotation-common")
 include(":ext-func-compiler")
 include(":ext-func-definition")
 include(":composite-definition")
-include(":composite-compiler")
+//include(":composite-compiler")
+include(":composite-compiler-ksp")
 
 include(":common-vm-ktx")
 include(":common-ui")

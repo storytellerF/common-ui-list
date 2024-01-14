@@ -75,13 +75,15 @@ class MainActivity : AppCompatActivity() {
             },
             { repo, _ -> RepoItemHolder(repo) },
             { before, after ->
-                when {
+                val dataItemHolder: SeparatorItemHolder? = when {
                     after == null -> null
                     before == null -> SeparatorItemHolder("${after.roundedStarCount}0.000+ stars")
                     before.roundedStarCount <= after.roundedStarCount -> null
                     after.roundedStarCount >= 1 -> SeparatorItemHolder("${after.roundedStarCount}0.000+ stars")
                     else -> SeparatorItemHolder("< 10.000+ stars")
                 }
+                println("add separator ${dataItemHolder?.info}")
+                dataItemHolder
             }
         )
     })

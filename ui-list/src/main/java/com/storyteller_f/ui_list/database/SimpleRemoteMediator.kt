@@ -62,8 +62,8 @@ class SimpleRemoteMediator<D : Datum<RK>, RK : RemoteKey, DT : RoomDatabase>(
                 val keys = items.map {
                     it.remoteKey(prevKey, nextKey)
                 }
-                commonRoomDatabase.insertRemoteKey(keys)
-                commonRoomDatabase.insertAllData(items)
+                commonRoomDatabase.insertRemoteKey(keys.toMutableList())
+                commonRoomDatabase.insertAllData(items.toMutableList())
             }
             return MediatorResult.Success(endOfPaginationReached = endOfPaginationReached)
         } catch (exception: IOException) {
