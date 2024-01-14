@@ -99,7 +99,7 @@ fun Project.baseAppDependency() {
     implModule(":common-ui")
     implModule(":ui-list")
     implModule(":ui-list-annotation-definition")
-    kaptModule(":ui-list-annotation-compiler")
+    kspModule(":ui-list-annotation-compiler-ksp")
     implModule(":composite-definition")
     kaptModule(":composite-compiler")
 

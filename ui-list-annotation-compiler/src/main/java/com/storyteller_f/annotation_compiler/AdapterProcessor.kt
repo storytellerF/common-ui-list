@@ -23,7 +23,7 @@ import javax.lang.model.element.TypeElement
 class AdapterProcessor : AbstractProcessor() {
 
     companion object {
-        const val className = "HolderBuilder"
+        const val CLASS_NAME = "HolderBuilder"
     }
 
     private var count = 0
@@ -32,7 +32,7 @@ class AdapterProcessor : AbstractProcessor() {
     @Suppress("NewApi")
     override fun process(
         set: MutableSet<out TypeElement>?,
-        roundEnvironment: RoundEnvironment?
+        roundEnvironment: RoundEnvironment?,
     ): Boolean {
         count++
 
@@ -40,9 +40,9 @@ class AdapterProcessor : AbstractProcessor() {
 
         println(
             "binding event map ${zoom.debugState()} " +
-                "error:${roundEnvironment?.errorRaised()} " +
-                "over:${roundEnvironment?.processingOver()} " +
-                "count:$count"
+                    "error:${roundEnvironment?.errorRaised()} " +
+                    "over:${roundEnvironment?.processingOver()} " +
+                    "count:$count"
         )
 
         writeFile(roundEnvironment)
@@ -56,12 +56,10 @@ class AdapterProcessor : AbstractProcessor() {
             zoom.packagesTemp.forEach { (_, packageElement) ->
                 val content = createClassFileContent(
                     packageElement,
-                    zoom.holderEntryTemp,
-                    zoom
                 )
                 val sources = zoom.getAllSource()
                 val classFile = processingEnv.filer.createSourceFile(
-                    "$packageElement.ui_list.$className",
+                    "$packageElement.ui_list.$CLASS_NAME",
                     *sources.toTypedArray()
                 )
                 classFile.openWriter().use {
@@ -74,7 +72,7 @@ class AdapterProcessor : AbstractProcessor() {
 
     private fun processAnnotation(
         set: MutableSet<out TypeElement>?,
-        roundEnvironment: RoundEnvironment?
+        roundEnvironment: RoundEnvironment?,
     ) {
         set?.forEach { typeElement ->
             when (typeElement.simpleName.toString()) {
@@ -108,9 +106,9 @@ class AdapterProcessor : AbstractProcessor() {
 
     private fun createMultiViewHolder(
         entry: Entry<Element>,
-        eventMapClick: Map<String, List<Event<Element>>>,
-        eventMapLongClick: Map<String, List<Event<Element>>>
     ): String {
+        val eventMapClick = zoom.clickEventMapTemp[entry.itemHolderFullName].orEmpty()
+        val eventMapLongClick = zoom.longClickEventMapTemp[entry.itemHolderFullName].orEmpty()
         val viewHolderBuilderContent = entry.viewHolders.map {
             val viewHolderContent = if (it.value.bindingName.endsWith(
                     "Binding"
@@ -136,34 +134,10 @@ class AdapterProcessor : AbstractProcessor() {
 
     private fun createClassFileContent(
         packageOf: PackageElement,
-        holderEntry: List<Entry<Element>>,
-        zoom: UIListHolderZoom<Element>
     ): String {
-        val importHolders = zoom.importHolders()
-        val importReceiverClass = zoom.importReceiverClass()
+        val holderEntry = zoom.holderEntryTemp
         val javaGenerator = JavaGenerator()
-        val buildAddFunction = javaGenerator.buildAddFunction(holderEntry)
-        val hasComposeView = zoom.hasComposeView
-        val buildViewHolder = holderEntry.joinToString("\n") {
-            val eventMapClick = zoom.clickEventMapTemp[it.itemHolderFullName] ?: mapOf()
-            val eventMapLongClick = zoom.longClickEventMapTemp[it.itemHolderFullName] ?: mapOf()
-            createMultiViewHolder(it, eventMapClick, eventMapLongClick)
-        }
 
-        val importComposeLibrary = if (hasComposeView) {
-            "import androidx.compose.ui.platform.ComposeView;\n"
-        } else {
-            ""
-        }
-        val importComposeRelatedLibrary = if (hasComposeView) {
-            """
-            import com.storyteller_f.view_holder_compose.EDComposeView;
-            import kotlin.Unit;
-            import kotlin.jvm.functions.Function1;
-            """.trimIndent()
-        } else {
-            ""
-        }
         return """
             package $packageOf.ui_list;
 
@@ -183,23 +157,25 @@ class AdapterProcessor : AbstractProcessor() {
              * auto generated
              * @author storyteller_f
              */
-            public class $className {
+            public class $CLASS_NAME {
                 $5
                 $6
             }
             """.trimInsertCode(
-            importComposeLibrary.no(),
-            importHolders.no(),
-            importReceiverClass.no(),
-            importComposeRelatedLibrary.no(),
-            buildViewHolder.yes(),
-            buildAddFunction.yes()
+            zoom.importComposeLibrary().no(),
+            zoom.importHolders().no(),
+            zoom.importReceiverClass().no(),
+            zoom.importComposeRelatedLibrary().no(),
+            holderEntry.joinToString("\n\n") {
+                createMultiViewHolder(it)
+            }.yes(),
+            javaGenerator.buildAddFunction(holderEntry).yes()
         )
     }
 
     private fun getEvent(
         roundEnvironment: RoundEnvironment?,
-        clazz: Class<out Annotation>
+        clazz: Class<out Annotation>,
     ): Map<String, Map<String, List<Event<Element>>>> {
         val eventAnnotations = roundEnvironment?.getElementsAnnotatedWith(clazz).orEmpty()
         val eventMap = eventAnnotations.doubleLayerGroupBy({ element ->
@@ -215,17 +191,17 @@ class AdapterProcessor : AbstractProcessor() {
             }
         }) { element ->
             val parameterList = parameterList(element)
-            val key = if (clazz.simpleName == "BindClickEvent") {
-                element.getAnnotation(BindClickEvent::class.java).key
+            val group = if (clazz.simpleName == "BindClickEvent") {
+                element.getAnnotation(BindClickEvent::class.java).group
             } else {
-                element.getAnnotation(BindLongClickEvent::class.java).key
+                element.getAnnotation(BindLongClickEvent::class.java).group
             }
             Event(
                 element.enclosingElement.simpleName.toString(),
                 element.enclosingElement.toString(),
                 element.simpleName.toString(),
                 parameterList,
-                key,
+                group,
                 element
             )
         }
@@ -238,21 +214,13 @@ class AdapterProcessor : AbstractProcessor() {
         }.joinToString(", ") {
             when {
                 it.isEmpty() -> ""
-                it.contains("android.view.View") -> {
-                    "v"
-                }
+                it.contains("android.view.View") -> "v"
 
-                it.contains("Holder") && !it.contains("Binding") -> {
-                    "viewHolder.getItemHolder()"
-                }
+                it.contains("Holder") && !it.contains("Binding") -> "viewHolder.getItemHolder()"
 
-                it.contains("Binding") -> {
-                    "inflate"
-                }
+                it.contains("Binding") -> "inflate"
 
-                else -> {
-                    throw UnknownError(it)
-                }
+                else -> throw UnknownError(it)
             }
         }
         return parameterList
@@ -260,7 +228,7 @@ class AdapterProcessor : AbstractProcessor() {
 
     private fun getAnnotationFirstClassArgument(
         element: Element,
-        annotation: Class<out Annotation>
+        annotation: Class<out Annotation>,
     ): Pair<String, String>? {
         val firstOrNull = element.annotationMirrors.firstOrNull {
             it.annotationType.toString() == annotation.canonicalName
@@ -278,7 +246,7 @@ class AdapterProcessor : AbstractProcessor() {
      */
     private fun getHolder(
         roundEnvironment: RoundEnvironment?,
-        typeElement: TypeElement
+        typeElement: TypeElement,
     ): List<Entry<Element>> {
         val holderAnnotations = roundEnvironment?.getElementsAnnotatedWithAny(typeElement).orEmpty()
         val holderEntry = holderAnnotations.mapNotNull { element ->
@@ -320,26 +288,20 @@ class AdapterProcessor : AbstractProcessor() {
     private fun buildComposeViewHolder(
         it: Holder,
         eventList: Map<String, List<Event<Element>>>,
-        eventList2: Map<String, List<Event<Element>>>
+        eventList2: Map<String, List<Event<Element>>>,
     ): String {
         return """
             Context context = view.getContext();
             EDComposeView composeView = new EDComposeView(context);
             ComposeView v = composeView.getComposeView();
             ${it.viewHolderName} viewHolder = new ${it.viewHolderName}(composeView);
-            composeView.setClickListener(new Function1<String, Unit>() {
-                @Override
-                public Unit invoke(String s) {
-                    $1
-                    return null;
-                }
+            composeView.setClickListener((s) -> {
+                $1
+                return null;
             });
-            composeView.setLongClickListener(new Function1<String, Unit>() {
-                @Override
-                public Unit invoke(String s) {
-                    $2
-                    return null;
-                }
+            composeView.setLongClickListener((s) -> {
+                $2
+                return null;
             });
             return viewHolder;
             """.trimInsertCode(
@@ -363,7 +325,7 @@ class AdapterProcessor : AbstractProcessor() {
     private fun buildViewHolder(
         entry: Holder,
         eventMapClick: Map<String, List<Event<Element>>>,
-        eventMapLongClick: Map<String, List<Event<Element>>>
+        eventMapLongClick: Map<String, List<Event<Element>>>,
     ): String {
         val buildClickListener = buildInvokeClickEvent(eventMapClick, eventMapLongClick)
         return """
@@ -391,14 +353,14 @@ class AdapterProcessor : AbstractProcessor() {
     private fun produceClickBlockForCompose(e: Event<Element>, parameterList: String): String {
         return if (e.receiver.contains("Activity")) {
             """
-            if("${e.key}".equals(viewHolder.grouped)) ViewJava.doWhenIs(context, ${e.receiver}.class, (activity) -> {
+            if("${e.group}".equals(viewHolder.grouped)) ViewJava.doWhenIs(context, ${e.receiver}.class, (activity) -> {
                 activity.${e.functionName}($parameterList);
                 return null;//activity return
             });//activity end
             """.trimIndent()
         } else {
             """
-            if("${e.key}".equals(viewHolder.grouped)) ViewJava.findActionReceiverOrNull(composeView.getComposeView(), ${e.receiver}.class, (fragment) -> {
+            if("${e.group}".equals(viewHolder.grouped)) ViewJava.findActionReceiverOrNull(composeView.getComposeView(), ${e.receiver}.class, (fragment) -> {
                 fragment.${e.functionName}($parameterList);
                 return null;//fragment return
             });//fragment end
@@ -408,7 +370,7 @@ class AdapterProcessor : AbstractProcessor() {
 
     private fun buildInvokeClickEvent(
         event: Map<String, List<Event<Element>>>,
-        event2: Map<String, List<Event<Element>>>
+        event2: Map<String, List<Event<Element>>>,
     ): String {
         val singleClickListener = event.map(::produceClickListener).joinToString("\n")
         val longClickListener = event2.map(::produceLongClickListener).joinToString("\n")
@@ -433,14 +395,14 @@ class AdapterProcessor : AbstractProcessor() {
             val parameterList = event.parameterList
             if (event.receiver.contains("Activity")) {
                 """
-                    if("${event.key}" == viewHolder.grouped) ViewJava.doWhenIs(context, ${event.receiver}.class, (activity)->{
+                    if("${event.group}" == viewHolder.grouped) ViewJava.doWhenIs(context, ${event.receiver}.class, (activity)->{
                         activity.${event.functionName}($parameterList);
                         return null;
                     });
                 """.trimIndent()
             } else {
                 """
-                    if("${event.key}" == viewHolder.grouped) ViewJava.findActionReceiverOrNull(v, ${event.receiver}.class, (fragment) -> {
+                    if("${event.group}" == viewHolder.grouped) ViewJava.findActionReceiverOrNull(v, ${event.receiver}.class, (fragment) -> {
                         fragment.${event.functionName}($parameterList);
                         return null;
                     });

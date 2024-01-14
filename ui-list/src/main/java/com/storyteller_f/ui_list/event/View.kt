@@ -49,7 +49,8 @@ fun <T : ViewBinding> Fragment.viewBinding(viewBindingFactory: (View) -> T) =
     FragmentViewBindingDelegate(this, viewBindingFactory)
 
 /**
- * 需要在onCreate 中使用，即使用不到，也需要进行引用
+ * 需要在onCreate 中使用，自动为activity 设置contentView
+ * 所以即使用不到，也需要进行引用以确保正常
  */
 inline fun <T : ViewBinding> AppCompatActivity.viewBinding(crossinline bindingInflater: (LayoutInflater) -> T) =
     lazy(LazyThreadSafetyMode.SYNCHRONIZED) {

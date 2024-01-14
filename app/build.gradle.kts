@@ -1,6 +1,5 @@
 import com.storyteller_f.version_manager.Versions
 import com.storyteller_f.version_manager.baseApp
-import com.storyteller_f.version_manager.fileSystemDependency
 import com.storyteller_f.version_manager.networkDependency
 import com.storyteller_f.version_manager.setupDataBinding
 import com.storyteller_f.version_manager.setupGeneric
@@ -14,6 +13,7 @@ plugins {
     id("com.storyteller_f.version_manager")
     id("kotlin-kapt")
     id("com.starter.easylauncher") version ("6.2.0")
+    id("com.google.devtools.ksp")
 }
 
 android {

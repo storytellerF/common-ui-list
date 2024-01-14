@@ -10,6 +10,7 @@ plugins {
 pureKotlinLanguageLevel()
 
 dependencies {
+    implementation(project(":slim-ktx"))
     implModule(":ui-list-annotation-definition")
     implementation("com.google.devtools.ksp:symbol-processing-api:${Versions.KSP}")
     implModule(":ui-list-annotation-common")

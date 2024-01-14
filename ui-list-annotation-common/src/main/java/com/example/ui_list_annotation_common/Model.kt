@@ -19,7 +19,7 @@ class Event<T>(
     val receiverFullName: String,
     val functionName: String,
     val parameterList: String,
-    val key: String,
+    val group: String,
     val origin: T
 ) {
     override fun toString(): String {
