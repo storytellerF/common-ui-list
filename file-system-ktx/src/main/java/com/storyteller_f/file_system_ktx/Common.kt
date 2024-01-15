@@ -16,7 +16,7 @@ fun ImageView.fileIcon(fileInfo: FileInfo) {
             return
         }
         val extension = fileInfo.extension
-        if (extension.isEmpty()) {
+        if (extension.isNotEmpty()) {
             val placeholder = when (extension) {
                 "mp3", "wav", "flac" -> R.drawable.ic_music
                 "zip", "7z", "rar" -> R.drawable.ic_archive

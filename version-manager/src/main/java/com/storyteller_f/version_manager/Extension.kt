@@ -6,14 +6,12 @@ import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import org.gradle.api.Action
 import org.gradle.api.JavaVersion
-import org.gradle.api.NamedDomainObjectContainer
-import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Project
 import org.gradle.api.plugins.ExtensionAware
-import org.gradle.kotlin.dsl.*
-import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
+import org.gradle.kotlin.dsl.DependencyHandlerScope
+import org.gradle.kotlin.dsl.dependencies
+import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmOptions
-import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 fun Project.setupExtFunc() {
@@ -192,28 +190,19 @@ fun Project.baseLibrary() {
     }
 }
 
-fun Project.androidLibrary(configure: Action<LibraryExtension>): Unit =
+internal fun Project.androidLibrary(configure: Action<LibraryExtension>): Unit =
     (this as ExtensionAware).extensions.configure("android", configure)
 
-fun Project.androidApp(configure: Action<BaseAppModuleExtension>): Unit =
+internal fun Project.androidApp(configure: Action<BaseAppModuleExtension>): Unit =
     (this as ExtensionAware).extensions.configure("android", configure)
 
-fun Project.kotlin(configure: Action<KotlinAndroidProjectExtension>): Unit =
-    (this as ExtensionAware).extensions.configure("kotlin", configure)
-
-val NamedDomainObjectContainer<KotlinSourceSet>.main: NamedDomainObjectProvider<KotlinSourceSet>
-    get() = named<KotlinSourceSet>("main")
-
-val NamedDomainObjectContainer<KotlinSourceSet>.test: NamedDomainObjectProvider<KotlinSourceSet>
-    get() = named<KotlinSourceSet>("test")
-
-fun BaseAppModuleExtension.kotlinOptionsApp(configure: Action<KotlinJvmOptions>): Unit =
+internal fun BaseAppModuleExtension.kotlinOptionsApp(configure: Action<KotlinJvmOptions>): Unit =
     (this as ExtensionAware).extensions.configure("kotlinOptions", configure)
 
-fun LibraryExtension.kotlinOptionsLibrary(configure: Action<KotlinJvmOptions>): Unit =
+internal fun LibraryExtension.kotlinOptionsLibrary(configure: Action<KotlinJvmOptions>): Unit =
     (this as ExtensionAware).extensions.configure("kotlinOptions", configure)
 
-fun Project.java(configure: Action<org.gradle.api.plugins.JavaPluginExtension>): Unit =
+internal fun Project.java(configure: Action<org.gradle.api.plugins.JavaPluginExtension>): Unit =
     (this as ExtensionAware).extensions.configure("java", configure)
 
 fun KotlinJvmOptions.addArgs(arg: String) {
