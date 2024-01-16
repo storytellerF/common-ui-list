@@ -1,35 +1,42 @@
 package com.example.ui_list_annotation_common
 
-import javax.lang.model.element.PackageElement
-import javax.lang.model.element.TypeElement
+typealias ItemHolderFullName = String
+
+typealias ViewName = String
+
+typealias EventForHolder<T> = Map<ViewName, List<Event<T>>>
+
+typealias EventMap<T> = Map<ItemHolderFullName, EventForHolder<T>>
+
+typealias EventMaps<T> = Pair<EventMap<T>, EventMap<T>>
+
+typealias EventEntry<T> = Map.Entry<ItemHolderFullName, EventForHolder<T>>
 
 class UIListHolderZoom<T> {
-    val packagesTemp = mutableMapOf<TypeElement, PackageElement>()
-    val holderEntryTemp = mutableListOf<Entry<T>>()
-    val clickEventMapTemp = mutableMapOf<String?, Map<String, List<Event<T>>>>()
-    val longClickEventMapTemp = mutableMapOf<String?, Map<String, List<Event<T>>>>()
+    private val holderEntry = mutableListOf<Entry<T>>()
+    private val clickEventMap = mutableMapOf<ItemHolderFullName, EventForHolder<T>>()
+    private val longClickEventMap = mutableMapOf<ItemHolderFullName, EventForHolder<T>>()
 
     fun debugState(): String {
-        return "click:${clickEventMapTemp.size} " +
-            "long:${longClickEventMapTemp.size} " +
-            "holder:${holderEntryTemp.size} " +
-            "package-set:${packagesTemp.size}"
+        return "click:${clickEventMap.size} " +
+            "long:${longClickEventMap.size} " +
+            "holder:${holderEntry.size} "
+    }
+
+    fun grouped() = holderEntry.groupBy {
+        it.packageName
     }
 
     fun addHolderEntry(list: List<Entry<T>>) {
-        holderEntryTemp.addAll(getGroupedHolders(holderEntryTemp + list))
-    }
-
-    fun logPackageInfo(first: TypeElement, second: PackageElement) {
-        packagesTemp[first] = second
+        holderEntry.addAll(getGroupedHolders(holderEntry + list))
     }
 
     fun addClickEvent(map: Map<String, Map<String, List<Event<T>>>>) {
-        clickEventMapTemp.putAll(map)
+        clickEventMap.putAll(map)
     }
 
     fun addLongClick(map: Map<String, Map<String, List<Event<T>>>>) {
-        longClickEventMapTemp.putAll(map)
+        longClickEventMap.putAll(map)
     }
 
     /**
@@ -47,16 +54,8 @@ class UIListHolderZoom<T> {
         }
     }
 
-    fun getAllSource(): List<T> {
-        return clickEventMapTemp.flatMap { entry ->
-            entry.value.flatMap { it.value }.map { it.origin }
-        }.plus(longClickEventMapTemp.flatMap { entry ->
-            entry.value.flatMap { it.value }.map { it.origin }
-        }).plus(holderEntryTemp.map { it.origin })
-    }
-
-    fun importHolders(): String {
-        return holderEntryTemp.joinToString("\n") { entry ->
+    fun importHolders(entries: List<Entry<T>>): String {
+        return entries.joinToString("\n") { entry ->
             val bindings = entry.viewHolders.values.map {
                 it.bindingFullName
             }.distinct().joinToString("\n") {
@@ -69,45 +68,50 @@ class UIListHolderZoom<T> {
         }
     }
 
-    val hasComposeView: Boolean
-        get() {
-            return holderEntryTemp.any { entry ->
-                entry.viewHolders.any {
-                    !it.value.bindingName.endsWith("Binding")
-                }
+    private fun getHasComposeView(entries: List<Entry<T>>): Boolean {
+        return entries.any { entry ->
+            entry.viewHolders.any {
+                !it.value.bindingName.endsWith("Binding")
             }
         }
+    }
 
-    private fun receiverList(longClickEvent: Map<String?, Map<String, List<Event<T>>>>) =
+    private fun receiverList(longClickEvent: Map<String, Map<String, List<Event<T>>>>) =
         longClickEvent.flatMap { it.value.flatMap { entry -> entry.value } }
             .map { it.receiverFullName }.distinct()
 
-    fun importReceiverClass(): String {
-        val flatMap = receiverList(this.clickEventMapTemp)
-        val flatMap2 = receiverList(longClickEventMapTemp)
+    fun importReceiverClass(
+        clickEventMap: EventMap<T>,
+        longClickEventMap: EventMap<T>
+    ): String {
+        val flatMap = receiverList(clickEventMap)
+        val flatMap2 = receiverList(longClickEventMap)
         return flatMap.plus(flatMap2).joinToString("\n") {
             "import $it;\n"
         }
     }
 
-    fun importComposeLibrary(): String {
-        return if (hasComposeView) {
+    fun importComposeLibrary(entries: List<Entry<T>>): String {
+        return if (getHasComposeView(entries)) {
             "import androidx.compose.ui.platform.ComposeView;\n"
         } else {
             ""
         }
     }
 
-    fun importComposeRelatedLibrary(): String {
-        return if (hasComposeView) {
-            """
-                import com.storyteller_f.view_holder_compose.EDComposeView;
-                import kotlin.Unit;
-                import kotlin.jvm.functions.Function1;
-            """.trimIndent()
-        } else {
-            ""
-        }
+    fun extractEventMap(
+        allItemHolderName: List<ItemHolderFullName>
+    ): EventMaps<T> {
+        val predicate: (EventEntry<T>) -> Boolean =
+            {
+                allItemHolderName.any { entry ->
+                    entry == it.key
+                }
+            }
+
+        val clickEventsMap = clickEventMap.filter(predicate)
+        val longClickEventsMap = longClickEventMap.filter(predicate)
+        return Pair(clickEventsMap, longClickEventsMap)
     }
 }
 

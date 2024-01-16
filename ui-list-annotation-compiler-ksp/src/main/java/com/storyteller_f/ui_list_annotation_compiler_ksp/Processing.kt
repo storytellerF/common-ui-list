@@ -2,10 +2,14 @@ package com.storyteller_f.ui_list_annotation_compiler_ksp
 
 import com.example.ui_list_annotation_common.Entry
 import com.example.ui_list_annotation_common.Event
+import com.example.ui_list_annotation_common.EventEntry
+import com.example.ui_list_annotation_common.EventMap
 import com.example.ui_list_annotation_common.Holder
+import com.example.ui_list_annotation_common.ItemHolderFullName
 import com.example.ui_list_annotation_common.JavaGenerator.Companion.CLASS_NAME
 import com.example.ui_list_annotation_common.UIListHolderZoom
 import com.example.ui_list_annotation_common.UiAdapterGenerator
+import com.example.ui_list_annotation_common.ViewName
 import com.example.ui_list_annotation_common.doubleLayerGroupBy
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.containingFile
@@ -41,10 +45,10 @@ private fun BufferedWriter.writeLine(line: String = "") {
 class Processing(private val environment: SymbolProcessorEnvironment) : SymbolProcessor {
     private var count: Int = 0
     private val zoom = UIListHolderZoom<KSAnnotated>()
+    private val logger = environment.logger
 
     @Suppress("LongMethod")
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val logger = environment.logger
         count++
         val viewHolders =
             resolver.getSymbolsWithAnnotation(BindItemHolder::class.java.canonicalName)
@@ -66,9 +70,9 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
         val longClickEventCount = longClickEvents.count()
 
         logger.warn("ui-list round $count $viewHolderCount $clickEventCount $longClickEventCount")
-        logger.warn("ui-list round $count holder ${viewHolderMap[true]?.count()} ${viewHolderMap[false]?.size}")
-        logger.warn("ui-list round $count click: ${clickEventMap[true]?.count()} ${clickEventMap[false]?.size}")
-        logger.warn("ui-list round $count long ${longClickEventMap[true]?.count()} ${longClickEventMap[false]?.size}")
+        logger.warn("ui-list round $count holder ${viewHolderMap[true]?.size} ${viewHolderMap[false]?.size}")
+        logger.warn("ui-list round $count click: ${clickEventMap[true]?.size} ${clickEventMap[false]?.size}")
+        logger.warn("ui-list round $count long ${longClickEventMap[true]?.size} ${longClickEventMap[false]?.size}")
         val invalidate =
             viewHolderMap[false].orEmpty() + clickEventMap[false].orEmpty() + longClickEventMap[false].orEmpty()
         invalidate.forEach {
@@ -78,61 +82,128 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
             logger.warn("ui-list round $count exit")
             return emptyList()
         }
-        val packageName = viewHolders.map {
-            (it as KSClassDeclaration).packageName.asString()
-        }.min()
+
+        logger.logging("ui-list round $count ${zoom.debugState()}")
         zoom.addHolderEntry(processEntry(viewHolders).toList())
         zoom.addClickEvent(processEvent(clickEvents, isLong = false))
         zoom.addLongClick(processEvent(longClickEvents, isLong = true))
-        val real = "$packageName.ui_list"
-        logger.warn("ui-list package $real")
-        val dependencyFiles = (viewHolders + clickEvents + longClickEvents).mapNotNull {
-            it.containingFile
-        }.distinctBy {
-            it.filePath
+
+        zoom.grouped().forEach { (packageName, entries) ->
+            writeFile(packageName, entries)
         }
+
+        return emptyList()
+    }
+
+    private fun writeFile(
+        packageName: String,
+        entries: List<Entry<KSAnnotated>>,
+    ) {
+        val allItemHolderName = entries.map {
+            it.itemHolderFullName
+        }
+        val uiListPackageName = "$packageName.ui_list"
+        logger.warn("ui-list package $uiListPackageName")
+        val maps = zoom.extractEventMap(allItemHolderName)
+        val clickEventsMap = maps.first
+        val longClickEventsMap = maps.second
+        val dependencyFiles =
+            getDependencies(
+                entries,
+                allItemHolderName,
+                clickEventsMap,
+                longClickEventsMap
+            ).mapNotNull {
+                it.containingFile
+            }.distinctBy {
+                it.filePath
+            }
         val dependencies =
             Dependencies(aggregating = false, *dependencyFiles.toList().toTypedArray())
-        val importBindingClass = zoom.importHolders()
-        val importReceiverClass = zoom.importReceiverClass()
+        val bindingClass = zoom.importHolders(entries)
+        val receiverClass = zoom.importReceiverClass(clickEventsMap, longClickEventsMap)
+        val composeLibrary = zoom.importComposeLibrary(entries)
+
         val generator = KotlinGenerator()
         BufferedWriter(
             OutputStreamWriter(
                 environment.codeGenerator.createNewFile(
                     dependencies,
-                    real,
+                    uiListPackageName,
                     CLASS_NAME
                 )
             )
         ).use { writer ->
-            writer.write("package $real")
-            writer.write("//view holder count $viewHolderCount\n")
-            writer.write("import com.storyteller_f.ui_list.event.ViewJava\n")
-            writer.write(zoom.importComposeLibrary())
-            writer.write(importBindingClass)
-            writer.write(importReceiverClass)
+            writer.writeLine("package $uiListPackageName")
+            writer.writeLine("import com.storyteller_f.ui_list.event.ViewJava")
+            writer.write(composeLibrary)
+            writer.write(bindingClass)
+            writer.write(receiverClass)
             writer.writeLine(UiAdapterGenerator.commonImports.joinToString("\n"))
-            writer.writeLine("""import com.storyteller_f.ui_list.core.list
-import com.storyteller_f.ui_list.core.registerCenter""")
+            writer.writeLine(
+                """import com.storyteller_f.ui_list.core.list
+                    |import com.storyteller_f.ui_list.core.registerCenter""".trimMargin()
+            )
             writer.writeLine()
             writer.writeLine("object $CLASS_NAME {")
-            writer.writeLine(buildViewHolders())
-            writer.writeLine(generator.buildAddFunction(zoom.holderEntryTemp).prependIndent())
+            writer.writeLine(
+                buildViewHolders(
+                    entries,
+                    clickEventsMap,
+                    longClickEventsMap
+                ).prependIndent()
+            )
+            writer.writeLine(generator.buildAddFunction(entries).prependIndent())
             writer.writeLine("}")
             writer.writeLine()
         }
-        return emptyList()
     }
 
-    private fun buildViewHolders(): String {
-        return zoom.holderEntryTemp.joinToString("\n\n") { entry ->
-            createMultiViewHolder(entry)
+    private fun <T> getDependencies(
+        entries: List<Entry<T>>,
+        allItemHolderName: List<ItemHolderFullName>,
+        clickEventsMap: EventMap<T>,
+        longClickEventsMap: EventMap<T>
+    ): List<T> {
+        val extractEventOrigin: (EventEntry<T>) -> List<T> = {
+            it.value.entries.flatMap { listEntry ->
+                listEntry.value.map(Event<T>::origin)
+            }
+        }
+        return (entries.filter {
+            allItemHolderName.any { entry ->
+                entry == it.itemHolderFullName
+            }
+        }.flatMap { entry ->
+            entry.viewHolders.map {
+                it.value.origin
+            }
+        } + clickEventsMap.flatMap(
+            extractEventOrigin
+        ) + longClickEventsMap.flatMap(
+            extractEventOrigin
+        ))
+    }
+
+    private fun buildViewHolders(
+        entries: List<Entry<KSAnnotated>>,
+        clickEventsMap: Map<ItemHolderFullName, Map<ViewName, List<Event<KSAnnotated>>>>,
+        longClickEventsMap: Map<ItemHolderFullName, Map<ViewName, List<Event<KSAnnotated>>>>
+    ): String {
+        return entries.joinToString("\n\n") { entry ->
+            createMultiViewHolder(
+                entry,
+                clickEventsMap[entry.itemHolderFullName].orEmpty(),
+                longClickEventsMap[entry.itemHolderFullName].orEmpty()
+            )
         }
     }
 
-    private fun createMultiViewHolder(entry: Entry<KSAnnotated>): String {
-        val eventMapClick = zoom.clickEventMapTemp[entry.itemHolderFullName].orEmpty()
-        val eventMapLongClick = zoom.longClickEventMapTemp[entry.itemHolderFullName].orEmpty()
+    private fun createMultiViewHolder(
+        entry: Entry<KSAnnotated>,
+        eventMapClick: Map<ViewName, List<Event<KSAnnotated>>>,
+        eventMapLongClick: Map<ViewName, List<Event<KSAnnotated>>>
+    ): String {
         val viewHolderBuilderContent = entry.viewHolders.map {
             val viewHolderContent = if (it.value.bindingName.endsWith(
                     "Binding"
@@ -158,7 +229,7 @@ import com.storyteller_f.ui_list.core.registerCenter""")
     }
 
     private fun buildComposeViewHolder(
-        it: Holder,
+        it: Holder<KSAnnotated>,
         eventList: Map<String, List<Event<KSAnnotated>>>,
         eventList2: Map<String, List<Event<KSAnnotated>>>,
     ): String {
@@ -214,7 +285,7 @@ import com.storyteller_f.ui_list.core.registerCenter""")
     }
 
     private fun buildViewHolder(
-        entry: Holder,
+        entry: Holder<KSAnnotated>,
         eventMapClick: Map<String, List<Event<KSAnnotated>>>,
         eventMapLongClick: Map<String, List<Event<KSAnnotated>>>,
     ): String {
@@ -341,10 +412,10 @@ import com.storyteller_f.ui_list.core.registerCenter""")
                         bindingName,
                         bindingFullName,
                         viewHolderName,
-                        viewHolderFullName
+                        viewHolderFullName,
+                        viewHolder as KSAnnotated
                     )
                 ),
-                viewHolder as KSAnnotated
             )
         }
     }
