@@ -1,18 +1,20 @@
 package com.example.ui_list_annotation_common
 
-class Holder(
+class Holder<T>(
     val bindingName: String,
     val bindingFullName: String,
     val viewHolderName: String,
-    val viewHolderFullName: String
+    val viewHolderFullName: String,
+    val origin: T
 )
 
 class Entry<T>(
     val itemHolderName: String,
-    val itemHolderFullName: String,
-    val viewHolders: MutableMap<String, Holder>,
-    val origin: T
-)
+    val itemHolderFullName: ItemHolderFullName,
+    val viewHolders: MutableMap<String, Holder<T>>,
+) {
+    val packageName = itemHolderFullName.substringBeforeLast(".")
+}
 
 class Event<T>(
     val receiver: String,
