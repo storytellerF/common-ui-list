@@ -14,6 +14,7 @@ import com.example.ui_list_annotation_common.doubleLayerGroupBy
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.getAnnotationsByType
+import com.google.devtools.ksp.isAnnotationPresent
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
@@ -29,12 +30,14 @@ import com.google.devtools.ksp.validate
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.annotation_defination.BindLongClickEvent
+import com.storyteller_f.annotation_defination.ItemHolder
 import com.storyteller_f.slim_ktx.insertCode
 import com.storyteller_f.slim_ktx.no
 import com.storyteller_f.slim_ktx.trimInsertCode
 import com.storyteller_f.slim_ktx.yes
 import java.io.BufferedWriter
 import java.io.OutputStreamWriter
+import kotlin.reflect.KClass
 
 data class Identity(val fullName: String, val name: String)
 
@@ -163,7 +166,7 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
         entries: List<Entry<T>>,
         allItemHolderName: List<ItemHolderFullName>,
         clickEventsMap: EventMap<T>,
-        longClickEventsMap: EventMap<T>
+        longClickEventsMap: EventMap<T>,
     ): List<T> {
         val extractEventOrigin: (EventEntry<T>) -> List<T> = {
             it.value.entries.flatMap { listEntry ->
@@ -188,7 +191,7 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
     private fun buildViewHolders(
         entries: List<Entry<KSAnnotated>>,
         clickEventsMap: Map<ItemHolderFullName, Map<ViewName, List<Event<KSAnnotated>>>>,
-        longClickEventsMap: Map<ItemHolderFullName, Map<ViewName, List<Event<KSAnnotated>>>>
+        longClickEventsMap: Map<ItemHolderFullName, Map<ViewName, List<Event<KSAnnotated>>>>,
     ): String {
         return entries.joinToString("\n\n") { entry ->
             createMultiViewHolder(
@@ -202,7 +205,7 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
     private fun createMultiViewHolder(
         entry: Entry<KSAnnotated>,
         eventMapClick: Map<ViewName, List<Event<KSAnnotated>>>,
-        eventMapLongClick: Map<ViewName, List<Event<KSAnnotated>>>
+        eventMapLongClick: Map<ViewName, List<Event<KSAnnotated>>>,
     ): String {
         val viewHolderBuilderContent = entry.viewHolders.map {
             val viewHolderContent = if (it.value.bindingName.endsWith(
@@ -236,8 +239,8 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
         return """
             val context = view.context
             val composeView = EDComposeView(context)
-            @Suppress("UNUSED_VARIABLE") val v = composeView.composeView
             val viewHolder = ${it.viewHolderName}(composeView)
+            @Suppress("UNUSED_VARIABLE") val v = viewHolder.itemView
             composeView.clickListener = { s ->
                 $1
             }
@@ -393,9 +396,14 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
         }
     }
 
-    private fun KSDeclaration.identity() =
-        Identity("${packageName.asString()}.${simpleName.asString()}", simpleName.asString())
+    private fun KSDeclaration.identity(): Identity {
+        val name = simpleName.asString()
+        return Identity("${packageName.asString()}.$name", name)
+    }
 
+    /**
+     * 处理viewHolder
+     */
     @OptIn(KspExperimental::class)
     private fun processEntry(viewHolders: Sequence<KSAnnotated>): Sequence<Entry<KSAnnotated>> {
         return viewHolders.map { viewHolder ->
@@ -422,7 +430,24 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
 
     private fun getItemHolderDetail(viewHolder: KSAnnotated): Pair<String, String> {
         val ksType = viewHolder.annotations.first().arguments.first().value as KSType
-        return ksType.declaration.qualifiedName.let { it!!.asString() to it.getShortName() }
+        val declaration = ksType.declaration as KSClassDeclaration
+        assert(
+            declaration.isAnnotationPresentOrParent(ItemHolder::class)
+        ) { "ItemHolder[${declaration.qualifiedName?.asString()}] 需要添加@ItemHolder 注解" }
+        return declaration.qualifiedName.let { it!!.asString() to it.getShortName() }
+    }
+
+    @OptIn(KspExperimental::class)
+    private fun KSClassDeclaration.isAnnotationPresentOrParent(kClass: KClass<out Annotation>): Boolean {
+        val isPresent = isAnnotationPresent(kClass)
+        return if (isPresent) {
+            true
+        } else {
+            superTypes.any {
+                val resolve = it.resolve()
+                resolve.declaration.isAnnotationPresent(kClass)
+            }
+        }
     }
 
     private fun getBindingDetail(viewHolder: KSClassDeclaration): Pair<String, String> {

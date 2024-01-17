@@ -32,6 +32,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.RecyclerView
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
+import com.storyteller_f.annotation_defination.ItemHolder
 import com.storyteller_f.common_pr.dipToInt
 import com.storyteller_f.common_ui.navigator
 import com.storyteller_f.common_ui.owner
@@ -242,6 +243,7 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
+@ItemHolder("repo")
 class RepoItemHolder(val repo: Repo) : DataItemHolder() {
     override fun areItemsTheSame(other: DataItemHolder): Boolean {
         return repo.id == (other as RepoItemHolder).repo.id
@@ -279,7 +281,10 @@ class RepoViewHolder(private val binding: RepoViewItemBinding) :
     }
 }
 
-class SeparatorItemHolder(val info: String) : DataItemHolder() {
+@ItemHolder("separator")
+abstract class SeparatorHolder : DataItemHolder()
+
+class SeparatorItemHolder(val info: String) : SeparatorHolder() {
     override fun areItemsTheSame(other: DataItemHolder): Boolean {
         return (other as SeparatorItemHolder).info == info
     }

@@ -28,9 +28,10 @@ class Processing(val environment: SymbolProcessorEnvironment) :
     @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
         count++
-        logger.warn("composite round $count")
+
         val composites =
             resolver.getSymbolsWithAnnotation(Composite::class.java.canonicalName)
+        logger.warn("composite round $count count ${composites.count()}")
         composites.forEach {
             it as KSClassDeclaration
             val clazzList = (it.annotations.first { ksAnnotation ->
@@ -72,7 +73,6 @@ class Processing(val environment: SymbolProcessorEnvironment) :
                 writer.write(content)
             }
         }
-        logger.warn("composites ${composites.count()}")
         return emptyList()
     }
 
