@@ -6,3 +6,7 @@ plugins {
     id("common-publish")
 }
 pureKotlinLanguageLevel()
+
+dependencies {
+    testImplementation("junit:junit:4.13.2")
+}

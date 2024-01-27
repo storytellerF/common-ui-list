@@ -3,7 +3,7 @@ package com.storyteller_f.ui_list_annotation_compiler_ksp
 import com.example.ui_list_annotation_common.Entry
 import com.example.ui_list_annotation_common.UiAdapterGenerator
 import com.google.devtools.ksp.symbol.KSAnnotated
-import com.storyteller_f.slim_ktx.trimInsertCode
+import com.storyteller_f.slim_ktx.trimAndReplaceCode
 import com.storyteller_f.slim_ktx.yes
 
 class KotlinGenerator : UiAdapterGenerator<KSAnnotated>() {
@@ -17,7 +17,7 @@ class KotlinGenerator : UiAdapterGenerator<KSAnnotated>() {
                 $1
                 return $index;
             }
-            """.trimInsertCode(addFunctions.yes())
+            """.trimAndReplaceCode(addFunctions.yes())
     }
 
     private fun buildRegisterBlock(it: Entry<KSAnnotated>, index: Int) = """
