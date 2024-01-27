@@ -37,7 +37,7 @@ object Versions {
     const val TEST_JUNIT = "1.1.3"
     const val TEST_ESPRESSO = "3.4.0"
     const val MULTI_DEX = "2.0.1"
-    const val BAO = "2.3.0"
+    const val BAO = "2.4.0"
     const val NAVIGATION = "2.7.6"
     const val SWIPE_REFRESH = "1.1.0"
 }

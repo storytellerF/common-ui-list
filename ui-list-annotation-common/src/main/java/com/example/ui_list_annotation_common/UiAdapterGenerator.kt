@@ -1,6 +1,6 @@
 package com.example.ui_list_annotation_common
 
-import com.storyteller_f.slim_ktx.trimInsertCode
+import com.storyteller_f.slim_ktx.trimAndReplaceCode
 import com.storyteller_f.slim_ktx.yes
 import javax.lang.model.element.Element
 
@@ -32,7 +32,7 @@ class JavaGenerator : UiAdapterGenerator<Element>() {
                 $1
                 return $index;
             }
-            """.trimInsertCode(addFunctions.yes())
+            """.trimAndReplaceCode(addFunctions.yes())
     }
 
     private fun buildRegisterBlock(it: Entry<Element>, index: Int) = """

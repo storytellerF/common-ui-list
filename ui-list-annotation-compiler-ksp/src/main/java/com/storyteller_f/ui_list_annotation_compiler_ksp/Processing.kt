@@ -31,9 +31,9 @@ import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.annotation_defination.BindLongClickEvent
 import com.storyteller_f.annotation_defination.ItemHolder
-import com.storyteller_f.slim_ktx.insertCode
 import com.storyteller_f.slim_ktx.no
-import com.storyteller_f.slim_ktx.trimInsertCode
+import com.storyteller_f.slim_ktx.replaceCode
+import com.storyteller_f.slim_ktx.trimAndReplaceCode
 import com.storyteller_f.slim_ktx.yes
 import java.io.BufferedWriter
 import java.io.OutputStreamWriter
@@ -220,7 +220,7 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
                     if (type.equals("${it.key}")) {
                         $1
                     }//type if end
-            """.trimIndent().insertCode(viewHolderContent.yes())
+            """.trimIndent().replaceCode(viewHolderContent.yes())
         }.joinToString("\n")
         return """
                 @Suppress("UNUSED_ANONYMOUS_PARAMETER")
@@ -228,7 +228,7 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
                     $1
                     throw Exception("unrecognized type:[${'$'}type]")
                 }
-        """.trimIndent().insertCode(viewHolderBuilderContent.yes())
+        """.trimIndent().replaceCode(viewHolderBuilderContent.yes())
     }
 
     private fun buildComposeViewHolder(
@@ -248,7 +248,7 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
                 $2
             }
             return viewHolder
-            """.trimInsertCode(
+            """.trimAndReplaceCode(
             buildComposeClickListener(eventList).yes(2),
             buildComposeClickListener(eventList2).yes(2)
         )
@@ -263,7 +263,7 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
             if (s == "${it.key}") {
                 $1                
             }//if end
-        """.trimInsertCode(clickBlock.yes())
+        """.trimAndReplaceCode(clickBlock.yes())
         }.joinToString("\n")
 
     private fun produceClickBlockForCompose(e: Event<KSAnnotated>): String {
@@ -299,7 +299,7 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
             val viewHolder = ${entry.viewHolderName}(inflate)
             $1       
             return viewHolder
-            """.trimInsertCode(buildInvokeClickEvent(eventMapClick, eventMapLongClick).no())
+            """.trimAndReplaceCode(buildInvokeClickEvent(eventMapClick, eventMapLongClick).no())
     }
 
     private fun buildInvokeClickEvent(
@@ -315,14 +315,14 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
             inflate.${it.key}.setOnClickListener { v ->
                 $1
             }
-        """.trimInsertCode(buildInvokeClickEvent(it.value).yes())
+        """.trimAndReplaceCode(buildInvokeClickEvent(it.value).yes())
 
     private fun produceLongClickListener(it: Map.Entry<String, List<Event<KSAnnotated>>>) = """
             inflate.${it.key}.setOnLongClickListener { v ->
                 $1
                 return true;
             }
-        """.trimInsertCode(buildInvokeClickEvent(it.value).yes())
+        """.trimAndReplaceCode(buildInvokeClickEvent(it.value).yes())
 
     private fun buildInvokeClickEvent(events: List<Event<KSAnnotated>>): String {
         return events.joinToString("\n") { event ->
