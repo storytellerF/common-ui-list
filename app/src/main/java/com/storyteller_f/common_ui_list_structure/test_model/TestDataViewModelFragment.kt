@@ -7,8 +7,8 @@ import com.storyteller_f.common_ui.repeatOnViewResumed
 import com.storyteller_f.common_ui_list_structure.R
 import com.storyteller_f.common_ui_list_structure.api.requireReposService
 import com.storyteller_f.common_ui_list_structure.databinding.FragmentTestDataBinding
-import com.storyteller_f.common_ui_list_structure.holders.seprator.RepoItemHolder
-import com.storyteller_f.common_ui_list_structure.holders.seprator.RepoViewHolder
+import com.storyteller_f.common_ui_list_structure.holders.RepoItemHolder
+import com.storyteller_f.common_ui_list_structure.holders.RepoViewHolder
 import com.storyteller_f.ext_func_definition.ExtFuncFlat
 import com.storyteller_f.ext_func_definition.ExtFuncFlatType
 import com.storyteller_f.ui_list.adapter.SimpleDataAdapter

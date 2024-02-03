@@ -54,25 +54,16 @@ class UIListHolderZoom<T> {
         }
     }
 
-    fun importHolders(entries: List<Entry<T>>): String {
-        return entries.joinToString("\n") { entry ->
-            val bindings = entry.viewHolders.values.map {
+    fun importHolders(entries: List<Entry<T>>): List<String> {
+        return entries.flatMap { entry ->
+            val values = entry.viewHolders.values
+            val bindings = values.map {
                 it.bindingFullName
-            }.distinct().joinToString("\n") {
-                "import $it;"
             }
-            val viewHolders = entry.viewHolders.values.joinToString("\n") {
-                "import ${it.viewHolderFullName};"
+            val viewHolders = values.map {
+                it.viewHolderFullName
             }
-            bindings + "\n" + viewHolders + "\nimport ${entry.itemHolderFullName};//item holder end\n"
-        }
-    }
-
-    private fun getHasComposeView(entries: List<Entry<T>>): Boolean {
-        return entries.any { entry ->
-            entry.viewHolders.any {
-                !it.value.bindingName.endsWith("Binding")
-            }
+            bindings + viewHolders + entry.itemHolderFullName
         }
     }
 
@@ -83,20 +74,10 @@ class UIListHolderZoom<T> {
     fun importReceiverClass(
         clickEventMap: EventMap<T>,
         longClickEventMap: EventMap<T>
-    ): String {
+    ): List<String> {
         val flatMap = receiverList(clickEventMap)
         val flatMap2 = receiverList(longClickEventMap)
-        return flatMap.plus(flatMap2).joinToString("\n") {
-            "import $it;\n"
-        }
-    }
-
-    fun importComposeLibrary(entries: List<Entry<T>>): String {
-        return if (getHasComposeView(entries)) {
-            "import androidx.compose.ui.platform.ComposeView;\n"
-        } else {
-            ""
-        }
+        return (flatMap + flatMap2).distinct()
     }
 
     fun extractEventMap(
@@ -115,25 +96,10 @@ class UIListHolderZoom<T> {
     }
 }
 
-inline fun <T, K1 : Any, K2 : Any, V> Iterable<T>.doubleLayerGroupBy(
-    doubleKeySelector: (T) -> Pair<K1, K2>?,
-    valueTransform: (T) -> V
-): Map<K1, Map<K2, List<V>>> {
-    val destination = mutableMapOf<K1, MutableMap<K2, MutableList<V>>>()
-    for (element in this) {
-        val key = doubleKeySelector(element)
-        key?.let {
-            val map = destination.getOrPut(key.first) { mutableMapOf() }
-            val secondMap = map.getOrPut(key.second) {
-                mutableListOf()
-            }
-            secondMap.add(valueTransform(element))
-        }
-    }
-    return destination
-}
-
-inline fun <T, K1, K2, V> Sequence<T>.doubleLayerGroupBy(
+/**
+ * 生成双层map
+ */
+inline fun <T, K1, K2, V> Sequence<T>.nestedGroupBy(
     doubleKeySelector: (T) -> Pair<K1, K2>?,
     valueTransform: (T) -> V
 ): Map<K1, Map<K2, List<V>>> {
