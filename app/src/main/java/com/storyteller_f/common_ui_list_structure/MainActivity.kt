@@ -7,23 +7,16 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
-import androidx.compose.material.Card
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ViewCompositionStrategy
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -31,9 +24,6 @@ import androidx.core.view.updatePadding
 import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.RecyclerView
 import com.storyteller_f.annotation_defination.BindClickEvent
-import com.storyteller_f.annotation_defination.BindItemHolder
-import com.storyteller_f.annotation_defination.ItemHolder
-import com.storyteller_f.common_ktx.propertiesSame
 import com.storyteller_f.common_pr.dipToInt
 import com.storyteller_f.common_ui.navigator
 import com.storyteller_f.common_ui.owner
@@ -43,24 +33,21 @@ import com.storyteller_f.common_ui.supportNavigatorBarImmersive
 import com.storyteller_f.common_ui.updateMargins
 import com.storyteller_f.common_ui_list_structure.api.requireReposService
 import com.storyteller_f.common_ui_list_structure.databinding.ActivityMainBinding
-import com.storyteller_f.common_ui_list_structure.databinding.RepoViewItemBinding
 import com.storyteller_f.common_ui_list_structure.db.composite.RepoComposite
 import com.storyteller_f.common_ui_list_structure.db.requireRepoDatabase
+import com.storyteller_f.common_ui_list_structure.holders.seprator.RepoItemHolder
+import com.storyteller_f.common_ui_list_structure.holders.seprator.SeparatorItemHolder
 import com.storyteller_f.common_ui_list_structure.model.Repo
 import com.storyteller_f.common_ui_list_structure.test_model.TestViewModelActivity
 import com.storyteller_f.common_ui_list_structure.test_navigation.TestNavigationResultActivity
 import com.storyteller_f.common_vm_ktx.combine
 import com.storyteller_f.ui_list.core.AbstractViewHolder
-import com.storyteller_f.ui_list.core.BindingViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.event.viewBinding
 import com.storyteller_f.ui_list.source.SourceProducer
 import com.storyteller_f.ui_list.source.source
 import com.storyteller_f.ui_list.ui.ListWithState
 import com.storyteller_f.view_holder_compose.ComposeSourceAdapter
-import com.storyteller_f.view_holder_compose.ComposeViewHolder
-import com.storyteller_f.view_holder_compose.EDComposeView
-import com.storyteller_f.view_holder_compose.EdComposeViewEventEmitter
 import kotlinx.coroutines.flow.collectLatest
 
 class MainActivity : AppCompatActivity() {
@@ -243,101 +230,3 @@ class MainActivity : AppCompatActivity() {
         }
     }
 }
-
-@ItemHolder("repo")
-class RepoItemHolder(val repo: Repo) : DataItemHolder() {
-    override fun areItemsTheSame(other: DataItemHolder): Boolean {
-        return propertiesSame(other, {
-            repo.id
-        })
-    }
-}
-
-@BindItemHolder(RepoItemHolder::class)
-class RepoViewHolder(private val binding: RepoViewItemBinding) :
-    BindingViewHolder<RepoItemHolder>(binding) {
-    override fun bindData(itemHolder: RepoItemHolder) {
-        binding.repoName.text = itemHolder.repo.name
-        // if the description is missing, hide the TextView
-        var descriptionVisibility = View.GONE
-        if (itemHolder.repo.description != null) {
-            binding.repoDescription.text = itemHolder.repo.description
-            descriptionVisibility = View.VISIBLE
-        }
-        binding.repoDescription.visibility = descriptionVisibility
-
-        binding.repoStars.text = itemHolder.repo.stars.toString()
-        binding.repoForks.text = itemHolder.repo.forks.toString()
-
-        // if the language is missing, hide the label and the value
-        var languageVisibility = View.GONE
-        if (!itemHolder.repo.language.isNullOrEmpty()) {
-            val resources = this.itemView.context.resources
-            binding.repoLanguage.text =
-                resources.getString(
-                    R.string.language,
-                    itemHolder.repo.language
-                )
-            languageVisibility = View.VISIBLE
-        }
-        binding.repoLanguage.visibility = languageVisibility
-    }
-}
-
-@ItemHolder("separator")
-abstract class SeparatorHolder : DataItemHolder()
-
-class SeparatorItemHolder(val info: String) : SeparatorHolder() {
-    override fun areItemsTheSame(other: DataItemHolder): Boolean {
-        return propertiesSame(other, {
-            info
-        })
-    }
-}
-
-@BindItemHolder(SeparatorItemHolder::class)
-class SeparatorViewHolder(edComposeView: EDComposeView) :
-    ComposeViewHolder<SeparatorItemHolder>(edComposeView) {
-    override fun bindData(itemHolder: SeparatorItemHolder) {
-        edComposeView.composeView.setContent {
-            Separator(itemHolder, edComposeView)
-        }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Preview
-@Composable
-private fun Separator(
-    @PreviewParameter(RepoSeparatorProvider::class) itemHolder: SeparatorItemHolder,
-    edComposeView: EdComposeViewEventEmitter = EdComposeViewEventEmitter.default
-) {
-    Card(
-        backgroundColor = colorResource(id = R.color.separatorBackground),
-        modifier = Modifier
-            .combinedClickable(
-                onClick = { edComposeView.notifyClickEvent("card") },
-                onLongClick = { edComposeView.notifyLongClickEvent("card") }
-            )
-            .fillMaxWidth()
-    ) {
-        Text(
-            text = itemHolder.info,
-            modifier = Modifier.padding(12.dp),
-            color = colorResource(
-                id = R.color.separatorText
-            ),
-            fontSize = 25.sp,
-        )
-    }
-}
-
-class RepoSeparatorProvider : PreviewParameterProvider<SeparatorItemHolder> {
-    override val values: Sequence<SeparatorItemHolder>
-        get() = sequence {
-            yield(SeparatorItemHolder("90.000+ starts"))
-        }
-}
-
-private val RepoItemHolder.roundedStarCount: Int
-    get() = this.repo.stars / 10_000

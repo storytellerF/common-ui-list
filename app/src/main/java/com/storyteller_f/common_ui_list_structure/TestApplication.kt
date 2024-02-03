@@ -9,7 +9,7 @@ class TestApplication : MultiDexApplication() {
         super.onCreate()
         DynamicColors.applyToActivitiesIfAvailable(this)
         holders(
-            com.storyteller_f.common_ui_list_structure.ui_list.HolderBuilder::add
+            com.storyteller_f.common_ui_list_structure.holders.seprator.ui_list.HolderBuilder::add
         )
     }
 }

@@ -23,6 +23,8 @@ gradlePlugin {
 dependencies {
     val androidVersion = "8.2.2"
     val kotlinVersion = "1.9.20"
+    val navVersion = "2.7.6"
     implementation("com.android.tools.build:gradle:$androidVersion")
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
+    implementation("androidx.navigation:navigation-safe-args-gradle-plugin:$navVersion")
 }
