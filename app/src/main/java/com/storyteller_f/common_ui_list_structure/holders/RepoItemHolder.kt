@@ -1,4 +1,4 @@
-package com.storyteller_f.common_ui_list_structure.holders.seprator
+package com.storyteller_f.common_ui_list_structure.holders
 
 import android.view.View
 import com.storyteller_f.annotation_defination.BindItemHolder

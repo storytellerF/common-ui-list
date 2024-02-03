@@ -13,10 +13,12 @@ abstract class UiAdapterGenerator<T> {
     companion object {
 
         val commonImports = listOf(
-            "import android.content.Context",
-            "import com.storyteller_f.ui_list.core.AbstractViewHolder",
-            "import android.view.LayoutInflater",
-            "import android.view.ViewGroup"
+            "com.storyteller_f.ui_list.core.AbstractViewHolder",
+            "android.view.LayoutInflater",
+            "android.view.ViewGroup",
+            "com.storyteller_f.ui_list.event.ViewJava",
+            "com.storyteller_f.ui_list.core.list",
+            "com.storyteller_f.ui_list.core.registerCenter"
         )
     }
 }

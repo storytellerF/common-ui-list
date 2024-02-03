@@ -35,7 +35,7 @@ import com.storyteller_f.common_ui_list_structure.api.requireReposService
 import com.storyteller_f.common_ui_list_structure.databinding.ActivityMainBinding
 import com.storyteller_f.common_ui_list_structure.db.composite.RepoComposite
 import com.storyteller_f.common_ui_list_structure.db.requireRepoDatabase
-import com.storyteller_f.common_ui_list_structure.holders.seprator.RepoItemHolder
+import com.storyteller_f.common_ui_list_structure.holders.RepoItemHolder
 import com.storyteller_f.common_ui_list_structure.holders.seprator.SeparatorItemHolder
 import com.storyteller_f.common_ui_list_structure.model.Repo
 import com.storyteller_f.common_ui_list_structure.test_model.TestViewModelActivity
@@ -175,8 +175,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     @BindClickEvent(SeparatorItemHolder::class, "card")
-    fun clickLine(itemHolder: SeparatorItemHolder) {
-        Toast.makeText(this, itemHolder.info, Toast.LENGTH_SHORT).show()
+    fun clickLine(view: View, itemHolder: SeparatorItemHolder) {
+        Toast.makeText(this, "${itemHolder.info} ${view::class.qualifiedName}", Toast.LENGTH_SHORT).show()
     }
 
     private fun printInsets(insets: WindowInsetsCompat) {

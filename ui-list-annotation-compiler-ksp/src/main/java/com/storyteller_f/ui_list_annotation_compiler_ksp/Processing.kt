@@ -10,7 +10,7 @@ import com.example.ui_list_annotation_common.JavaGenerator.Companion.CLASS_NAME
 import com.example.ui_list_annotation_common.UIListHolderZoom
 import com.example.ui_list_annotation_common.UiAdapterGenerator
 import com.example.ui_list_annotation_common.ViewName
-import com.example.ui_list_annotation_common.doubleLayerGroupBy
+import com.example.ui_list_annotation_common.nestedGroupBy
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.getAnnotationsByType
@@ -22,7 +22,6 @@ import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSClassifierReference
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSType
@@ -125,7 +124,6 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
             Dependencies(aggregating = false, *dependencyFiles.toList().toTypedArray())
         val bindingClass = zoom.importHolders(entries)
         val receiverClass = zoom.importReceiverClass(clickEventsMap, longClickEventsMap)
-        val composeLibrary = zoom.importComposeLibrary(entries)
 
         val generator = KotlinGenerator()
         BufferedWriter(
@@ -138,15 +136,9 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
             )
         ).use { writer ->
             writer.writeLine("package $uiListPackageName")
-            writer.writeLine("import com.storyteller_f.ui_list.event.ViewJava")
-            writer.write(composeLibrary)
-            writer.write(bindingClass)
-            writer.write(receiverClass)
-            writer.writeLine(UiAdapterGenerator.commonImports.joinToString("\n"))
-            writer.writeLine(
-                """import com.storyteller_f.ui_list.core.list
-                    |import com.storyteller_f.ui_list.core.registerCenter""".trimMargin()
-            )
+            writer.writeLine((bindingClass + receiverClass + UiAdapterGenerator.commonImports).distinct().joinToString("\n") {
+                "import $it"
+            })
             writer.writeLine()
             writer.writeLine("object $CLASS_NAME {")
             writer.writeLine(
@@ -279,7 +271,7 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
         } else {
             """
             if("${e.group}".equals(viewHolder.grouped)) 
-                ViewJava.findActionReceiverOrNull(composeView.getComposeView(), ${e.receiver}::class.java, { fragment ->
+                ViewJava.findActionReceiverOrNull(composeView.composeView, ${e.receiver}::class.java, { fragment ->
                     fragment.${e.functionName}($parameterList);
                     null;//fragment return
                 });//fragment end
@@ -352,7 +344,7 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
         clickEvents: Sequence<KSAnnotated>,
         isLong: Boolean,
     ): Map<String, Map<String, List<Event<KSAnnotated>>>> {
-        return clickEvents.doubleLayerGroupBy({
+        return clickEvents.nestedGroupBy({
             val (itemHolderFullName, _) = getItemHolderDetail(it)
             val viewName = if (isLong) {
                 it.getAnnotationsByType(
