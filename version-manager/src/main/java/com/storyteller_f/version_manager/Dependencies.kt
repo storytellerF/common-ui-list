@@ -90,9 +90,6 @@ fun Project.kspModule(moduleName: String) {
 
 }
 
-/**
- * 需要加载kapt 插件。应用于app 组件
- */
 fun Project.baseAppDependency() {
     implModule(":common-ktx")
     implModule(":compat-ktx")
@@ -106,10 +103,7 @@ fun Project.baseAppDependency() {
     dependencies {
         commonAndroidDependency()
 
-        "kapt"("androidx.room:room-compiler:${Versions.ROOM}")
-
-        "implementation"("androidx.fragment:fragment-ktx:${Versions.FRAGMENT_KTX}")
-        "implementation"("androidx.activity:activity-ktx:${Versions.ACTIVITY_KTX}")
+        "ksp"("androidx.room:room-compiler:${Versions.ROOM}")
 
         "implementation"("org.jetbrains.kotlinx:kotlinx-coroutines-android:${Versions.COROUTINES}")
         "implementation"("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.COROUTINES}")
@@ -170,4 +164,7 @@ fun DependencyHandlerScope.commonAndroidDependency() {
     "implementation"("androidx.core:core-ktx:${Versions.CORE}")
     "implementation"("androidx.appcompat:appcompat:${Versions.APPCOMPAT}")
     "implementation"("com.google.android.material:material:${Versions.MATERIAL}")
+
+    "implementation"("androidx.fragment:fragment-ktx:${Versions.FRAGMENT_KTX}")
+    "implementation"("androidx.activity:activity-ktx:${Versions.ACTIVITY_KTX}")
 }

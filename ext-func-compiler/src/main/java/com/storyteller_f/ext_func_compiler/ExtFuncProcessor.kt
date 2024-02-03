@@ -32,7 +32,7 @@ class ExtFuncProcessor(private val codeGenerator: CodeGenerator, private val log
         val symbols = resolver.getSymbolsWithAnnotation(ExtFuncFlat::class.java.canonicalName)
         val invalidates = symbols.filter { !it.validate() }.toList()
         logger.info(
-            "round $round invalidates ${invalidates.size} ${
+            "ext-func round $round invalidates ${invalidates.size} ${
                 invalidates.joinToString {
                     it.toString()
                 }

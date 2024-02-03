@@ -41,8 +41,7 @@ val builtinMethod = listOf("equals", "hashCode", "toString", "<init>")
 internal fun generateForV8(task: ExtFuncProcessor.Task, logger: KSPLogger): String {
     val ksAnnotated = task.ksAnnotated as KSPropertyDeclaration
     val fieldName = ksAnnotated.simpleName.asString()
-    val javaClass = ksAnnotated.javaClass
-    logger.info(javaClass.canonicalName, ksAnnotated)
+    logger.info("ext-func v8", ksAnnotated)
     val type = ksAnnotated.type.resolve()
     val declaration = type.declaration as KSClassDeclaration
     val methods = declaration.getAllFunctions().filter {

@@ -451,20 +451,11 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
     }
 
     private fun getBindingDetail(viewHolder: KSClassDeclaration): Pair<String, String> {
-        val firstProperties = viewHolder.getAllProperties().first()
-        val propertyName = firstProperties.simpleName.getShortName()
-        return if (propertyName == "binding") {
-            val bindingPackageName = firstProperties.packageName.asString()
-            val bindingName =
-                (firstProperties.type.element as KSClassifierReference).referencedName()
-            val bindingFullName = "$bindingPackageName.databinding.$bindingName"
-            Pair(bindingName, bindingFullName)
-        } else {
-            val asString = firstProperties.type.resolve().declaration.qualifiedName
-            val bindingName = asString?.getShortName() ?: ""
-            val bindingFullName = asString?.asString() ?: ""
-            Pair(bindingName, bindingFullName)
-        }
+        val firstProperty = viewHolder.getAllProperties().first()
+        val ksName = firstProperty.type.resolve().declaration.qualifiedName
+        val bindingName = ksName?.getShortName() ?: ""
+        val bindingFullName = ksName?.asString() ?: ""
+        return Pair(bindingName, bindingFullName)
     }
 }
 
