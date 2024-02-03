@@ -499,13 +499,13 @@ class ListWithState @JvmOverloads constructor(
 }
 
 fun LoadState.debugEmoji() = when (this) {
-    is LoadState.NotLoading -> if (endOfPaginationReached) "\uD83D\uDD1A" else "⏸️"
+    is LoadState.NotLoading -> if (endOfPaginationReached) "\uD83D\uDD1A" else "\uD83D\uDEA7"
     is LoadState.Loading -> "⏳"
-    is LoadState.Error -> "❌"
+    is LoadState.Error -> "\uD83D\uDCA5"
 }
 
 fun LoadStates?.debugEmoji() =
-    if (this == null) "\uD83D\uDD72" else "${prepend.debugEmoji()} ${refresh.debugEmoji()} ${append.debugEmoji()}"
+    if (this == null) "\uD83D\uDCA4" else "${prepend.debugEmoji()} ${refresh.debugEmoji()} ${append.debugEmoji()}"
 
 fun CombinedLoadStates.debugEmoji() =
     "source: ${source.debugEmoji()}  " +

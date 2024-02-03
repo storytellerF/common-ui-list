@@ -8,3 +8,13 @@ val Throwable.exceptionMessage get() = localizedMessage ?: javaClass.toString()
 fun buildMask(block: (MutableList<Int>) -> Unit) = buildList(block).fold(0) { acc, i ->
     acc or i
 }
+
+inline fun <reified T : Any> T.propertiesSame(any: Any, vararg properties: T.() -> Any?): Boolean {
+    return if (any is T) {
+        properties.all { property ->
+            property(this) == property(any)
+        }
+    } else {
+        false
+    }
+}

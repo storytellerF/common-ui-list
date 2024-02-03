@@ -31,7 +31,7 @@ class Processing(val environment: SymbolProcessorEnvironment) :
 
         val composites =
             resolver.getSymbolsWithAnnotation(Composite::class.java.canonicalName)
-        logger.warn("composite round $count count ${composites.count()}")
+        logger.logging("composite round $count count ${composites.count()}")
         composites.forEach {
             it as KSClassDeclaration
             val clazzList = (it.annotations.first { ksAnnotation ->
