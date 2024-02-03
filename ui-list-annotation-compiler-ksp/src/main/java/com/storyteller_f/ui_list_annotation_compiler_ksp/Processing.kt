@@ -136,7 +136,9 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
             )
         ).use { writer ->
             writer.writeLine("package $uiListPackageName")
-            writer.writeLine((bindingClass + receiverClass + UiAdapterGenerator.commonImports).distinct().joinToString("\n") {
+            writer.writeLine((bindingClass + receiverClass + UiAdapterGenerator.commonImports).distinct().joinToString(
+                "\n"
+            ) {
                 "import $it"
             })
             writer.writeLine()
