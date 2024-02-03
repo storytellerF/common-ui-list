@@ -72,10 +72,10 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
         val clickEventCount = clickEvents.count()
         val longClickEventCount = longClickEvents.count()
 
-        logger.warn("ui-list round $count $viewHolderCount $clickEventCount $longClickEventCount")
-        logger.warn("ui-list round $count holder ${viewHolderMap[true]?.size} ${viewHolderMap[false]?.size}")
-        logger.warn("ui-list round $count click: ${clickEventMap[true]?.size} ${clickEventMap[false]?.size}")
-        logger.warn("ui-list round $count long ${longClickEventMap[true]?.size} ${longClickEventMap[false]?.size}")
+        logger.logging("ui-list round $count $viewHolderCount $clickEventCount $longClickEventCount")
+        logger.logging("ui-list round $count holder ${viewHolderMap[true]?.size} ${viewHolderMap[false]?.size}")
+        logger.logging("ui-list round $count click: ${clickEventMap[true]?.size} ${clickEventMap[false]?.size}")
+        logger.logging("ui-list round $count long ${longClickEventMap[true]?.size} ${longClickEventMap[false]?.size}")
         val invalidate =
             viewHolderMap[false].orEmpty() + clickEventMap[false].orEmpty() + longClickEventMap[false].orEmpty()
         invalidate.forEach {
@@ -106,7 +106,7 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
             it.itemHolderFullName
         }
         val uiListPackageName = "$packageName.ui_list"
-        logger.warn("ui-list package $uiListPackageName")
+        logger.info("ui-list package $uiListPackageName")
         val maps = zoom.extractEventMap(allItemHolderName)
         val clickEventsMap = maps.first
         val longClickEventsMap = maps.second
