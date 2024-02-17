@@ -71,7 +71,7 @@ object CommonFileSystem {
     val ftpsSpec = RemoteSpec("localhost", 0, "test", "test", RemoteAccessType.FTPS)
 
     val webDavSpec =
-        ShareSpec("localhost", 0, "test", "test", type = RemoteAccessType.WEB_DAV, "test1")
+        RemoteSpec("localhost", 0, "test", "test", type = RemoteAccessType.WEB_DAV)
 
     fun setup(type: String) {
         fs.getPath("/test1").apply {
@@ -123,28 +123,24 @@ object CommonFileSystem {
             every {
                 list(any())
             } answers {
-                val p = buildPath(webDavSpec.share, firstArg())
-                fs.getPath(p).walk().map {
+                fs.getPath(firstArg()).walk().map {
                     mockDavResources(it)
                 }.toMutableList()
             }
             every {
                 getInputStream(any())
             } answers {
-                val p = buildPath(webDavSpec.share, firstArg())
-                fs.getPath(p).inputStream()
+                fs.getPath(firstArg()).inputStream()
             }
             every {
                 acl(any())
             } answers {
-                val p = buildPath(webDavSpec.share, firstArg())
-                mockAcl(p)
+                mockAcl(firstArg())
             }
             every {
                 resources(any())
             } answers {
-                val p = buildPath(webDavSpec.share, firstArg())
-                mockDavResources(fs.getPath(p))
+                mockDavResources(fs.getPath(firstArg()))
             }
         }.apply {
             webdavInstances[webDavSpec] = this

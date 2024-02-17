@@ -127,13 +127,13 @@ open class ScopeFileCopyOp(
         return false
     }
 
-    private suspend fun ScopeFileCopyOp.copyFileInternal(
+    private suspend fun copyFileInternal(
         int: FileChannel,
         out: FileChannel,
         f: FileInstance
     ) {
         withContext(Dispatchers.IO) {
-            val byteBuffer = ByteBuffer.allocateDirect(1024)
+            val byteBuffer = ByteBuffer.allocateDirect(DEFAULT_BUFFER_SIZE)
             while (int.read(byteBuffer) != -1) {
                 yield()
                 byteBuffer.flip()

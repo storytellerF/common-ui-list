@@ -15,9 +15,9 @@ import java.io.FileOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 
-val webdavInstances = mutableMapOf<ShareSpec, WebDavInstance>()
+val webdavInstances = mutableMapOf<RemoteSpec, WebDavInstance>()
 
-class WebDavFileInstance(uri: Uri, private val spec: ShareSpec = ShareSpec.parse(uri)) :
+class WebDavFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse(uri)) :
     FileInstance(uri) {
 
     private var resources: DavResource? = null
@@ -42,9 +42,6 @@ class WebDavFileInstance(uri: Uri, private val spec: ShareSpec = ShareSpec.parse
         }
         return r
     }
-
-    override val path: String
-        get() = super.path.substring(spec.share.length + 1).ifEmpty { "/" }
 
     override suspend fun filePermissions() = reconnectAclIfNeed().filePermissions()
 
@@ -158,8 +155,8 @@ class WebDavFileInstance(uri: Uri, private val spec: ShareSpec = ShareSpec.parse
     }
 }
 
-class WebDavInstance(spec: ShareSpec) {
-    private val baseUrl = "http://${spec.server}:${spec.port}/${spec.share}"
+class WebDavInstance(spec: RemoteSpec) {
+    private val baseUrl = "http://${spec.server}:${spec.port}"
     private val instance = OkHttpSardine().apply {
         setCredentials(spec.user, spec.password)
     }

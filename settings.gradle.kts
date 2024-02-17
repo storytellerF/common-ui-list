@@ -36,7 +36,6 @@ include(":ui-list-annotation-common")
 include(":ext-func-compiler")
 include(":ext-func-definition")
 include(":composite-definition")
-//include(":composite-compiler")
 include(":composite-compiler-ksp")
 
 include(":common-vm-ktx")
