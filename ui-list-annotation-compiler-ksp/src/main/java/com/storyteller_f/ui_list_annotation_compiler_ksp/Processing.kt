@@ -14,6 +14,7 @@ import com.example.ui_list_annotation_common.nestedGroupBy
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.getAnnotationsByType
+import com.google.devtools.ksp.getDeclaredFunctions
 import com.google.devtools.ksp.isAnnotationPresent
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.Resolver
@@ -25,6 +26,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.validate
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
@@ -428,6 +430,14 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
         assert(
             declaration.isAnnotationPresentOrParent(ItemHolder::class)
         ) { "ItemHolder[${declaration.qualifiedName?.asString()}] 需要添加@ItemHolder 注解" }
+        val isDataClass = declaration.modifiers.contains(Modifier.DATA)
+        val hasOverride = declaration.getDeclaredFunctions().any {
+            val asString = it.simpleName.asString()
+            asString == "equals" && it.findOverridee() != null || asString == "areContentsTheSame"
+        }
+        assert(isDataClass || hasOverride) {
+            "ItemHolder[${declaration.qualifiedName?.asString()}] 需要添加data 修饰符或者重载equals/areContentsTheSame"
+        }
         return declaration.qualifiedName.let { it!!.asString() to it.getShortName() }
     }
 
