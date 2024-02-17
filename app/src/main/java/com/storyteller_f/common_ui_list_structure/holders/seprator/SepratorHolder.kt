@@ -26,7 +26,7 @@ import com.storyteller_f.view_holder_compose.EdComposeViewEventEmitter
 @ItemHolder("separator")
 abstract class SeparatorHolder : DataItemHolder()
 
-class SeparatorItemHolder(val info: String) : SeparatorHolder() {
+data class SeparatorItemHolder(val info: String) : SeparatorHolder() {
     override fun areItemsTheSame(other: DataItemHolder): Boolean {
         return propertiesSame(other, {
             info

@@ -53,7 +53,7 @@ fun DependencyHandlerScope.loadSardine() {
     if (project != null) {
         implementation(project)
     } else {
-        implementation("com.github.storytellerF:sardine-android:8c9cf3aa08")
+        implementation("com.github.storytellerF:sardine-android:7da4aa36e1")
 //        implementation("com.github.thegrizzlylabs:sardine-android:0.8")
     }
 }

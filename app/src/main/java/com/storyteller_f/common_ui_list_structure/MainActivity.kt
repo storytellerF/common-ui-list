@@ -37,10 +37,8 @@ import com.storyteller_f.common_ui_list_structure.db.composite.RepoComposite
 import com.storyteller_f.common_ui_list_structure.db.requireRepoDatabase
 import com.storyteller_f.common_ui_list_structure.holders.RepoItemHolder
 import com.storyteller_f.common_ui_list_structure.holders.seprator.SeparatorItemHolder
-import com.storyteller_f.common_ui_list_structure.model.Repo
 import com.storyteller_f.common_ui_list_structure.test_model.TestViewModelActivity
 import com.storyteller_f.common_ui_list_structure.test_navigation.TestNavigationResultActivity
-import com.storyteller_f.common_vm_ktx.combine
 import com.storyteller_f.ui_list.core.AbstractViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.event.viewBinding
@@ -153,22 +151,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        val age = MutableLiveData(0)
-        val gender = MutableLiveData(true)
-        val r = MutableLiveData<Repo>(null)
-        combine("age" to age, "gender" to gender, "repo" to r).observe(this) {
-            val lAge = it["age"] as Int
-            val lGender = it["gender"]
-            val lRepo = it["repo"]
-            Log.i(TAG, "onResume: $lAge $lGender $lRepo")
-        }
-        age.value = 2
-        gender.value = false
-        r.value = Repo(0, "", "", "", "", 12, 15, "")
-    }
-
     @BindClickEvent(RepoItemHolder::class)
     fun clickRepo(itemHolder: RepoItemHolder) {
         Toast.makeText(this, itemHolder.repo.fullName, Toast.LENGTH_SHORT).show()
@@ -176,7 +158,8 @@ class MainActivity : AppCompatActivity() {
 
     @BindClickEvent(SeparatorItemHolder::class, "card")
     fun clickLine(view: View, itemHolder: SeparatorItemHolder) {
-        Toast.makeText(this, "${itemHolder.info} ${view::class.qualifiedName}", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "${itemHolder.info} ${view::class.qualifiedName}", Toast.LENGTH_SHORT)
+            .show()
     }
 
     private fun printInsets(insets: WindowInsetsCompat) {

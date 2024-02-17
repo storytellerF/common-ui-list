@@ -39,7 +39,7 @@ data class SecondRegisterKey(val clazz: Class<out DataItemHolder>, val variant: 
 
 fun holders(vararg blocks: (Int) -> Int) {
     blocks.fold(0) { acc, block ->
-        block(acc)
+        acc + block(acc)
     }
 }
 

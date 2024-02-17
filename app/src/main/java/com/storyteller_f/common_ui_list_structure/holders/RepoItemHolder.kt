@@ -11,7 +11,7 @@ import com.storyteller_f.ui_list.core.BindingViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
 
 @ItemHolder("repo")
-class RepoItemHolder(val repo: Repo) : DataItemHolder() {
+data class RepoItemHolder(val repo: Repo) : DataItemHolder() {
     override fun areItemsTheSame(other: DataItemHolder): Boolean {
         return propertiesSame(other, {
             repo.id

@@ -121,7 +121,7 @@ class HttpFileInstance(context: Context, uri: Uri) : BaseContextFileInstance(con
 private suspend fun File.write(body: ResponseBody) {
     body.source().use { int ->
         outputStream().channel.use { out ->
-            val byteBuffer = ByteBuffer.allocateDirect(1024)
+            val byteBuffer = ByteBuffer.allocateDirect(DEFAULT_BUFFER_SIZE)
             while (int.read(byteBuffer) != -1) {
                 yield()
                 byteBuffer.flip()
