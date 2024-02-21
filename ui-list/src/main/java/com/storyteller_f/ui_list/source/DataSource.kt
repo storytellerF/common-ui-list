@@ -1,5 +1,6 @@
 package com.storyteller_f.ui_list.source
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelStoreOwner
@@ -21,8 +22,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import retrofit2.HttpException
-import java.io.IOException
 import java.util.Collections
 
 val LoadState?.isError get() = this is LoadState.Error
@@ -98,9 +97,8 @@ class SimpleDataRepository<D : Datum<RK>, RK : RemoteKey>(
                 )
             )
             return true
-        } catch (exception: IOException) {
-            loadState.emit(MoreInfoLoadState(LoadState.Error(exception), inMemoryCache.size))
-        } catch (exception: HttpException) {
+        } catch (exception: Exception) {
+            Log.e(TAG, "requestPage: ", exception)
             loadState.emit(MoreInfoLoadState(LoadState.Error(exception), inMemoryCache.size))
         }
         return false
@@ -108,6 +106,10 @@ class SimpleDataRepository<D : Datum<RK>, RK : RemoteKey>(
 
     fun swap(from: Int, to: Int) {
         Collections.swap(inMemoryCache, from, to)
+    }
+
+    companion object {
+        private const val TAG = "DataSource"
     }
 }
 

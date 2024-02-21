@@ -29,6 +29,7 @@ dependencies {
     implementation("androidx.room:room-common:${Versions.ROOM}")
 
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
     // https://mvnrepository.com/artifact/commons-net/commons-net
     implementation("commons-net:commons-net:3.10.0")
     // https://mvnrepository.com/artifact/org.mockftpserver/MockFtpServer
@@ -37,8 +38,9 @@ dependencies {
     implementation("com.hierynomus:smbj:0.13.0")
     // https://mvnrepository.com/artifact/com.hierynomus/sshj
     implementation("com.hierynomus:sshj:0.38.0")
+    implementation("com.madgag.spongycastle:prov:1.58.0.0")
+
     loadSardine()
-    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
 
 
     val mockkVersion = "1.13.8"
@@ -53,7 +55,7 @@ fun DependencyHandlerScope.loadSardine() {
     if (project != null) {
         implementation(project)
     } else {
-        implementation("com.github.storytellerF:sardine-android:7da4aa36e1")
-//        implementation("com.github.thegrizzlylabs:sardine-android:0.8")
+//        implementation("com.github.storytellerF:sardine-android:7da4aa36e1")
+        implementation("com.github.thegrizzlylabs:sardine-android:0.9")
     }
 }

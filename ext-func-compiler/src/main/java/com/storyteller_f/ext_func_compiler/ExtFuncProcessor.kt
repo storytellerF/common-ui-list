@@ -100,7 +100,11 @@ class ExtFuncProcessor(private val codeGenerator: CodeGenerator, private val log
                         name
                     )
 
-                    ExtFuncFlatType.V4 -> setOf("android.content.Context") to generatePropertyV4(
+                    ExtFuncFlatType.V4 -> setOf(
+                        "android.content.Context",
+                        "android.view.View",
+                        "androidx.fragment.app.Fragment"
+                    ) to generatePropertyV4(
                         name, extFuncFlat
                     )
 

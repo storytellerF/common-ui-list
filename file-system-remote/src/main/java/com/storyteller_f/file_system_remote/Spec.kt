@@ -1,6 +1,8 @@
 package com.storyteller_f.file_system_remote
 
 import android.net.Uri
+import com.storyteller_f.file_system.decodeByBase64
+import com.storyteller_f.file_system.encodeByBase64
 import com.storyteller_f.file_system.instance.FileInstance
 
 data class ShareSpec(
@@ -42,31 +44,22 @@ data class RemoteSpec(
 ) {
     fun toUri(): Uri {
         val scheme = type
-        return Uri.parse("$scheme://$user:$password@$server:$port/")!!
+        val encodedServer = server.encodeByBase64()
+        return Uri.parse("$scheme://$user:$password@$encodedServer:$port/")!!
     }
 
     companion object {
         fun parse(parse: Uri): RemoteSpec {
+            println(parse)
             val scheme = parse.scheme!!
             val authority = parse.authority!!
             val (userConfig, serverConfig) = authority.split("@")
             val (user, pass) = userConfig.split(":")
             val (server, port) = serverConfig.split(":")
-            return RemoteSpec(server, port.toInt(), user, pass, type = scheme)
+            return RemoteSpec(server.decodeByBase64(), port.toInt(), user, pass, type = scheme)
         }
     }
 }
-
-val supportScheme = listOf(
-    RemoteAccessType.FTP,
-    RemoteAccessType.SMB,
-    RemoteAccessType.SFTP,
-    RemoteAccessType.FTP_ES,
-    RemoteAccessType.FTPS,
-    RemoteAccessType.WEB_DAV,
-    "http",
-    "https"
-)
 
 fun getRemoteInstance(uri: Uri): FileInstance {
     return when (uri.scheme) {

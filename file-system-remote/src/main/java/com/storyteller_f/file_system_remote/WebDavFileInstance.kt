@@ -14,6 +14,7 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.InputStream
 import java.io.OutputStream
+import java.util.Date
 
 val webdavInstances = mutableMapOf<RemoteSpec, WebDavInstance>()
 
@@ -26,7 +27,9 @@ class WebDavFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.par
     private fun reconnectResourcesIfNeed(): DavResource {
         val r = resources
         if (r == null) {
-            val resources1 = getWebDavInstance().resources(path)
+            val resources1 = getWebDavInstance().run {
+                resources(buildRelativePath(path))
+            }
             resources = resources1
             return resources1
         }
@@ -36,7 +39,9 @@ class WebDavFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.par
     private fun reconnectAclIfNeed(): DavAcl {
         val r = acl
         if (r == null) {
-            val resources1 = getWebDavInstance().acl(path)!!
+            val resources1 = getWebDavInstance().run {
+                acl(buildRelativePath(path))!!
+            }
             acl = resources1
             return resources1
         }
@@ -73,7 +78,9 @@ class WebDavFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.par
     override suspend fun getFileLength() = reconnectResourcesIfNeed().fileLength()
 
     override suspend fun getInputStream(): InputStream {
-        return getWebDavInstance().getInputStream(path)!!
+        return getWebDavInstance().run {
+            getInputStream(buildRelativePath(path))!!
+        }
     }
 
     override suspend fun getOutputStream(): OutputStream {
@@ -92,18 +99,28 @@ class WebDavFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.par
         fileItems: MutableList<FileInfo>,
         directoryItems: MutableList<FileInfo>,
     ) {
-        getWebDavInstance().list(path).forEach {
+        val webDavInstance = getWebDavInstance()
+        webDavInstance.list(webDavInstance.buildRelativePath(path)).filter {
+            it.path != "$path/"
+        }.forEach {
             val fileName = it.name
             val child = childUri(fileName)
-            val filePermissions = getWebDavInstance().acl(it.path)?.filePermissions()!!
-            val fileTime = FileTime(it.modified.time, created = it.creation.time)
+            val filePermissions = webDavInstance.acl(webDavInstance.buildAbsolutePath(it.path))?.filePermissions()!!
+            val modified: Date? = it.modified
+            val creation: Date? = it.creation
+            val fileTime = FileTime(modified?.time, created = creation?.time)
             if (it.isDirectory) {
                 directoryItems.add(
                     FileInfo(
                         fileName,
                         child,
                         fileTime,
-                        FileKind.build(isFile = false, isSymbolicLink = false, isHidden = false, 0),
+                        FileKind.build(
+                            isFile = false,
+                            isSymbolicLink = false,
+                            isHidden = false,
+                            0
+                        ),
                         filePermissions
                     )
                 )
@@ -113,7 +130,12 @@ class WebDavFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.par
                         fileName,
                         child,
                         fileTime,
-                        FileKind.build(isFile = true, isSymbolicLink = false, isHidden = false, 0),
+                        FileKind.build(
+                            isFile = true,
+                            isSymbolicLink = false,
+                            isHidden = false,
+                            it.fileLength()
+                        ),
                         filePermissions,
                     )
                 )
@@ -121,10 +143,14 @@ class WebDavFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.par
         }
     }
 
-    override suspend fun exists() = getWebDavInstance().exists(path)
+    override suspend fun exists() = getWebDavInstance().run {
+        exists(buildRelativePath(path))
+    }
 
     override suspend fun deleteFileOrEmptyDirectory(): Boolean {
-        getWebDavInstance().delete(path)
+        getWebDavInstance().run {
+            delete(buildRelativePath(path))
+        }
         return true
     }
 
@@ -145,7 +171,9 @@ class WebDavFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.par
     }
 
     override suspend fun createDirectory(): Boolean {
-        getWebDavInstance().createDirectory(path)
+        getWebDavInstance().run {
+            createDirectory(buildRelativePath(path))
+        }
         return true
     }
 
@@ -155,39 +183,55 @@ class WebDavFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.par
     }
 }
 
-class WebDavInstance(spec: RemoteSpec) {
-    private val baseUrl = "http://${spec.server}:${spec.port}"
+class WebDavInstance(private val spec: RemoteSpec) {
+    private val baseUrl by lazy {
+        val server = if (spec.server.contains("/")) {
+            spec.server.replaceFirst("/", ":${spec.port}/")
+        } else {
+            spec.server
+        }
+        "http://$server"
+    }
+    private val prefixPath by lazy {
+        if (spec.server.contains("/")) {
+            spec.server.substringAfter("/")
+        } else {
+            ""
+        }
+    }
     private val instance = OkHttpSardine().apply {
         setCredentials(spec.user, spec.password)
     }
 
-    fun list(path: String): MutableList<DavResource> = instance.list(buildPath(path))
+    fun list(path: String): MutableList<DavResource> = instance.list(path)
 
     fun resources(path: String): DavResource {
-        return instance.getResources(buildPath(path)).filterNotNull().first()
+        return instance.getResources(path).filterNotNull().first()
     }
 
     fun getInputStream(path: String): InputStream? {
-        return instance.get(buildPath(path))
+        return instance.get(path)
     }
 
     fun exists(path: String): Boolean {
-        return instance.exists(buildPath(path))
+        return instance.exists(path)
     }
 
     fun delete(path: String) {
-        instance.delete(buildPath(path))
+        instance.delete(path)
     }
 
     fun createDirectory(path: String) {
-        instance.createDirectory(buildPath(path))
+        instance.createDirectory(path)
     }
 
     fun acl(path: String): DavAcl? {
-        return instance.getAcl(buildPath(path))
+        return instance.getAcl(path)
     }
 
-    private fun buildPath(path: String) = baseUrl + path
+    internal fun buildAbsolutePath(path: String) = baseUrl + path.substring(prefixPath.length + 1)
+
+    internal fun buildRelativePath(path: String) = baseUrl + path
 }
 
 fun DavResource.fileLength(): Long {
