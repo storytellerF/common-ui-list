@@ -1,6 +1,7 @@
 package com.storyteller_f.common_ui
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -76,6 +77,7 @@ fun LifecycleOwner.waitingDialog(block: suspend () -> Unit) {
             block()
         } catch (e: Exception) {
             Toast.makeText(ctx, e.exceptionMessage, Toast.LENGTH_SHORT).show()
+            Log.e("WaitingDialog", "waitingDialog: ", e)
         } finally {
             waiting.end()
         }

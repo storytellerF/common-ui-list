@@ -1,5 +1,6 @@
 package com.storyteller_f.ui_list.source
 
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelStoreOwner
@@ -36,6 +37,7 @@ class SimpleDetailViewModel<D : Any>(
                 content.value = value
                 loadState.value = LoadState.NotLoading(true)
             } catch (e: Exception) {
+                Log.e(TAG, "refresh: ", e)
                 loadState.value = LoadState.Error(e)
             }
         }
@@ -43,6 +45,10 @@ class SimpleDetailViewModel<D : Any>(
 
     fun refresh() {
         refresh(null, producer)
+    }
+
+    companion object {
+        private const val TAG = "DetailSource"
     }
 }
 

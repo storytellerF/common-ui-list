@@ -9,14 +9,14 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     dependencies {
-        val navVersion = "2.7.6"
+        val navVersion = "2.7.7"
         classpath("androidx.navigation:navigation-safe-args-gradle-plugin:$navVersion")
     }
 }
 plugins {
     val androidVersion = "8.2.2"
-    val kotlinVersion = "1.9.20"
-    val kspVersion = "1.9.20-1.0.14"
+    val kotlinVersion = "1.9.21"
+    val kspVersion = "1.9.21-1.0.15"
     id("com.android.application") version androidVersion apply false
     id("com.android.library") version androidVersion
     id("org.jetbrains.kotlin.android") version kotlinVersion apply false

@@ -12,12 +12,18 @@ class FilePermission(
         return buildString {
             if (readable) {
                 append("r")
+            } else {
+                append("-")
             }
             if (writable) {
                 append("w")
+            } else {
+                append("-")
             }
             if (executable) {
                 append("x")
+            } else {
+                append("-")
             }
         }
     }
@@ -35,7 +41,7 @@ class FilePermissions(
     val othersPermission: FilePermission? = null,
 ) {
     override fun toString(): String {
-        return "$userPermission-$groupPermission-$othersPermission"
+        return "$userPermission-${groupPermission ?: "---"}-${othersPermission ?: "---"}"
     }
 
     companion object {

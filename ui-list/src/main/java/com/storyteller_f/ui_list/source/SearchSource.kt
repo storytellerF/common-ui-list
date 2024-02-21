@@ -1,5 +1,6 @@
 package com.storyteller_f.ui_list.source
 
+import android.util.Log
 import androidx.lifecycle.*
 import androidx.paging.*
 import androidx.savedstate.SavedStateRegistryOwner
@@ -42,8 +43,13 @@ class SimpleSearchSource<D : Model, SQ : Any>(
                 nextKey = nextKey
             )
         } catch (exception: Exception) {
+            Log.e(TAG, "load: ", exception)
             LoadResult.Error(exception)
         }
+    }
+
+    companion object {
+        private const val TAG = "SearchSource"
     }
 }
 

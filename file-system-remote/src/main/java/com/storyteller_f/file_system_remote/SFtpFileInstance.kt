@@ -8,6 +8,7 @@ import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.FileInfo
+import net.schmizz.sshj.AndroidConfig
 import net.schmizz.sshj.SSHClient
 import net.schmizz.sshj.sftp.FileAttributes
 import net.schmizz.sshj.sftp.FileMode
@@ -154,7 +155,7 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
 }
 
 fun RemoteSpec.sftpClient(): SFTPClient {
-    val sshClient = SSHClient().apply {
+    val sshClient = SSHClient(AndroidConfig()).apply {
         addHostKeyVerifier(PromiscuousVerifier())
         connect(server, port)
         authPassword(user, password)
@@ -162,16 +163,12 @@ fun RemoteSpec.sftpClient(): SFTPClient {
     return sshClient.newSFTPClient()
 }
 
-fun RemoteSpec.checkSftp() {
-    sftpClient()
-}
-
 private fun FileAttributes.fileTime() = FileTime(mtime, atime)
 
-fun FileAttributes.fileLength(): Long {
+private fun FileAttributes.fileLength(): Long {
     return size
 }
 
-fun RemoteResourceInfo.fileLength(): Long {
+private fun RemoteResourceInfo.fileLength(): Long {
     return attributes.size
 }

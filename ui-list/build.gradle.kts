@@ -23,6 +23,7 @@ android {
 baseLibrary()
 
 dependencies {
+    implModule(":common-ktx")
     implModule(":ui-list-annotation-definition")
     unitTestDependency()
 
