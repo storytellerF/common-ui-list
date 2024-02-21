@@ -11,8 +11,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.viewbinding.ViewBinding
-import com.storyteller_f.common_ktx.ctx
-import com.storyteller_f.common_ktx.exceptionMessage
+import com.storyteller_f.slim_ktx.exceptionMessage
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
 

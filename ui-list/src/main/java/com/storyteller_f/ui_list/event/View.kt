@@ -59,7 +59,10 @@ inline fun <T : ViewBinding> AppCompatActivity.viewBinding(crossinline bindingIn
         invoke
     }
 
-inline fun <reified T> View.findActionReceiverOrNull(): T? {
+/**
+ * 查找继承指定接口或抽象类的Fragment
+ */
+inline fun <reified T> View.findFragmentOrNull(): T? {
     var fragment: Fragment? = try {
         findFragment(this)
     } catch (_: Exception) {

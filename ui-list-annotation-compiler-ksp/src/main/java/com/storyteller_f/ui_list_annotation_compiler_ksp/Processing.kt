@@ -32,6 +32,7 @@ import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.annotation_defination.BindLongClickEvent
 import com.storyteller_f.annotation_defination.ItemHolder
+import com.storyteller_f.slim_ktx.dup
 import com.storyteller_f.slim_ktx.no
 import com.storyteller_f.slim_ktx.replaceCode
 import com.storyteller_f.slim_ktx.trimAndReplaceCode
@@ -138,11 +139,15 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
             )
         ).use { writer ->
             writer.writeLine("package $uiListPackageName")
-            writer.writeLine((bindingClass + receiverClass + UiAdapterGenerator.commonImports).distinct().joinToString(
-                "\n"
-            ) {
-                "import $it"
-            })
+            writer.writeLine()
+            writer.writeLine(
+                (bindingClass + receiverClass + UiAdapterGenerator.commonImports).distinct()
+                    .joinToString(
+                        "\n"
+                    ) {
+                        "import $it"
+                    }
+            )
             writer.writeLine()
             writer.writeLine("object $CLASS_NAME {")
             writer.writeLine(
@@ -220,17 +225,18 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
         }.joinToString("\n")
         return """
                 @Suppress("UNUSED_ANONYMOUS_PARAMETER")
-                fun buildFor${entry.itemHolderName}(view: ViewGroup, type: String) : AbstractViewHolder<*> {
+                fun buildFor${entry.itemHolderName}(view: ViewGroup, type: String): AbstractViewHolder<*> {
                     $1
                     throw Exception("unrecognized type:[${'$'}type]")
                 }
+                
         """.trimIndent().replaceCode(viewHolderBuilderContent.yes())
     }
 
     private fun buildComposeViewHolder(
         it: Holder<KSAnnotated>,
-        eventList: Map<String, List<Event<KSAnnotated>>>,
-        eventList2: Map<String, List<Event<KSAnnotated>>>,
+        eventList: Map<ViewName, List<Event<KSAnnotated>>>,
+        eventList2: Map<ViewName, List<Event<KSAnnotated>>>,
     ): String {
         return """
             val context = view.context
@@ -245,13 +251,24 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
             }
             return viewHolder
             """.trimAndReplaceCode(
-            buildComposeClickListener(eventList).yes(2),
-            buildComposeClickListener(eventList2).yes(2)
+            buildComposeClickListener(eventList).yes(),
+            buildComposeClickListener(eventList2).yes()
         )
     }
 
-    private fun buildComposeClickListener(event: Map<String, List<Event<KSAnnotated>>>) =
+    private fun buildComposeClickListener(event: Map<ViewName, List<Event<KSAnnotated>>>) =
         event.map {
+            if (it.value.map { event1 ->
+                    event1.group
+                }.dup()) {
+                throw Exception(
+                    "dup group ${
+                        it.value.map { event1 ->
+                            "${event1.receiver}#${event1.functionName} ${event1.group}"
+                        }
+                    }"
+                )
+            }
             val clickBlock = it.value.joinToString("\n") { e ->
                 produceClickBlockForCompose(e)
             }
@@ -267,18 +284,12 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
         return if (e.receiver.contains("Activity")) {
             """
             if("${e.group}".equals(viewHolder.grouped)) 
-                ViewJava.doWhenIs(context, ${e.receiver}::class.java, { activity ->
-                    activity.${e.functionName}($parameterList);
-                    null;//activity return
-                });//activity end
+                (context as? ${e.receiver})?.${e.functionName}($parameterList)
             """.trimIndent()
         } else {
             """
             if("${e.group}".equals(viewHolder.grouped)) 
-                ViewJava.findActionReceiverOrNull(composeView.composeView, ${e.receiver}::class.java, { fragment ->
-                    fragment.${e.functionName}($parameterList);
-                    null;//fragment return
-                });//fragment end
+                v.findFragmentOrNull<${e.receiver}>()?.${e.functionName}($parameterList)
             """.trimIndent()
         }
     }
@@ -326,18 +337,12 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
             if (event.receiver.contains("Activity")) {
                 """
                     if("${event.group}" == viewHolder.grouped) 
-                        ViewJava.doWhenIs(context, ${event.receiver}::class.java, { activity ->
-                            activity.${event.functionName}($parameterList);
-                            null;
-                        });
+                        (context as? ${event.receiver})?.${event.functionName}($parameterList)
                 """.trimIndent()
             } else {
                 """
                     if("${event.group}" == viewHolder.grouped)
-                        ViewJava.findActionReceiverOrNull(v, ${event.receiver}::class.java, { fragment ->
-                            fragment.${event.functionName}($parameterList);
-                            null;
-                        });
+                        v.findFragmentOrNull<${event.receiver}>()?.${event.functionName}($parameterList)
                 """.trimIndent()
             }
         }
@@ -360,7 +365,7 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
             itemHolderFullName to viewName
         }) {
             it as KSFunctionDeclaration
-            val key = if (isLong) {
+            val group = if (isLong) {
                 it.getAnnotationsByType(
                     BindLongClickEvent::class
                 ).first().group
@@ -386,7 +391,7 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
                 r.fullName,
                 it.simpleName.asString(),
                 parameterList,
-                key,
+                group,
                 it as KSAnnotated
             )
         }

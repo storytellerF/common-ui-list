@@ -1,6 +1,7 @@
-package com.storyteller_f.common_ktx
+package com.storyteller_f.common_ui
 
 import android.content.Context
+import android.content.res.Configuration
 import androidx.activity.ComponentActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
@@ -19,3 +20,6 @@ val LifecycleOwner.ctx
         is Fragment -> requireContext()
         else -> throw UnsupportedOperationException("unknown type $this")
     }
+
+val Context.isNightMode
+    get() = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES

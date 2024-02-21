@@ -1,8 +1,20 @@
 package com.storyteller_f.ui_list.source
 
 import android.util.Log
-import androidx.lifecycle.*
-import androidx.paging.*
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.viewModelScope
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.PagingSource
+import androidx.paging.PagingState
+import androidx.paging.cachedIn
+import androidx.paging.map
 import androidx.savedstate.SavedStateRegistryOwner
 import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.ui_list.core.DataItemHolder
@@ -30,7 +42,7 @@ class SimpleSearchSource<D : Model, SQ : Any>(
         return try {
             val response = service(sq, position, params.loadSize)
             val items = response.items
-            val nextKey = if (items.isEmpty() || items.size <= params.loadSize) {
+            val nextKey = if (items.isEmpty() || items.size < params.loadSize || response.total == 0) {
                 null
             } else {
                 // initial load size = 3 * NETWORK_PAGE_SIZE

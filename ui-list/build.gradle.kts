@@ -24,6 +24,7 @@ baseLibrary()
 
 dependencies {
     implModule(":common-ktx")
+    implModule(":slim-ktx")
     implModule(":ui-list-annotation-definition")
     unitTestDependency()
 

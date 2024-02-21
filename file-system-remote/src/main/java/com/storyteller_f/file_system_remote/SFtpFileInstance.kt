@@ -1,13 +1,13 @@
 package com.storyteller_f.file_system_remote
 
 import android.net.Uri
-import com.storyteller_f.common_ktx.bit
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.FileInfo
+import com.storyteller_f.slim_ktx.bit
 import net.schmizz.sshj.AndroidConfig
 import net.schmizz.sshj.SSHClient
 import net.schmizz.sshj.sftp.FileAttributes
@@ -20,44 +20,60 @@ import net.schmizz.sshj.xfer.FilePermission
 import java.io.FileInputStream
 import java.io.FileOutputStream
 
-val sftpChannels = mutableMapOf<RemoteSpec, SFTPClient>()
+val sftpChannels = mutableMapOf<RemoteSpec, SFtpInstance>()
 
 class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse(uri)) :
     FileInstance(uri) {
-    private var remoteFile: RemoteFile? = null
-    private var attribute: FileAttributes? = null
-
-    private fun initCurrent(): Pair<RemoteFile, FileAttributes> {
-        val sftpClient = getInstance()
-        val remoteFile1 = sftpClient.open(path)
-        val fetchAttributes = remoteFile1.fetchAttributes()
-        remoteFile = remoteFile1
-        attribute = fetchAttributes
-        return remoteFile1 to fetchAttributes
-    }
+    private var fileAttributes: FileAttributes? = null
 
     private fun getInstance() = sftpChannels.getOrPut(spec) {
-        spec.sftpClient()
+        SFtpInstance(spec)
     }
 
-    private fun reconnectIfNeed(): Pair<RemoteFile, FileAttributes> {
-        var c = remoteFile
-        var attributes = attribute
-        if (c == null || attributes == null) {
-            val initCurrent = initCurrent()
-            c = initCurrent.first
-            attributes = initCurrent.second
+    private fun fetchAttributesIfNeed(): FileAttributes {
+        val attributes = fileAttributes
+        if (attributes == null) {
+            val fetchAttributes = getInstance().open(path)!!.use {
+                it.fetchAttributes()!!
+            }
+            fileAttributes = fetchAttributes
+            return fetchAttributes
         }
-        return c to attributes
+        return attributes
     }
 
     override suspend fun filePermissions() =
-        FilePermissions.fromMask(FilePermission.toMask(reconnectIfNeed().second.permissions))
+        filePermissions1(fetchAttributesIfNeed().permissions)
 
-    override suspend fun fileTime() = reconnectIfNeed().second.fileTime()
+    private fun filePermissions1(permissions: MutableSet<FilePermission>): FilePermissions {
+        return FilePermissions(
+            com.storyteller_f.file_system.instance.FilePermission(
+                permissions.contains(
+                    FilePermission.USR_X
+                ),
+                permissions.contains(FilePermission.USR_R),
+                permissions.contains(FilePermission.USR_W)
+            ),
+            com.storyteller_f.file_system.instance.FilePermission(
+                permissions.contains(
+                    FilePermission.GRP_X
+                ),
+                permissions.contains(FilePermission.GRP_R),
+                permissions.contains(FilePermission.GRP_W)
+            ),
+            com.storyteller_f.file_system.instance.FilePermission(
+                permissions.contains(
+                    FilePermission.OTH_X
+                ),
+                permissions.contains(FilePermission.OTH_R),
+                permissions.contains(FilePermission.OTH_W)
+            )
+        )
+    }
 
-    override suspend fun fileKind() = reconnectIfNeed().let {
-        val fileAttributes = it.second
+    override suspend fun fileTime() = fetchAttributesIfNeed().fileTime()
+
+    override suspend fun fileKind() = fetchAttributesIfNeed().let { fileAttributes ->
         val type = fileAttributes.mode.type
         val typeMask = type.toMask()
         FileKind.build(
@@ -69,14 +85,14 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
     }
 
     override suspend fun getFileLength(): Long {
-        return reconnectIfNeed().second.fileLength()
+        return fetchAttributesIfNeed().fileLength()
     }
 
     override suspend fun getInputStream() =
-        reconnectIfNeed().first.RemoteFileInputStream()
+        getInstance().open(path)!!.RemoteFileInputStream()
 
     override suspend fun getOutputStream() =
-        reconnectIfNeed().first.RemoteFileOutputStream()
+        getInstance().open(path)!!.RemoteFileOutputStream()
 
     override suspend fun getFileInputStream(): FileInputStream {
         TODO("Not yet implemented")
@@ -96,8 +112,7 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
             val child = childUri(fileName)
             val isSymLink = attributes.mode.type.toMask().bit(FileMode.Type.SYMLINK.ordinal)
             val fileTime = attributes.fileTime()
-            val filePermissions =
-                FilePermissions.fromMask(FilePermission.toMask(attributes.permissions))
+            val filePermissions = filePermissions1(attributes.permissions)
             if (it.isDirectory) {
                 directoryItems.add(
                     FileInfo(
@@ -114,7 +129,7 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
                         fileName,
                         child,
                         fileTime,
-                        FileKind.build(true, isSymLink, false, 0),
+                        FileKind.build(true, isSymLink, false, attributes.fileLength()),
                         filePermissions,
                     )
                 )
@@ -154,16 +169,34 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
         SFtpFileInstance(childUri(name), spec)
 }
 
-fun RemoteSpec.sftpClient(): SFTPClient {
-    val sshClient = SSHClient(AndroidConfig()).apply {
-        addHostKeyVerifier(PromiscuousVerifier())
-        connect(server, port)
-        authPassword(user, password)
+class SFtpInstance(private val spec: RemoteSpec) {
+
+    private fun <T : Any> client(block: SFTPClient.() -> T): T {
+        val sshClient = SSHClient(AndroidConfig()).apply {
+            addHostKeyVerifier(PromiscuousVerifier())
+            connect(spec.server, spec.port)
+            authPassword(spec.user, spec.password)
+        }
+        return sshClient.use {
+            it.newSFTPClient().use(block)
+        }
     }
-    return sshClient.newSFTPClient()
+
+    fun open(path: String): RemoteFile? {
+        return client {
+            open(path)
+        }
+    }
+
+    fun ls(path: String): List<RemoteResourceInfo> {
+        return client {
+            this.sftpEngine.subsystem
+            ls(path)
+        }
+    }
 }
 
-private fun FileAttributes.fileTime() = FileTime(mtime, atime)
+private fun FileAttributes.fileTime() = FileTime(mtime * 1000, atime * 1000)
 
 private fun FileAttributes.fileLength(): Long {
     return size

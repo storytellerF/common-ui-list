@@ -4,18 +4,6 @@
 
 [![JITPACK](https://jitpack.io/v/storytellerF/common-ui-list.svg)](https://jitpack.io/#storytellerF/common-ui-list)
 
-兼容性对比：
-
-```kotlin
-val androidVersion = "8.2.0"
-val kotlinVersion = "1.9.20"
-val kspVersion = "1.9.20-1.0.14"
-object Dependencies {
-    const val COMPOSE_COMPILER = "1.5.4"
-}
-val gradleVersion = "8.4"
-```
-
 ## Build
 
 ```shell

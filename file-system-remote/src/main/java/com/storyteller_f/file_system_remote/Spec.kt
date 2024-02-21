@@ -50,7 +50,6 @@ data class RemoteSpec(
 
     companion object {
         fun parse(parse: Uri): RemoteSpec {
-            println(parse)
             val scheme = parse.scheme!!
             val authority = parse.authority!!
             val (userConfig, serverConfig) = authority.split("@")

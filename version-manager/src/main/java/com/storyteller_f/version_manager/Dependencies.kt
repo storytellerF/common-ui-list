@@ -8,8 +8,8 @@ import org.gradle.kotlin.dsl.dependencies
 
 object Versions {
     const val KOTLIN = "1.8.21"
-    const val AGP = "8.1.0"
-    const val KSP = "1.9.0-1.0.13"
+    const val AGP = "8.2.2"
+    const val KSP = "1.9.21-1.0.15"
     const val COMPILE_SDK = 34
     const val TARGET_SDK = 34
     const val APPCOMPAT = "1.6.1"
@@ -91,6 +91,7 @@ fun Project.kspModule(moduleName: String) {
 }
 
 fun Project.baseAppDependency() {
+    implModule(":slim-ktx")
     implModule(":common-ktx")
     implModule(":compat-ktx")
     implModule(":common-ui")
@@ -134,10 +135,6 @@ fun DependencyHandlerScope.unitTestDependency() {
     "testImplementation"("junit:junit:${Versions.JUNIT}")
     "androidTestImplementation"("androidx.test.ext:junit:${Versions.TEST_JUNIT}")
     "androidTestImplementation"("androidx.test.espresso:espresso-core:${Versions.TEST_ESPRESSO}")
-}
-
-fun Project.dipToPxDependency() {
-    implModule(":common-pr")
 }
 
 /**

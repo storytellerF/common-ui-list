@@ -2,18 +2,18 @@
 
 package com.storyteller_f.common_vm_ktx
 
-import android.util.Log
-import androidx.annotation.MainThread
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.map
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 import java.util.Timer
 import java.util.TimerTask
-import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.collections.set
 
 /**
@@ -96,86 +96,6 @@ fun copyMap(map: Map<String, Any?>?): MutableMap<String, Any?> {
     return newly
 }
 
-/**
- * 控制能否让下游observe 到数据变动
- */
-class MuteLiveEvent<T> : MutableLiveData<T?>() {
-    private val mPending: AtomicBoolean = AtomicBoolean(false)
-
-    @MainThread
-    override fun observe(owner: LifecycleOwner, observer: Observer<in T?>) {
-        if (hasActiveObservers()) {
-            Log.w(TAG, "Multiple observers registered but only one will be notified of changes.")
-        }
-
-        // Observe the internal MutableLiveData
-        super.observe(owner) {
-            if (mPending.get()) {
-                observer.onChanged(it)
-            }
-        }
-    }
-
-    @MainThread
-    override fun setValue(t: T?) {
-        mPending.set(true)
-        super.setValue(t)
-    }
-
-    /**
-     * Used for cases where T is Void, to make calls cleaner.
-     */
-    @MainThread
-    fun call() {
-        value = null
-    }
-
-    fun reset(t: T?) {
-        mPending.set(false)
-        super.setValue(t)
-    }
-
-    companion object {
-        private const val TAG = "SingleLiveEvent"
-    }
-}
-
-class SingleLiveEvent<T> : MutableLiveData<T?>() {
-    private val mPending: AtomicBoolean = AtomicBoolean(false)
-
-    @MainThread
-    override fun observe(owner: LifecycleOwner, observer: Observer<in T?>) {
-        if (hasActiveObservers()) {
-            Log.w(TAG, "Multiple observers registered but only one will be notified of changes.")
-        }
-
-        // Observe the internal MutableLiveData
-        super.observe(owner) {
-            if (mPending.compareAndSet(true, false)) {
-                observer.onChanged(it)
-            }
-        }
-    }
-
-    @MainThread
-    override fun setValue(t: T?) {
-        mPending.set(true)
-        super.setValue(t)
-    }
-
-    /**
-     * Used for cases where T is Void, to make calls cleaner.
-     */
-    @MainThread
-    fun call() {
-        value = null
-    }
-
-    companion object {
-        private const val TAG = "SingleLiveEvent"
-    }
-}
-
 fun <T> LiveData<T>.toDiff(compare: ((T, T) -> Boolean)? = null): MediatorLiveData<Pair<T?, T?>> {
     val mediatorLiveData = MediatorLiveData<Pair<T?, T?>>()
     var oo: T? = value
@@ -229,9 +149,22 @@ fun <T> LiveData<T>.debounce(ms: Long): MediatorLiveData<T> {
     return mediatorLiveData
 }
 
-fun <T> LiveData<T>.state(owner: LifecycleOwner, ob: Observer<in T>) {
+fun <T> LiveData<T>.state(owner: LifecycleOwner, ob: Observer<T>) {
     val any = if (owner is Fragment) owner.viewLifecycleOwner else owner
     observe(any, ob)
+}
+
+fun <T> Flow<T>.state(owner: LifecycleOwner, function: (T) -> Unit) {
+    val any = if (owner is Fragment) owner.viewLifecycleOwner else owner
+    observe(any, function)
+}
+
+fun <T> Flow<T>.observe(owner: LifecycleOwner, function: (T) -> Unit) {
+    owner.lifecycleScope.launch {
+        collect {
+            function(it)
+        }
+    }
 }
 
 /**

@@ -10,6 +10,7 @@ object RemoteAccessType {
     const val HTTP = "http"
     const val HTTPS = "https"
 
+    val DEFAULT_PORT = listOf(-1, 22, 22, 22, 22, 80)
     val EXCLUDE_HTTP_PROTOCOL = listOf(SMB, SFTP, FTP, FTP_ES, FTPS, WEB_DAV)
 
     @Suppress("unused")

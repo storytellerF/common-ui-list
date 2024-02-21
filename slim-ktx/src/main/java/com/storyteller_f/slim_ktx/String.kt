@@ -1,4 +1,4 @@
-package com.storyteller_f.common_ktx
+package com.storyteller_f.slim_ktx
 
 fun String.substringAt(s: String): String {
     val indexOf = indexOf(s)
