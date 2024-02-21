@@ -1,14 +1,7 @@
-package com.storyteller_f.common_ktx
+package com.storyteller_f.slim_ktx
 
 fun <T> MutableList<T>.toggle(t: T) {
     if (contains(t)) remove(t) else add(t)
-}
-
-/**
- * 省略一个问号，在数值不为null时，也用去去除多余的问号
- */
-fun <T, R> T?.safeLet(block: (T) -> R): R? {
-    return this?.let { block(it) }
 }
 
 fun <T> List<T>.same(list: List<T>): Boolean {
@@ -23,4 +16,16 @@ private fun <T> List<T>.sameInternal(list: List<T>): Boolean {
         }
     }
     return true
+}
+
+fun <E> List<E>.dup(): Boolean {
+    for (i in indices) {
+        val e = get(i)
+        if (subList(i + 1, size).any {
+                it == e
+            }) {
+            return true
+        }
+    }
+    return false
 }

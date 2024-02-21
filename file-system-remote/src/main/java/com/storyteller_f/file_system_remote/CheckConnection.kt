@@ -1,7 +1,7 @@
 package com.storyteller_f.file_system_remote
 
 fun RemoteSpec.checkSFtpConnection() {
-    sftpClient()
+    SFtpInstance(this)
 }
 
 fun ShareSpec.checkSmbConnection() {

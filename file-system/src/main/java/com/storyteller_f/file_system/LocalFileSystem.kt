@@ -4,8 +4,8 @@ import android.annotation.SuppressLint
 import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
-import com.storyteller_f.common_ktx.substringAt
 import com.storyteller_f.file_system.instance.local.fake.getMyId
+import com.storyteller_f.slim_ktx.substringAt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -14,8 +14,6 @@ object LocalFileSystem {
     const val STORAGE_PATH = "/storage"
     const val EMULATED_ROOT_PATH = "/storage/emulated"
 
-    @SuppressLint("SdCardPath")
-    const val USER_DATA_FRONT_PATH = "/data/user/"
     const val USER_DATA = "/data/user"
     const val USER_EMULATED_FRONT_PATH = "/storage/emulated/"
 

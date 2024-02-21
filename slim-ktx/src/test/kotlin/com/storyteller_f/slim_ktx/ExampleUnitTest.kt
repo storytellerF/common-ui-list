@@ -1,4 +1,4 @@
-package com.storyteller_f.common_ktx
+package com.storyteller_f.slim_ktx
 
 import org.junit.Assert.assertEquals
 import org.junit.Test

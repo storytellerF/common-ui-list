@@ -40,6 +40,7 @@ abstract class SimpleFragment<T : ViewBinding>(
     }
 
     abstract fun onBindViewEvent(binding: T)
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

@@ -23,6 +23,7 @@ baseLibrary()
 dependencies {
 
     implModule(":common-ktx")
+    implModule(":slim-ktx")
     implModule(":file-system")
     unitTestDependency()
     commonAndroidDependency()

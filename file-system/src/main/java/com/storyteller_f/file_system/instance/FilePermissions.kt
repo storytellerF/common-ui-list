@@ -1,6 +1,6 @@
 package com.storyteller_f.file_system.instance
 
-import com.storyteller_f.common_ktx.bit
+import com.storyteller_f.slim_ktx.bit
 
 class FilePermission(
     val executable: Boolean = false,
@@ -48,9 +48,9 @@ class FilePermissions(
         val USER_READABLE = FilePermissions(FilePermission(true))
 
         fun fromMask(value: Int): FilePermissions {
-            val userPermission = FilePermission.fromMask(value.ushr(6).and(0x111))
-            val groupPermission = FilePermission.fromMask(value.ushr(3).and(0x111))
-            val othersPermission = FilePermission.fromMask(value.ushr(0).and(0x111))
+            val userPermission = FilePermission.fromMask(value.shl(6).and(0x111))
+            val groupPermission = FilePermission.fromMask(value.shl(3).and(0x111))
+            val othersPermission = FilePermission.fromMask(value.shl(0).and(0x111))
             return FilePermissions(userPermission, groupPermission, othersPermission)
         }
 

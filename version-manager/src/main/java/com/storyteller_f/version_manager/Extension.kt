@@ -81,7 +81,7 @@ fun Project.setupPreviewFeature() {
         }
     }
     dependencies {
-        dipToPxDependency()
+        implModule(":common-pr")
     }
 }
 

@@ -32,6 +32,7 @@ setupExtFunc()
 dependencies {
     apiModule(":ext-func-definition")
     implModule(":common-ktx")
+    implModule(":slim-ktx")
     implModule(":compat-ktx")
     implModule(":common-vm-ktx")
     implementation("androidx.navigation:navigation-runtime-ktx:${Versions.NAVIGATION}")

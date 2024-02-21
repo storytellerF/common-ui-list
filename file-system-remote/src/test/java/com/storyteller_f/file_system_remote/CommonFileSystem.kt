@@ -12,9 +12,7 @@ import com.hierynomus.msfscc.fileinformation.FileIdBothDirectoryInformation
 import com.hierynomus.msfscc.fileinformation.FileStandardInformation
 import com.hierynomus.mssmb2.SMB2CreateDisposition
 import com.hierynomus.protocol.commons.EnumWithValue.EnumUtils
-import com.hierynomus.smbj.share.DiskShare
 import com.hierynomus.smbj.share.File
-import com.storyteller_f.common_ktx.buildMask
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.toChildEfficiently
@@ -34,7 +32,6 @@ import kotlinx.coroutines.runBlocking
 import net.schmizz.sshj.sftp.FileMode
 import net.schmizz.sshj.sftp.RemoteFile
 import net.schmizz.sshj.sftp.RemoteResourceInfo
-import net.schmizz.sshj.sftp.SFTPClient
 import net.schmizz.sshj.xfer.FilePermission
 import org.apache.commons.net.ftp.FTPFile
 import org.junit.Assert
@@ -196,9 +193,6 @@ object CommonFileSystem {
     private fun bindFtpsSession() {
         mockk<FtpsInstance> {
             every {
-                connectIfNeed()
-            } returns true
-            every {
                 listFiles(any())
             } answers {
                 fs.getPath(firstArg()).walk().map {
@@ -274,7 +268,7 @@ object CommonFileSystem {
     }
 
     private fun bindSFtpSession() {
-        mockk<SFTPClient> {
+        mockk<SFtpInstance> {
             every {
                 ls(any())
             } answers {
@@ -338,7 +332,7 @@ object CommonFileSystem {
     ): net.schmizz.sshj.sftp.FileAttributes = mockk {
         every {
             mode
-        } returns FileMode(buildMask {
+        } returns FileMode(com.storyteller_f.slim_ktx.buildMask {
             if (Files.isSymbolicLink(pathObject)) FileMode.Type.SYMLINK
         })
         every {
@@ -359,19 +353,19 @@ object CommonFileSystem {
     }
 
     private fun bindSmbSession() {
-        mockk<DiskShare> {
+        mockk<SmbInstance> {
             every {
                 list(any())
             } answers {
                 mockSmbListResponse(smbSpec, firstArg())
             }
             every {
-                getFileInformation(any(String::class))
+                information(any(String::class))
             } answers {
                 mockSmbInformation(firstArg<String>())
             }
             every {
-                openFile(any(), any(), any(), any(), SMB2CreateDisposition.FILE_OPEN, any())
+                open(any(), any(), any(), any(), SMB2CreateDisposition.FILE_OPEN, any())
             } answers {
                 mockSmbInputStream(firstArg())
             }

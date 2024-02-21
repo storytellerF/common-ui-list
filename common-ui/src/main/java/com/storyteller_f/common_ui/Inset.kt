@@ -40,20 +40,20 @@ class InsetBlock(val padding: Direction, val margin: Direction)
     requireAll = false
 )
 fun View.inset(
-    statusPadding: Int = 0,
-    statusMargin: Int = 0,
-    navigatorPadding: Int = 0,
-    navigatorMargin: Int = 0
+    @InsetBlockFlag statusPadding: Int = 0,
+    @InsetBlockFlag statusMargin: Int = 0,
+    @InsetBlockFlag navigatorPadding: Int = 0,
+    @InsetBlockFlag navigatorMargin: Int = 0
 ) {
     ViewCompat.setOnApplyWindowInsetsListener(this) { v, insets ->
         val block = getInsetBlock()
-        val v1 = insets.navigator.bottom
-        val v2 = insets.status.top
+        val bottom = insets.navigator.bottom
+        val top = insets.status.top
         v.updatePadding(
-            block.padding + statusPadding.insetBlock(v2) + navigatorPadding.insetBlock(v1)
+            block.padding + statusPadding.insetBlock(top) + navigatorPadding.insetBlock(bottom)
         )
         v.updateMargin(
-            block.margin + statusMargin.insetBlock(v2) + navigatorMargin.insetBlock(v1)
+            block.margin + statusMargin.insetBlock(top) + navigatorMargin.insetBlock(bottom)
         )
         insets
     }

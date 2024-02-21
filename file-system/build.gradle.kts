@@ -28,6 +28,7 @@ android {
 baseLibrary()
 dependencies {
     implModule(":common-ktx")
+    implModule(":slim-ktx")
     implModule(":compat-ktx")
 
     implementation("com.google.android.material:material:${Versions.MATERIAL}")

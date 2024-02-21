@@ -1,7 +1,6 @@
 package com.storyteller_f.file_system_remote
 
 import android.net.Uri
-import android.util.Log
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.FileKind
@@ -12,7 +11,6 @@ import org.apache.commons.net.PrintCommandListener
 import org.apache.commons.net.ftp.FTPClient
 import org.apache.commons.net.ftp.FTPFile
 import org.apache.commons.net.ftp.FTPReply
-import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
@@ -33,13 +31,9 @@ class FtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse(
     }
 
     private fun getInstance(): FtpInstance {
-        val ftpInstance = ftpClients.getOrPut(spec) {
+        return ftpClients.getOrPut(spec) {
             FtpInstance(spec)
         }
-        if (ftpInstance.connectIfNeed()) {
-            return ftpInstance
-        }
-        throw Exception("login failed")
     }
 
     val completePendingCommand
@@ -147,51 +141,34 @@ class FtpInstance(private val spec: RemoteSpec) {
 
     @Throws(IOException::class)
     fun open(): Boolean {
+        connect()
+        return ftp.login(spec.user, spec.password)
+    }
+
+    private fun connect() {
         ftp.connect(spec.server, spec.port)
         val reply = ftp.replyCode
         if (!FTPReply.isPositiveCompletion(reply)) {
             ftp.disconnect()
             throw IOException("Exception in connecting to FTP Server")
         }
-        return ftp.login(spec.user, spec.password)
     }
 
     fun get(path: String?): FTPFile? {
-        return ftp.mlistFile(path)
+        return client { mlistFile(path) }
     }
 
-    @Throws(IOException::class)
-    fun close() {
-        ftp.disconnect()
-    }
-
-    @Throws(IOException::class)
     fun listFiles(path: String?): Array<out FTPFile>? {
-        return ftp.listFiles(path)
+        return client { listFiles(path) }
     }
 
-    @Throws(IOException::class)
-    fun downloadFile(source: String?, destination: String?) {
-        val out = FileOutputStream(destination)
-        ftp.retrieveFile(source, out)
-    }
-
-    @Throws(IOException::class)
-    fun putFileToPath(file: File?, path: String?) {
-        ftp.storeFile(path, FileInputStream(file))
-    }
-
-    fun connectIfNeed(): Boolean {
-        return if (ftp.isConnected && ftp.isAvailable) {
-            true
-        } else {
-            try {
-                open()
-            } catch (e: Exception) {
-                Log.e(TAG, "connectIfNeed: ", e)
-                false
+    private fun <T : Any> client(block: FTPClient.() -> T): T {
+        if (!ftp.isConnected || !ftp.isAvailable) {
+            if (!open()) {
+                throw Exception("login failed")
             }
         }
+        return ftp.block()
     }
 
     fun inputStream(path: String): InputStream? {
@@ -206,10 +183,6 @@ class FtpInstance(private val spec: RemoteSpec) {
         get() {
             return ftp.completePendingCommand()
         }
-
-    companion object {
-        private const val TAG = "FtpInstance"
-    }
 }
 
 fun FTPFile.permissions() = FilePermissions(

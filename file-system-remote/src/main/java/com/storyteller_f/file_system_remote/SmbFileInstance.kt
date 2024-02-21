@@ -6,6 +6,8 @@ import com.hierynomus.msfscc.FileAttributes
 import com.hierynomus.msfscc.fileinformation.FileAllInformation
 import com.hierynomus.msfscc.fileinformation.FileIdBothDirectoryInformation
 import com.hierynomus.mssmb2.SMB2CreateDisposition
+import com.hierynomus.mssmb2.SMB2CreateOptions
+import com.hierynomus.mssmb2.SMB2ShareAccess
 import com.hierynomus.protocol.commons.EnumWithValue.EnumUtils
 import com.hierynomus.smbj.SMBClient
 import com.hierynomus.smbj.auth.AuthenticationContext
@@ -31,17 +33,16 @@ fun ShareSpec.requireDiskShare(): DiskShare {
     return session.connectShare(share) as DiskShare
 }
 
-val smbSessions = mutableMapOf<ShareSpec, DiskShare>()
+val smbSessions = mutableMapOf<ShareSpec, SmbInstance>()
 
 class SmbFileInstance(uri: Uri, private val shareSpec: ShareSpec = ShareSpec.parse(uri)) :
     FileInstance(uri) {
     private var information: FileAllInformation? = null
-    private var share: DiskShare? = null
     override val path: String
         get() = super.path.substring(shareSpec.share.length + 1).ifEmpty { "/" }
 
     override suspend fun filePermissions(): FilePermissions {
-        val second = reconnectIfNeed().second
+        val second = reconnectIfNeed()
         val accessFlags = second.accessInformation.accessFlags.toLong()
         return FilePermissions.permissions(
             EnumUtils.isSet(accessFlags, AccessMask.GENERIC_READ),
@@ -50,8 +51,8 @@ class SmbFileInstance(uri: Uri, private val shareSpec: ShareSpec = ShareSpec.par
         )
     }
 
-    override suspend fun fileTime() = reconnectIfNeed().second.fileTime()
-    override suspend fun fileKind() = reconnectIfNeed().let { (_, allInformation) ->
+    override suspend fun fileTime() = reconnectIfNeed().fileTime()
+    override suspend fun fileKind() = reconnectIfNeed().let { allInformation ->
         FileKind.build(
             !allInformation.standardInformation.isDirectory,
             isSymbolicLink = false,
@@ -63,46 +64,37 @@ class SmbFileInstance(uri: Uri, private val shareSpec: ShareSpec = ShareSpec.par
         )
     }
 
-    private fun initCurrentFile(): Pair<DiskShare, FileAllInformation> {
-        val connectShare = getDiskShare()
-        val fileInformation = connectShare.getFileInformation(path)
-        share = connectShare
+    private fun initCurrentFile(): FileAllInformation {
+        val fileInformation = getDiskShare().information(path)
         information = fileInformation
-        return connectShare to fileInformation
+        return fileInformation
     }
 
-    private fun getDiskShare(): DiskShare {
-        val orPut = smbSessions.getOrPut(shareSpec) {
-            shareSpec.requireDiskShare()
+    private fun getDiskShare(): SmbInstance {
+        return smbSessions.getOrPut(shareSpec) {
+            SmbInstance(shareSpec)
         }
-        return orPut
     }
 
-    private fun reconnectIfNeed(): Pair<DiskShare, FileAllInformation> {
+    private fun reconnectIfNeed(): FileAllInformation {
         var information = information
-        var share = share
-        if (information == null || share == null) {
-            val initCurrentFile = initCurrentFile()
-            share = initCurrentFile.first
-            information = initCurrentFile.second
+        if (information == null) {
+            information = initCurrentFile()
         }
-        return share to information
+        return information
     }
 
     override suspend fun getFileLength() =
-        reconnectIfNeed().second.fileLength()
+        reconnectIfNeed().fileLength()
 
-    override suspend fun getInputStream(): InputStream = reconnectIfNeed().let {
-        val openFile = it.first.openFile(
-            path,
-            emptySet(),
-            emptySet(),
-            emptySet(),
-            SMB2CreateDisposition.FILE_OPEN,
-            emptySet()
-        )
-        openFile.inputStream
-    }
+    override suspend fun getInputStream(): InputStream = getDiskShare().open(
+        path,
+        emptySet(),
+        emptySet(),
+        emptySet(),
+        SMB2CreateDisposition.FILE_OPEN,
+        emptySet()
+    )!!.inputStream
 
     override suspend fun getFileInputStream(): FileInputStream {
         TODO("Not yet implemented")
@@ -116,8 +108,7 @@ class SmbFileInstance(uri: Uri, private val shareSpec: ShareSpec = ShareSpec.par
         fileItems: MutableList<FileInfo>,
         directoryItems: MutableList<FileInfo>
     ) {
-        val (share, _) = reconnectIfNeed()
-        share.list(path).filter {
+        getDiskShare().list(path).filter {
             it.fileName != "." && it.fileName != ".."
         }.forEach {
             val fileName = it.fileName
@@ -132,7 +123,12 @@ class SmbFileInstance(uri: Uri, private val shareSpec: ShareSpec = ShareSpec.par
                         fileName,
                         child,
                         fileTime,
-                        FileKind.build(isFile = false, isSymbolicLink = false, isHidden = false, it.allocationSize),
+                        FileKind.build(
+                            isFile = false,
+                            isSymbolicLink = false,
+                            isHidden = false,
+                            it.allocationSize
+                        ),
                         filePermissions
                     )
                 )
@@ -180,6 +176,37 @@ class SmbFileInstance(uri: Uri, private val shareSpec: ShareSpec = ShareSpec.par
 
     override suspend fun toChild(name: String, policy: FileCreatePolicy) =
         SmbFileInstance(childUri(name), shareSpec)
+}
+
+class SmbInstance(private val shareSpec: ShareSpec) {
+    private fun <T> client(block: DiskShare.() -> T): T {
+        return shareSpec.requireDiskShare().use(block)
+    }
+
+    fun information(path: String): FileAllInformation {
+        return client {
+            getFileInformation(path)
+        }
+    }
+
+    fun open(
+        path: String,
+        accessMasks: Set<AccessMask>,
+        attributes: Set<FileAttributes>,
+        shareAccesses: Set<SMB2ShareAccess>,
+        disposition: SMB2CreateDisposition,
+        optionsSet: Set<SMB2CreateOptions>
+    ): com.hierynomus.smbj.share.File? {
+        return client {
+            openFile(path, accessMasks, attributes, shareAccesses, disposition, optionsSet)
+        }
+    }
+
+    fun list(path: String): List<FileIdBothDirectoryInformation> {
+        return client {
+            list(path)
+        }
+    }
 }
 
 private fun FileIdBothDirectoryInformation.fileTime() =

@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
+import androidx.navigation.NavDirections
 import androidx.navigation.NavOptions
 import androidx.navigation.Navigator
 import com.storyteller_f.common_vm_ktx.StateValueModel
@@ -152,6 +153,19 @@ fun NavController.request(
     navigatorExtras: Navigator.Extras? = null
 ): FragmentRequest {
     val randomUUID = UUID.randomUUID()
+    args.putSerializable("uuid", randomUUID)
+    navigate(resId, args, navOptions, navigatorExtras)
+    return randomUUID.requestKey()
+}
+
+fun NavController.request(
+    directions: NavDirections,
+    navOptions: NavOptions? = null,
+    navigatorExtras: Navigator.Extras? = null
+): FragmentRequest {
+    val randomUUID = UUID.randomUUID()
+    val resId = directions.actionId
+    val args = directions.arguments
     args.putSerializable("uuid", randomUUID)
     navigate(resId, args, navOptions, navigatorExtras)
     return randomUUID.requestKey()

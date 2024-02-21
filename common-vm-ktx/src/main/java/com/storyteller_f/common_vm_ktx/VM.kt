@@ -9,12 +9,22 @@ package com.storyteller_f.common_vm_ktx
 import androidx.activity.ComponentActivity
 import androidx.annotation.MainThread
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.*
+import androidx.lifecycle.AbstractSavedStateViewModelFactory
+import androidx.lifecycle.HasDefaultViewModelProviderFactory
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.MutableCreationExtras
 import androidx.savedstate.SavedStateRegistryOwner
 import com.storyteller_f.ext_func_definition.ExtFuncFlat
 import com.storyteller_f.ext_func_definition.ExtFuncFlatType
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import kotlin.reflect.KClass
 
 class ViewModelLazy<VM : ViewModel> @JvmOverloads constructor(
@@ -184,8 +194,15 @@ fun <T> genericValueModel(t: T) = GenericValueModel<T>().apply {
     data.value = t
 }
 
-class GenericListValueModel<T> : ViewModel() {
-    val data = MutableLiveData<List<T>>()
+class BuilderValueModel<T>(onInit: Boolean = true, val builder: suspend () -> T) : ViewModel() {
+    val data = MutableStateFlow<T?>(null)
+    init {
+        if (onInit) {
+            viewModelScope.launch {
+                data.value = builder()
+            }
+        }
+    }
 }
 
 class StateValueModel<T>(stateHandle: SavedStateHandle, key: String = "default", default: T) : ViewModel() {

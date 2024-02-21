@@ -1,7 +1,5 @@
 package com.storyteller_f.common_ui
 
-import android.content.Context
-import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -61,6 +59,3 @@ fun ComponentActivity.supportNavigatorBarImmersive(view: View) {
         insets
     }
 }
-
-val Context.isNightMode
-    get() = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES

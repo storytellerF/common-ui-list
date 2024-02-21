@@ -32,13 +32,9 @@ class FtpsFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
     }
 
     private fun getInstance(): FtpsInstance {
-        val ftpInstance = ftpsClients.getOrPut(spec) {
+        return ftpsClients.getOrPut(spec) {
             FtpsInstance(spec)
         }
-        if (ftpInstance.connectIfNeed()) {
-            return ftpInstance
-        }
-        throw Exception("login failed")
     }
 
     override suspend fun filePermissions() = reconnectIfNeed()!!.permissions()
@@ -142,7 +138,6 @@ class FtpsInstance(private val spec: RemoteSpec) {
         configure(ftpClientConfig)
     }
 
-    @Throws(IOException::class)
     fun open(): Boolean {
         connect()
         val login = ftps.login(spec.user, spec.password)
@@ -163,31 +158,36 @@ class FtpsInstance(private val spec: RemoteSpec) {
     }
 
     fun getFile(path: String?): FTPFile? {
-        return ftps.mlistFile(path)
+        return client {
+            mlistFile(path)
+        }
     }
 
-    @Throws(IOException::class)
-    fun close() {
-        ftps.disconnect()
+    fun listFiles(path: String?): Array<out FTPFile>? = client {
+        listFiles(path)
     }
 
-    @Throws(IOException::class)
-    fun listFiles(path: String?): Array<out FTPFile>? = ftps.listFiles(path)
+    fun inputStream(path: String): InputStream? = client {
+        retrieveFileStream(path)
+    }
 
-    fun inputStream(path: String): InputStream? = ftps.retrieveFileStream(path)
-
-    fun outputStream(path: String): OutputStream? = ftps.storeFileStream(path)
+    fun outputStream(path: String): OutputStream? = client {
+        storeFileStream(path)
+    }
 
     /**
      * @return 返回是否可用
      */
-    fun connectIfNeed(): Boolean {
-        return if (ftps.isAvailable) {
-            true
-        } else {
-            open()
+    private fun<T : Any> client(block: FTPSClient.() -> T): T {
+        if (isAvailable()) {
+            if (!open()) {
+                throw Exception("login failed.")
+            }
         }
+        return ftps.block()
     }
+
+    internal fun isAvailable() = !ftps.isAvailable || !ftps.isConnected
 }
 
 fun FTPFile.fileTime() = FileTime(timestamp.timeInMillis)

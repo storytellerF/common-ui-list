@@ -3,7 +3,7 @@ package com.storyteller_f.slim_ktx
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
 
-class CommonKtTest {
+class IndentKtTest {
     @Test
     fun testCast() {
         val a = 1

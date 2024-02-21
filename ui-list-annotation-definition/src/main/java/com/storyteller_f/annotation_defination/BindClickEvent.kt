@@ -9,7 +9,7 @@ import kotlin.reflect.KClass
  */
 annotation class BindClickEvent(
     @Suppress("unused") val kClass: KClass<out Any>,
-    val viewName: String = "getRoot()",
+    val viewName: String = "root",
     val group: String = "default",
 )
 
@@ -17,6 +17,6 @@ annotation class BindClickEvent(
 @Target(AnnotationTarget.FUNCTION)
 annotation class BindLongClickEvent(
     @Suppress("unused") val kClass: KClass<out Any>,
-    val viewName: String = "getRoot()",
+    val viewName: String = "root",
     val group: String = "default",
 )

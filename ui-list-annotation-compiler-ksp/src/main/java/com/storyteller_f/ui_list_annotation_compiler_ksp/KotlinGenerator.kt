@@ -13,7 +13,7 @@ class KotlinGenerator : UiAdapterGenerator<KSAnnotated>() {
             buildRegisterBlock(it, index++)
         }
         return """
-            fun add(offset: Int) : Int {
+            fun add(offset: Int): Int {
                 $1
                 return $index;
             }
