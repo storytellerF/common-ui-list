@@ -4,6 +4,7 @@ pluginManagement {
     val smlFolder: String by settings
     includeBuild("version-manager")
     includeBuild("common-publish")
+//    includeBuild("../easylauncher-gradle-plugin")
     repositories {
         gradlePluginPortal()
         google()
@@ -15,6 +16,11 @@ pluginManagement {
 }
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
+//    versionCatalogs {
+//        create("libs") {
+//            from(files("../easylauncher-gradle-plugin/gradle/libs.versions.toml"))
+//        }
+//    }
     repositories {
         google()
         mavenCentral()
