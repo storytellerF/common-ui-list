@@ -24,6 +24,7 @@ plugins {
     id("com.google.devtools.ksp") version kspVersion apply false
     id("io.gitlab.arturbosch.detekt") version "1.23.1"
     id("org.jetbrains.kotlinx.kover") version "0.7.4"
+    id("com.starter.easylauncher") version ("6.2.0") apply false
 }
 
 android {
