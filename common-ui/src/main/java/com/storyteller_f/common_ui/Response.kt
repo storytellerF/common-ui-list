@@ -37,6 +37,17 @@ data class FragmentRequest(private val uuid: UUID?)
 internal val ResponseFragment.fragmentRequest: FragmentRequest
     get() = FragmentRequest(vm.data.value)
 
+internal fun <T : Parcelable> Fragment.setFragmentResult(fragmentRequest: FragmentRequest, result: T) =
+    fm.setFragmentResult(fragmentRequest.toString(), Bundle().apply {
+        putParcelable(fragmentResultKey, result)
+    })
+
+/**
+ * 返回数据给当前的FragmentRequest。
+ */
+fun <T, F> F.setFragmentResult(result: T) where T : Parcelable, F : Fragment, F : ResponseFragment =
+    setFragmentResult(fragmentRequest, result)
+
 /**
  * 可以发起请求，发起的请求通过registryKey 辨别
  */
@@ -47,22 +58,19 @@ interface Registry {
     fun registryKey(): String = "${this.javaClass.simpleName}-registry"
 }
 
-fun <T : Parcelable> Fragment.setFragmentResult(fragmentRequest: FragmentRequest, result: T) =
-    fm.setFragmentResult(fragmentRequest.toString(), Bundle().apply {
-        putParcelable(fragmentResultKey, result)
-    })
-
-fun <T, F> F.setFragmentResult(result: T) where T : Parcelable, F : Fragment, F : ResponseFragment =
-    setFragmentResult(fragmentRequest, result)
-
-val fragmentResultKey
-    get() = "result"
+/**
+ * Fragment 返回的结果在Bundle 中的Key
+ */
+const val fragmentResultKey = "result"
 
 val <T : Fragment> T.responseModel
     get() = keyPrefix("response", svm({ arguments }) { handle, arg ->
         stateValueModel(arg?.getSerializableCompat("uuid", UUID::class.java), handle)
     })
 
+/**
+ * 生成一个在Fragment从全局变量中获取所需结果的高阶函数
+ */
 inline fun <T : Parcelable, F> F.buildCallback(
     result: Class<T>,
     crossinline action: (F, T) -> Unit
@@ -80,6 +88,9 @@ inline fun <T : Parcelable, F> F.buildCallback(
     }
 }
 
+/**
+ * 生成一个在Activity 从全局变量中获取所需结果的高阶函数
+ */
 inline fun <T : Parcelable, A> A.buildCallback(
     result: Class<T>,
     crossinline action: A.(T) -> Unit
@@ -98,9 +109,10 @@ inline fun <T : Parcelable, A> A.buildCallback(
 }
 
 /**
+ * 在Fragment 中监听结果。
  * 如果启动是通过navigation 启动dialog，需要使用parentFragmentManager 接受结果
  */
-fun <T : Parcelable, F> F.waitingResponseInFragment(
+private fun <T : Parcelable, F> F.waitingResponseInFragment(
     fragmentRequest: FragmentRequest,
     action: F.(T) -> Unit,
     callback: (String, Bundle) -> Unit
@@ -116,6 +128,9 @@ fun <T : Parcelable, F> F.waitingResponseInFragment(
     fm.setFragmentResultListener(key, owner, callback)
 }
 
+/**
+ * 在Activity 中监听结果。
+ */
 private fun <A, T : Parcelable> A.waitingResponseInActivity(
     fragmentRequest: FragmentRequest,
     action: A.(T) -> Unit,
@@ -145,7 +160,6 @@ private fun <A> A.show(
     return randomUUID
 }
 
-// todo 自定义NavController
 fun NavController.request(
     @IdRes resId: Int,
     args: Bundle = Bundle(),
@@ -171,11 +185,17 @@ fun NavController.request(
     return randomUUID.requestKey()
 }
 
+/**
+ * 显示一个Dialog 并且返回FragmentResult
+ */
 fun <F> F.request(
     dialog: KClass<out CommonDialogFragment>,
     parameters: Bundle = Bundle()
 ): FragmentRequest where F : LifecycleOwner = show(dialog.java, parameters).requestKey()
 
+/**
+ * 显示一个Dialog 并且返回FragmentResult
+ */
 fun <F> F.request(
     dialog: Class<out CommonDialogFragment>,
     parameters: Bundle = Bundle()
@@ -183,12 +203,18 @@ fun <F> F.request(
 
 private fun UUID.requestKey(): FragmentRequest = FragmentRequest(this)
 
+/**
+ * 在Fragment 中监听结果。
+ */
 fun <T : Parcelable, F> F.observeResponse(
     fragmentRequest: FragmentRequest,
     result: KClass<T>,
     action: F.(T) -> Unit
 ) where F : Fragment, F : Registry = observeResponse(fragmentRequest, result.java, action)
 
+/**
+ * 在Fragment 中监听结果。
+ */
 fun <T : Parcelable, F> F.observeResponse(
     fragmentRequest: FragmentRequest,
     result: Class<T>,
@@ -198,12 +224,18 @@ fun <T : Parcelable, F> F.observeResponse(
     waitingResponseInFragment(fragmentRequest, action, callback)
 }
 
+/**
+ * 在Activity 中监听结果。
+ */
 fun <T : Parcelable, A> A.observeResponse(
     fragmentRequest: FragmentRequest,
     result: KClass<T>,
     action: A.(T) -> Unit
 ) where A : FragmentActivity, A : Registry = observeResponse(fragmentRequest, result.java, action)
 
+/**
+ * 在Activity 中监听结果。
+ */
 fun <T : Parcelable, A> A.observeResponse(
     fragmentRequest: FragmentRequest,
     result: Class<T>,
@@ -213,6 +245,9 @@ fun <T : Parcelable, A> A.observeResponse(
     waitingResponseInActivity(fragmentRequest, action, callback)
 }
 
+/**
+ * 在Activity 中监听结果。
+ */
 internal fun <A> A.observeResponse() where A : FragmentActivity, A : Registry {
     waitingInActivity[registryKey()]?.forEach {
         val action = it.action
@@ -224,6 +259,9 @@ internal fun <A> A.observeResponse() where A : FragmentActivity, A : Registry {
     }
 }
 
+/**
+ * 在Fragment 中监听结果。
+ */
 internal fun CommonFragment.observeResponse() {
     waitingInFragment[registryKey()]?.forEach {
         val action = it.action
