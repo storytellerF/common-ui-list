@@ -3,6 +3,7 @@ package com.storyteller_f.common_ui_list_structure.test_navigation
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import com.storyteller_f.common_pr.request
 import com.storyteller_f.common_pr.response
 import com.storyteller_f.common_ui.SimpleFragment
 import com.storyteller_f.common_ui.request
@@ -20,7 +21,7 @@ class NavigationInvokeFragment : SimpleFragment<FragmentNavigationInvokeBinding>
 ) {
     override fun onBindViewEvent(binding: FragmentNavigationInvokeBinding) {
         binding.buttonFirst.setOnClickListener {
-            findNavController().request(R.id.action_FirstFragment_to_SecondFragment)
+            NavigationInvokeFragmentDirections.actionFirstFragmentToSecondFragment().request()
                 .response(NavigationResultFragment.Result::class.java) { r ->
                     Toast.makeText(requireContext(), "fragment： ${r.hh}", Toast.LENGTH_SHORT).show()
                 }

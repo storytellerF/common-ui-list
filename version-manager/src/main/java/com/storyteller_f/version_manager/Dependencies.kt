@@ -29,7 +29,7 @@ object Versions {
     const val COMPOSE = "1.4.0"
     const val COMPOSE_UI = "1.5.4"
     const val COMPOSE_MATERIAL = "1.4.0-beta02"
-    const val NAV = "2.5.1"
+    const val NAV = "2.7.7"
     const val WORK = "2.7.1"
     const val LEAK_CANARY = "2.9.1"
     const val DATA_BINDING_COMPILER = "8.2.2"

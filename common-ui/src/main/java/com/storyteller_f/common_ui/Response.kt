@@ -39,7 +39,7 @@ internal val ResponseFragment.fragmentRequest: FragmentRequest
 
 internal fun <T : Parcelable> Fragment.setFragmentResult(fragmentRequest: FragmentRequest, result: T) =
     fm.setFragmentResult(fragmentRequest.toString(), Bundle().apply {
-        putParcelable(fragmentResultKey, result)
+        putParcelable(FRAGMENT_RESULT_KEY, result)
     })
 
 /**
@@ -61,7 +61,7 @@ interface Registry {
 /**
  * Fragment 返回的结果在Bundle 中的Key
  */
-const val fragmentResultKey = "result"
+const val FRAGMENT_RESULT_KEY = "result"
 
 val <T : Fragment> T.responseModel
     get() = keyPrefix("response", svm({ arguments }) { handle, arg ->
@@ -78,7 +78,7 @@ inline fun <T : Parcelable, F> F.buildCallback(
     return { requestKey: String, bundle: Bundle ->
         val registry = registryKey()
         waitingInFragment[registry]?.let { list ->
-            bundle.getParcelableCompat(fragmentResultKey, result)?.let {
+            bundle.getParcelableCompat(FRAGMENT_RESULT_KEY, result)?.let {
                 action(this, it)
             }
             waitingInFragment[registry] = list.filter {
@@ -98,7 +98,7 @@ inline fun <T : Parcelable, A> A.buildCallback(
     return { requestKey: String, bundle: Bundle ->
         val registry = registryKey()
         waitingInActivity[registry]?.let { list ->
-            bundle.getParcelableCompat(fragmentResultKey, result)?.let {
+            bundle.getParcelableCompat(FRAGMENT_RESULT_KEY, result)?.let {
                 action(this, it)
             }
             waitingInActivity[registry] = list.filter {

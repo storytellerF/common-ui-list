@@ -12,8 +12,9 @@ plugins {
     id("kotlin-parcelize")
     id("com.storyteller_f.version_manager")
     id("kotlin-kapt")
-//    id("com.starter.easylauncher") version ("6.2.0")
+    id("com.starter.easylauncher") version ("6.2.0")
     id("com.google.devtools.ksp")
+    id("androidx.navigation.safeargs")
 }
 
 android {
