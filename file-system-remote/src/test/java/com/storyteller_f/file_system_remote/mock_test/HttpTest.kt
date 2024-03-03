@@ -1,6 +1,7 @@
-package com.storyteller_f.file_system_remote
+package com.storyteller_f.file_system_remote.mock_test
 
 import androidx.core.net.toUri
+import com.storyteller_f.file_system_remote.HttpFileInstance
 import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer

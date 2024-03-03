@@ -43,30 +43,30 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
     }
 
     override suspend fun filePermissions() =
-        filePermissions1(fetchAttributesIfNeed().permissions)
+        fetchAttributesIfNeed().permissions.filePermissions()
 
-    private fun filePermissions1(permissions: MutableSet<FilePermission>): FilePermissions {
+    private fun MutableSet<FilePermission>.filePermissions(): FilePermissions {
         return FilePermissions(
             com.storyteller_f.file_system.instance.FilePermission(
-                permissions.contains(
+                contains(
                     FilePermission.USR_X
                 ),
-                permissions.contains(FilePermission.USR_R),
-                permissions.contains(FilePermission.USR_W)
+                contains(FilePermission.USR_R),
+                contains(FilePermission.USR_W)
             ),
             com.storyteller_f.file_system.instance.FilePermission(
-                permissions.contains(
+                contains(
                     FilePermission.GRP_X
                 ),
-                permissions.contains(FilePermission.GRP_R),
-                permissions.contains(FilePermission.GRP_W)
+                contains(FilePermission.GRP_R),
+                contains(FilePermission.GRP_W)
             ),
             com.storyteller_f.file_system.instance.FilePermission(
-                permissions.contains(
+                contains(
                     FilePermission.OTH_X
                 ),
-                permissions.contains(FilePermission.OTH_R),
-                permissions.contains(FilePermission.OTH_W)
+                contains(FilePermission.OTH_R),
+                contains(FilePermission.OTH_W)
             )
         )
     }
@@ -112,7 +112,7 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
             val child = childUri(fileName)
             val isSymLink = attributes.mode.type.toMask().bit(FileMode.Type.SYMLINK.toMask())
             val fileTime = attributes.fileTime()
-            val filePermissions = filePermissions1(attributes.permissions)
+            val filePermissions = attributes.permissions.filePermissions()
             if (it.isDirectory) {
                 directoryItems.add(
                     FileInfo(
@@ -137,9 +137,9 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
         }
     }
 
-    override suspend fun exists(): Boolean {
-        TODO("Not yet implemented")
-    }
+    override suspend fun exists() = runCatching {
+        fetchAttributesIfNeed()
+    }.isSuccess
 
     override suspend fun deleteFileOrEmptyDirectory(): Boolean {
         TODO("Not yet implemented")
