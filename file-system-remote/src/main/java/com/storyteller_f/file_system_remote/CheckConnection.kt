@@ -5,15 +5,11 @@ fun RemoteSpec.checkSFtpConnection() {
 }
 
 fun ShareSpec.checkSmbConnection() {
-    requireDiskShare().close()
+    SmbInstance(this).information("/")
 }
 
 fun RemoteSpec.checkFtpConnection() {
     FtpInstance(this).open()
-}
-
-fun RemoteSpec.checkFtpEsConnection() {
-    FtpsInstance(this).open()
 }
 
 fun RemoteSpec.checkFtpsConnection() {

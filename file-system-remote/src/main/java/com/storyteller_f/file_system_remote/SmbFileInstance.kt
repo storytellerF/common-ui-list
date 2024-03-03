@@ -22,17 +22,6 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.InputStream
 
-val smbClient by lazy {
-    SMBClient()
-}
-
-fun ShareSpec.requireDiskShare(): DiskShare {
-    val connect = smbClient.connect(server, port)
-    val authenticationContext = AuthenticationContext(user, password.toCharArray(), "")
-    val session = connect.authenticate(authenticationContext)
-    return session.connectShare(share) as DiskShare
-}
-
 val smbSessions = mutableMapOf<ShareSpec, SmbInstance>()
 
 class SmbFileInstance(uri: Uri, private val shareSpec: ShareSpec = ShareSpec.parse(uri)) :
@@ -64,7 +53,7 @@ class SmbFileInstance(uri: Uri, private val shareSpec: ShareSpec = ShareSpec.par
         )
     }
 
-    private fun initCurrentFile(): FileAllInformation {
+    private fun initInformation(): FileAllInformation {
         val fileInformation = getDiskShare().information(path)
         information = fileInformation
         return fileInformation
@@ -79,7 +68,7 @@ class SmbFileInstance(uri: Uri, private val shareSpec: ShareSpec = ShareSpec.par
     private fun reconnectIfNeed(): FileAllInformation {
         var information = information
         if (information == null) {
-            information = initCurrentFile()
+            information = initInformation()
         }
         return information
     }
@@ -146,9 +135,9 @@ class SmbFileInstance(uri: Uri, private val shareSpec: ShareSpec = ShareSpec.par
         }
     }
 
-    override suspend fun exists(): Boolean {
-        TODO("Not yet implemented")
-    }
+    override suspend fun exists() = runCatching {
+        reconnectIfNeed()
+    }.isSuccess
 
     override suspend fun deleteFileOrEmptyDirectory(): Boolean {
         TODO("Not yet implemented")
@@ -179,8 +168,20 @@ class SmbFileInstance(uri: Uri, private val shareSpec: ShareSpec = ShareSpec.par
 }
 
 class SmbInstance(private val shareSpec: ShareSpec) {
+    private val smbClient by lazy {
+        SMBClient()
+    }
+
     private fun <T> client(block: DiskShare.() -> T): T {
-        return shareSpec.requireDiskShare().use(block)
+        return requireDiskShare(shareSpec).use(block)
+    }
+
+    private fun requireDiskShare(shareSpec: ShareSpec): DiskShare {
+        val connect = smbClient.connect(shareSpec.server, shareSpec.port)
+        val authenticationContext =
+            AuthenticationContext(shareSpec.user, shareSpec.password.toCharArray(), null)
+        val session = connect.authenticate(authenticationContext)
+        return session.connectShare(shareSpec.share) as DiskShare
     }
 
     fun information(path: String): FileAllInformation {

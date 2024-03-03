@@ -1,5 +1,10 @@
-package com.storyteller_f.file_system_remote
+package com.storyteller_f.file_system_remote.mock_test
 
+import com.storyteller_f.file_system_remote.FtpFileInstance
+import com.storyteller_f.file_system_remote.RemoteAccessType
+import com.storyteller_f.file_system_remote.RemoteSpec
+import com.storyteller_f.file_system_remote.checkFtpConnection
+import com.storyteller_f.file_system_remote.getRemoteInstance
 import kotlinx.coroutines.runBlocking
 import org.junit.AfterClass
 import org.junit.Assert.assertEquals
@@ -47,12 +52,15 @@ class FtpTest {
         }
     }
 
+    private val remoteSpec =
+        RemoteSpec(SERVER, fakeFtpServer!!.serverControlPort, USERNAME, PASSWORD, SCHEME)
     private val toUri =
-        RemoteSpec(SERVER, fakeFtpServer!!.serverControlPort, USERNAME, PASSWORD, SCHEME).toUri()
+        remoteSpec.toUri()
 
     @Test
     fun test() {
         runBlocking {
+            remoteSpec.checkFtpConnection()
             assertEquals("data", getRemoteInstance(toUri).list().directories.first().name)
             val foobarFile = getRemoteInstance(
                 toUri.buildUpon().path("/data/foobar.txt").build()

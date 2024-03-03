@@ -1,5 +1,8 @@
-package com.storyteller_f.file_system_remote
+package com.storyteller_f.file_system_remote.mocktio_test
 
+import com.storyteller_f.file_system_remote.CommonFileSystem
+import com.storyteller_f.file_system_remote.CommonFileSystemRule
+import com.storyteller_f.file_system_remote.WebDavFileInstance
 import io.mockk.junit4.MockKRule
 import org.junit.Rule
 import org.junit.Test
