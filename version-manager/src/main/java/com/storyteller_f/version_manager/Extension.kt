@@ -169,7 +169,7 @@ private fun Project.loadBao() {
 
 }
 
-fun Project.baseLibrary() {
+fun Project.baseLibrary(enableMultiDex: Boolean = false) {
     androidLibrary {
         compileSdk = Versions.COMPILE_SDK
 
@@ -180,6 +180,11 @@ fun Project.baseLibrary() {
         }
 
         buildTypes {
+            debug {
+                if (enableMultiDex) {
+                    multiDexEnabled = true
+                }
+            }
             release {
                 isMinifyEnabled = false
                 proguardFiles(

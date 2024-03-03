@@ -1,8 +1,6 @@
 package com.storyteller_f.file_system_remote
 
 import io.mockk.junit4.MockKRule
-import org.junit.AfterClass
-import org.junit.BeforeClass
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -16,20 +14,8 @@ class SmbTest {
     @get:Rule
     val mockkRule = MockKRule(this)
 
-    companion object {
-
-        @JvmStatic
-        @BeforeClass
-        fun setup() {
-            CommonFileSystem.setup("smb")
-        }
-
-        @JvmStatic
-        @AfterClass
-        fun close() {
-            CommonFileSystem.close()
-        }
-    }
+    @get:Rule
+    val commonRelu = CommonFileSystemRule(null, CommonFileSystem.smbSpec)
 
     @Test
     fun test() {

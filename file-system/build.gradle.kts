@@ -25,7 +25,7 @@ android {
         }
     }
 }
-baseLibrary()
+baseLibrary(true)
 dependencies {
     implModule(":common-ktx")
     implModule(":slim-ktx")
@@ -35,9 +35,8 @@ dependencies {
 
     unitTestDependency()
     // https://mvnrepository.com/artifact/androidx.test.uiautomator/uiautomator
-    androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0-beta01")
+    androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")
     androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:${Versions.COROUTINES}")
-
 
     implementation("com.google.code.gson:gson:2.10.1")
 }

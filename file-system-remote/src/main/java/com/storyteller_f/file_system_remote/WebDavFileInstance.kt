@@ -184,11 +184,11 @@ class WebDavFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.par
 }
 
 class WebDavInstance(private val spec: RemoteSpec) {
-    private val baseUrl by lazy {
+    internal val baseUrl by lazy {
         val server = if (spec.server.contains("/")) {
             spec.server.replaceFirst("/", ":${spec.port}/")
         } else {
-            spec.server
+            "${spec.server}:${spec.port}"
         }
         "http://$server"
     }

@@ -77,8 +77,8 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
         val type = fileAttributes.mode.type
         val typeMask = type.toMask()
         FileKind.build(
-            typeMask.bit(FileMode.Type.REGULAR.ordinal),
-            typeMask.bit(FileMode.Type.SYMLINK.ordinal),
+            typeMask.bit(FileMode.Type.REGULAR.toMask()),
+            typeMask.bit(FileMode.Type.SYMLINK.toMask()),
             false,
             fileAttributes.fileLength()
         )
@@ -110,7 +110,7 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
             val attributes = it.attributes
             val fileName = it.name
             val child = childUri(fileName)
-            val isSymLink = attributes.mode.type.toMask().bit(FileMode.Type.SYMLINK.ordinal)
+            val isSymLink = attributes.mode.type.toMask().bit(FileMode.Type.SYMLINK.toMask())
             val fileTime = attributes.fileTime()
             val filePermissions = filePermissions1(attributes.permissions)
             if (it.isDirectory) {
@@ -196,7 +196,7 @@ class SFtpInstance(private val spec: RemoteSpec) {
     }
 }
 
-private fun FileAttributes.fileTime() = FileTime(mtime * 1000, atime * 1000)
+private fun FileAttributes.fileTime() = FileTime(mtime, atime)
 
 private fun FileAttributes.fileLength(): Long {
     return size

@@ -7,6 +7,7 @@ import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.operate.ScopeFileMoveOpInShell
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
@@ -20,8 +21,8 @@ class MoveFileTest {
         val currentUserDataPath = context.getCurrentUserDataPath()
         val userDataUri = File(currentUserDataPath).toUri()
 
-        val userData = getLocalFileInstance(context, userDataUri)
         runBlocking {
+            val userData = getLocalFileInstance(context, userDataUri)
             val pack = userData.list()
             val userPackageModel = pack.directories.first()
             val userPackage = userData.toChildEfficiently(
@@ -30,16 +31,19 @@ class MoveFileTest {
                 FileCreatePolicy.NotCreate
             )
 
-            //在cache 下面创建一个问题
+            val filesInstance = userPackage.toChildEfficiently(context, "files", FileCreatePolicy.Create(false))
+
+            //在cache 下面创建一个文件
             val cacheInstance =
                 userPackage.toChildEfficiently(context, "cache", FileCreatePolicy.NotCreate)
-            val filesInstance = userPackage.toChildEfficiently(context, "files", FileCreatePolicy.NotCreate)
             val testFile =
                 cacheInstance.toChildEfficiently(context, "test.txt", FileCreatePolicy.Create(true))
             testFile.getFileOutputStream().bufferedWriter().use {
                 it.write("hello world")
             }
-            ScopeFileMoveOpInShell(testFile, filesInstance, context).call()
+            //移动文件
+            assertTrue(ScopeFileMoveOpInShell(testFile, filesInstance, context).call())
+            //读取移动后的文件
             val readContent =
                 filesInstance.toChildEfficiently(context, "test.txt", FileCreatePolicy.NotCreate)
                     .getFileInputStream().bufferedReader().use {
