@@ -10,7 +10,7 @@ import com.storyteller_f.file_system_remote.getRemoteInstance
 import com.storyteller_f.file_system_root.RootAccessFileInstance
 
 @Suppress("unused")
-fun getFileInstance(
+suspend fun getFileInstance(
     context: Context,
     uri: Uri,
 ): FileInstance {

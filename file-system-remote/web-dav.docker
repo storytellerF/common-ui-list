@@ -1,0 +1,3 @@
+docker run --rm --detach --name webdav --publish 7000:8080 \
+           --env WEBDAV_USERNAME=myuser \
+           --env WEBDAV_PASSWORD=mypassword ionelmc/webdav

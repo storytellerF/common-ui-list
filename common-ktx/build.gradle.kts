@@ -14,7 +14,7 @@ android {
     }
     namespace = "com.storyteller_f.common_ktx"
 }
-baseLibrary()
+baseLibrary(true)
 
 dependencies {
     commonAndroidDependency()

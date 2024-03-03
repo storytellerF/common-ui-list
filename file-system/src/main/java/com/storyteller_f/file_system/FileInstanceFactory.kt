@@ -28,7 +28,11 @@ fun Context.getCurrentUserDataPath() =
 /**
  * 除非是根路径，否则最后一个字符不可以是/
  */
-fun getLocalFileInstance(context: Context, uri: Uri): FileInstance {
+suspend fun getLocalFileInstance(
+    context: Context,
+    uri: Uri,
+    policy: FileCreatePolicy = FileCreatePolicy.NotCreate
+): FileInstance {
     val unsafePath = uri.path!!
     assert(!unsafePath.endsWith("/") || unsafePath.length == 1) {
         "invalid path [$unsafePath]"
@@ -51,6 +55,14 @@ fun getLocalFileInstance(context: Context, uri: Uri): FileInstance {
         }
 
         else -> getPublicFileSystemInstance(context, safeUri)
+    }.apply {
+        if (policy is FileCreatePolicy.Create && !exists()) {
+            if (policy.isFile) {
+                createFile()
+            } else {
+                createDirectory()
+            }
+        }
     }
 }
 
@@ -146,7 +158,7 @@ suspend fun FileInstance.toChildEfficiently(
     return if (currentPrefix == childPrefix) {
         toChild(name, policy)!!
     } else {
-        getLocalFileInstance(context, childUri)
+        getLocalFileInstance(context, childUri, policy)
     }
 }
 

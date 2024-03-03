@@ -190,7 +190,7 @@ class ScopeFileMoveOpInShell(
 ) : ScopeFileOperation(fileInstance, target, context) {
     override suspend fun call(): Boolean {
         val mvResult = withContext(Dispatchers.IO) {
-            Runtime.getRuntime().exec("mv ${fileInstance.path} ${target.path}").waitFor()
+            Runtime.getRuntime().exec("mv ${fileInstance.path} ${target.path}/").waitFor()
         }
 
         val cmdFailed = mvResult != 0

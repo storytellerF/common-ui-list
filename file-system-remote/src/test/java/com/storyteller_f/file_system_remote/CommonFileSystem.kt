@@ -26,8 +26,11 @@ import com.thegrizzlylabs.sardineandroid.model.Principal
 import com.thegrizzlylabs.sardineandroid.model.Privilege
 import com.thegrizzlylabs.sardineandroid.model.Read
 import com.thegrizzlylabs.sardineandroid.model.Write
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.spyk
 import kotlinx.coroutines.runBlocking
 import net.schmizz.sshj.sftp.FileMode
 import net.schmizz.sshj.sftp.RemoteFile
@@ -35,6 +38,8 @@ import net.schmizz.sshj.sftp.RemoteResourceInfo
 import net.schmizz.sshj.xfer.FilePermission
 import org.apache.commons.net.ftp.FTPFile
 import org.junit.Assert
+import org.junit.rules.TestWatcher
+import org.junit.runner.Description
 import java.nio.file.FileSystem
 import java.nio.file.Files
 import java.nio.file.Path
@@ -58,8 +63,23 @@ import kotlin.io.path.pathString
 import kotlin.io.path.readAttributes
 import kotlin.io.path.walk
 
+class CommonFileSystemRule(
+    private val spec: RemoteSpec? = null,
+    private val share: ShareSpec? = null
+) : TestWatcher() {
+    override fun starting(description: Description?) {
+        super.starting(description)
+        CommonFileSystem.setup((spec?.type ?: share?.type)!!)
+    }
+
+    override fun finished(description: Description?) {
+        super.finished(description)
+        CommonFileSystem.close()
+    }
+}
+
 object CommonFileSystem {
-    private val fs: FileSystem = Jimfs.newFileSystem(Configuration.unix())
+    private var fs: FileSystem? = null
 
     val smbSpec = ShareSpec("localhost", 0, "test", "test", RemoteAccessType.SMB, "test1")
 
@@ -71,10 +91,12 @@ object CommonFileSystem {
         RemoteSpec("localhost", 0, "test", "test", type = RemoteAccessType.WEB_DAV)
 
     fun setup(type: String) {
-        fs.getPath("/test1").apply {
+        val newFileSystem = Jimfs.newFileSystem(Configuration.unix())
+        fs = newFileSystem
+        newFileSystem.getPath("/test1").apply {
             createDirectory()
         }
-        val helloFile = fs.getPath("/test1/hello.txt").apply {
+        val helloFile = newFileSystem.getPath("/test1/hello.txt").apply {
             createFile()
         }
         helloFile.outputStream().bufferedWriter().use {
@@ -85,7 +107,7 @@ object CommonFileSystem {
             RemoteAccessType.SMB -> bindSmbSession()
             RemoteAccessType.SFTP -> bindSFtpSession()
             RemoteAccessType.FTPS -> bindFtpsSession()
-            RemoteAccessType.WEB_DAV -> bindWebDavSession()
+            RemoteAccessType.WEB_DAV -> bindWebDavSession(webDavSpec)
         }
     }
 
@@ -98,7 +120,7 @@ object CommonFileSystem {
             Assert.assertTrue(childInstance.fileKind().isFile)
 
             val helloTxtLastModified =
-                fs.getPath("/test1/hello.txt").readAttributes<BasicFileAttributes>()
+                fs!!.getPath("/test1/hello.txt").readAttributes<BasicFileAttributes>()
                     .lastModifiedTime()
                     .toMillis()
             Assert.assertEquals(
@@ -115,37 +137,42 @@ object CommonFileSystem {
     }
 
     @OptIn(ExperimentalPathApi::class)
-    private fun bindWebDavSession() {
-        mockk<WebDavInstance> {
+    private fun bindWebDavSession(webDavSpec: RemoteSpec) {
+        val origin = WebDavInstance(webDavSpec)
+        spyk(origin) {
             every {
                 list(any())
             } answers {
-                fs.getPath(firstArg()).walk().map {
+                val realPath = firstArg<String>().substring(origin.baseUrl.length)
+                fs!!.getPath(realPath).walk().map {
                     mockDavResources(it)
                 }.toMutableList()
             }
             every {
                 getInputStream(any())
             } answers {
-                fs.getPath(firstArg()).inputStream()
+                val realPath = firstArg<String>().substring(origin.baseUrl.length)
+                fs!!.getPath(realPath).inputStream()
             }
             every {
                 acl(any())
             } answers {
-                mockAcl(firstArg())
+                val realPath = firstArg<String>().substring(origin.baseUrl.length)
+                mockAcl(realPath)
             }
             every {
                 resources(any())
             } answers {
-                mockDavResources(fs.getPath(firstArg()))
+                val realPath = firstArg<String>().substring(origin.baseUrl.length)
+                mockDavResources(fs!!.getPath(realPath))
             }
         }.apply {
-            webdavInstances[webDavSpec] = this
+            webdavInstances[this@CommonFileSystem.webDavSpec] = this
         }
     }
 
     private fun mockAcl(path: String): DavAcl {
-        val p = fs.getPath(path)
+        val p = fs!!.getPath(path)
         return mockk<DavAcl> {
             every {
                 aces
@@ -195,24 +222,24 @@ object CommonFileSystem {
             every {
                 listFiles(any())
             } answers {
-                fs.getPath(firstArg()).walk().map {
+                fs!!.getPath(firstArg()).walk().map {
                     mockFtpsFile(it)
                 }.toList().toTypedArray<FTPFile>()
             }
             every {
                 inputStream(any())
             } answers {
-                fs.getPath(firstArg()).inputStream()
+                fs!!.getPath(firstArg()).inputStream()
             }
             every {
                 outputStream(any())
             } answers {
-                fs.getPath(firstArg()).outputStream()
+                fs!!.getPath(firstArg()).outputStream()
             }
             every {
                 getFile(any())
             } answers {
-                mockFtpsFile(fs.getPath(firstArg()))
+                mockFtpsFile(fs!!.getPath(firstArg()))
             }
         }.apply {
             ftpsClients[ftpsSpec] = this
@@ -264,7 +291,7 @@ object CommonFileSystem {
     fun close() {
         smbSessions.clear()
         sftpChannels.clear()
-        fs.close()
+        fs!!.close()
     }
 
     private fun bindSFtpSession() {
@@ -285,16 +312,25 @@ object CommonFileSystem {
     }
 
     private fun mockSFtpRemoteFile(path: String): RemoteFile {
-        val pathObject = fs.getPath(path)
+        val pathObject = fs!!.getPath(path)
         val basicFileAttributes = pathObject.readAttributes<BasicFileAttributes>()
         return mockk {
             every {
                 fetchAttributes()
             } answers {
-                net.schmizz.sshj.sftp.FileAttributes.Builder().withAtimeMtime(
-                    basicFileAttributes.lastAccessTime().toMillis(),
-                    basicFileAttributes.lastModifiedTime().toMillis()
-                ).withPermissions(buildPermission(pathObject)).build()
+                net.schmizz.sshj.sftp.FileAttributes.Builder()
+                    .withAtimeMtime(
+                        basicFileAttributes.lastAccessTime().toMillis(),
+                        basicFileAttributes.lastModifiedTime().toMillis()
+                    )
+                    .withPermissions(buildPermission(pathObject))
+                    .withType(
+                        if (pathObject.isRegularFile()) {
+                            FileMode.Type.REGULAR
+                        } else {
+                            FileMode.Type.DIRECTORY
+                        }
+                    ).build()
             }
             every {
                 read(any(), any(), any(), any())
@@ -304,12 +340,15 @@ object CommonFileSystem {
                     it.read(secondArg(), thirdArg(), lastArg())
                 }
             }
+            every {
+                close()
+            } just Runs
         }
     }
 
     @OptIn(ExperimentalPathApi::class)
     private fun mockSFtpResponse(path: String) =
-        fs.getPath(path).walk().map { pathObject ->
+        fs!!.getPath(path).walk().map { pathObject ->
             val basicFileAttributes = pathObject.readAttributes<BasicFileAttributes>()
             mockk<RemoteResourceInfo> {
                 every {
@@ -344,6 +383,9 @@ object CommonFileSystem {
         every {
             permissions
         } returns buildPermission(pathObject)
+        every {
+            size
+        } returns pathObject.fileSize()
     }
 
     private fun buildPermission(pathObject: Path?) = buildSet {
@@ -400,7 +442,7 @@ object CommonFileSystem {
                     every {
                         changeTime
                     } answers {
-                        val p = fs.getPath(buildPath)
+                        val p = fs!!.getPath(buildPath)
                         FileTime.ofEpochMillis(
                             p.readAttributes<BasicFileAttributes>().lastModifiedTime().toMillis()
                         )
@@ -408,7 +450,7 @@ object CommonFileSystem {
                     every {
                         creationTime
                     } answers {
-                        val p = fs.getPath(buildPath)
+                        val p = fs!!.getPath(buildPath)
                         FileTime.ofEpochMillis(
                             p.readAttributes<BasicFileAttributes>().creationTime().toMillis()
                         )
@@ -416,7 +458,7 @@ object CommonFileSystem {
                     every {
                         lastAccessTime
                     } answers {
-                        val p = fs.getPath(buildPath)
+                        val p = fs!!.getPath(buildPath)
                         FileTime.ofEpochMillis(
                             p.readAttributes<BasicFileAttributes>().lastAccessTime().toMillis()
                         )
@@ -432,7 +474,7 @@ object CommonFileSystem {
     }
 
     private fun mockAccessInformation(buildPath: String): FileAccessInformation {
-        val p = fs.getPath(buildPath)
+        val p = fs!!.getPath(buildPath)
         return mockk {
             every {
                 accessFlags
@@ -453,7 +495,7 @@ object CommonFileSystem {
     }
 
     private fun mockSmbFileAttributes(buildPath: String): Long {
-        val p = fs.getPath(buildPath)
+        val p = fs!!.getPath(buildPath)
         return EnumUtils.toLong(buildSet<FileAttributes> {
             if (p.isDirectory()) {
                 add(FileAttributes.FILE_ATTRIBUTE_DIRECTORY)
@@ -468,17 +510,17 @@ object CommonFileSystem {
         mockk {
             every {
                 isDirectory
-            } returns fs.getPath(buildPath).isDirectory()
+            } returns fs!!.getPath(buildPath).isDirectory()
             every {
                 allocationSize
-            } returns fs.getPath(buildPath).fileSize()
+            } returns fs!!.getPath(buildPath).fileSize()
         }
 
     private fun mockSmbInputStream(relativePath: String): File =
         mockk {
             every {
                 inputStream
-            } returns fs.getPath(buildPath(smbSpec.share, relativePath)).inputStream()
+            } returns fs!!.getPath(buildPath(smbSpec.share, relativePath)).inputStream()
         }
 
     @OptIn(ExperimentalPathApi::class)
@@ -487,7 +529,7 @@ object CommonFileSystem {
         relativePath: String,
     ): List<FileIdBothDirectoryInformation> {
         val buildPath = buildPath(shareSpec.share, relativePath)
-        return fs.getPath(buildPath).walk().filter {
+        return fs!!.getPath(buildPath).walk().filter {
             it.name.isNotEmpty()
         }.map { pathObject ->
             mockSmbInformation(pathObject)
