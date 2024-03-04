@@ -6,6 +6,3 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-
-rootProject.name = "version-manager"
-include (":version-manager")

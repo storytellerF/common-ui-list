@@ -3,7 +3,9 @@ plugins {
 }
 
 group = "com.storyteller_f"
-version = "0.0.2"
+version = System.getenv().let {
+    if (it["JITPACK"] == null) "0.0.1-local" else it["VERSION"]!!
+}
 
 afterEvaluate {
     publishing {
