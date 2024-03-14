@@ -24,6 +24,7 @@ import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
+import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.Modifier
@@ -47,7 +48,7 @@ private fun BufferedWriter.writeLine(line: String = "") {
     write("$line\n")
 }
 
-class Processing(private val environment: SymbolProcessorEnvironment) : SymbolProcessor {
+class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) : SymbolProcessor {
     private var count: Int = 0
     private val zoom = UIListHolderZoom<KSAnnotated>()
     private val logger = environment.logger
@@ -109,44 +110,21 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
         }
         val uiListPackageName = "$packageName.ui_list"
         logger.info("ui-list package $uiListPackageName")
-        val maps = zoom.extractEventMap(allItemHolderName)
-        val clickEventsMap = maps.first
-        val longClickEventsMap = maps.second
+        val (clickEventsMap, longClickEventsMap) = zoom.extractEventMap(allItemHolderName)
         val dependencyFiles =
-            getDependencies(
-                entries,
-                allItemHolderName,
-                clickEventsMap,
-                longClickEventsMap
-            ).mapNotNull {
-                it.containingFile
-            }.distinctBy {
-                it.filePath
-            }
-        val dependencies =
-            Dependencies(aggregating = false, *dependencyFiles.toList().toTypedArray())
-        val bindingClass = zoom.importHolders(entries)
-        val receiverClass = zoom.importReceiverClass(clickEventsMap, longClickEventsMap)
+            getDependencyFiles(entries, allItemHolderName, clickEventsMap, longClickEventsMap)
 
+        val allImports = allImports(entries, clickEventsMap, longClickEventsMap)
+        val affectInfo = getAffectFileInfo(uiListPackageName, dependencyFiles)
         val generator = KotlinGenerator()
-        BufferedWriter(
-            OutputStreamWriter(
-                environment.codeGenerator.createNewFile(
-                    dependencies,
-                    uiListPackageName,
-                    CLASS_NAME
-                )
-            )
-        ).use { writer ->
-            writer.writeLine("package $uiListPackageName")
+        writer(uiListPackageName, dependencyFiles).use { writer ->
+            writer.writeLine("package $uiListPackageName\n")
+            writer.writeLine(affectInfo)
             writer.writeLine()
             writer.writeLine(
-                (bindingClass + receiverClass + UiAdapterGenerator.commonImports).distinct()
-                    .joinToString(
-                        "\n"
-                    ) {
-                        "import $it"
-                    }
+                allImports.joinToString("\n") {
+                    "import $it"
+                }
             )
             writer.writeLine()
             writer.writeLine("object $CLASS_NAME {")
@@ -158,9 +136,86 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
                 ).prependIndent()
             )
             writer.writeLine(generator.buildAddFunction(entries).prependIndent())
-            writer.writeLine("}")
-            writer.writeLine()
+            writer.writeLine("}\n")
         }
+    }
+
+    private fun getAffectFileInfo(
+        uiListPackageName: String,
+        dependencyFiles: List<KSFile>
+    ): String {
+        val coverPart = getAllFilePathCoverPart(dependencyFiles)
+
+        val distinctName = dependencyFiles.map {
+            it.filePath.substring(coverPart.length)
+        }
+        val info = distinctName.joinToString("\n\t")
+        logger.warn(
+            "$uiListPackageName has changed, because processor changed or this file changed $coverPart\n\t$info"
+        )
+        val affectInfo = buildString {
+            appendLine("//scope: $coverPart")
+            distinctName.forEachIndexed { index, ksFile ->
+                appendLine("//file $index: $ksFile")
+            }
+        }
+        return affectInfo
+    }
+
+    private fun getAllFilePathCoverPart(
+        dependencyFiles: List<KSFile>,
+    ): String {
+        return dependencyFiles.map {
+            it.filePath
+        }.coverPart()
+    }
+
+    private fun allImports(
+        entries: List<Entry<KSAnnotated>>,
+        clickEventsMap: EventMap<KSAnnotated>,
+        longClickEventsMap: EventMap<KSAnnotated>
+    ): List<String> {
+        val bindingClass = zoom.importHolders(entries)
+        val receiverClass = zoom.importReceiverClass(clickEventsMap, longClickEventsMap)
+
+        return (bindingClass + receiverClass + UiAdapterGenerator.commonImports).distinct()
+    }
+
+    private fun writer(
+        uiListPackageName: String,
+        dependencyFiles: List<KSFile>
+    ): BufferedWriter {
+        val dependencies =
+            Dependencies(aggregating = false, *dependencyFiles.toTypedArray())
+        return BufferedWriter(
+            OutputStreamWriter(
+                environment.codeGenerator.createNewFile(
+                    dependencies,
+                    uiListPackageName,
+                    CLASS_NAME
+                )
+            )
+        )
+    }
+
+    private fun UiListEventProcessor.getDependencyFiles(
+        entries: List<Entry<KSAnnotated>>,
+        allItemHolderName: List<ItemHolderFullName>,
+        clickEventsMap: EventMap<KSAnnotated>,
+        longClickEventsMap: EventMap<KSAnnotated>
+    ): List<KSFile> {
+        val dependencyFiles =
+            getDependencies(
+                entries,
+                allItemHolderName,
+                clickEventsMap,
+                longClickEventsMap
+            ).mapNotNull {
+                it.containingFile
+            }.distinctBy {
+                it.filePath
+            }
+        return dependencyFiles
     }
 
     private fun <T> getDependencies(
@@ -468,8 +523,24 @@ class Processing(private val environment: SymbolProcessorEnvironment) : SymbolPr
     }
 }
 
-class ProcessingProvider : SymbolProcessorProvider {
+private fun List<String>.coverPart(): String {
+    val c = minOfOrNull {
+        it.length
+    } ?: return ""
+    val baseString = get(0)
+    for (i in 0 until c) {
+        val base = baseString[i]
+        if (any {
+                it[i] != base
+            }) {
+            return baseString.substring(0, i)
+        }
+    }
+    return baseString.substring(0, c)
+}
+
+class ProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
-        return Processing(environment)
+        return UiListEventProcessor(environment)
     }
 }
