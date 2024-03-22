@@ -2,17 +2,11 @@ package com.storyteller_f.ui_list_annotation_compiler_ksp
 
 import com.example.ui_list_annotation_common.Entry
 import com.example.ui_list_annotation_common.Event
-import com.example.ui_list_annotation_common.EventEntry
-import com.example.ui_list_annotation_common.EventMap
 import com.example.ui_list_annotation_common.Holder
-import com.example.ui_list_annotation_common.ItemHolderFullName
 import com.example.ui_list_annotation_common.JavaGenerator.Companion.CLASS_NAME
 import com.example.ui_list_annotation_common.UIListHolderZoom
-import com.example.ui_list_annotation_common.UiAdapterGenerator
-import com.example.ui_list_annotation_common.ViewName
 import com.example.ui_list_annotation_common.nestedGroupBy
 import com.google.devtools.ksp.KspExperimental
-import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.getAnnotationsByType
 import com.google.devtools.ksp.getDeclaredFunctions
 import com.google.devtools.ksp.isAnnotationPresent
@@ -33,18 +27,13 @@ import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.annotation_defination.BindLongClickEvent
 import com.storyteller_f.annotation_defination.ItemHolder
-import com.storyteller_f.slim_ktx.dup
-import com.storyteller_f.slim_ktx.no
-import com.storyteller_f.slim_ktx.replaceCode
-import com.storyteller_f.slim_ktx.trimAndReplaceCode
-import com.storyteller_f.slim_ktx.yes
 import java.io.BufferedWriter
 import java.io.OutputStreamWriter
 import kotlin.reflect.KClass
 
 data class Identity(val fullName: String, val name: String)
 
-private fun BufferedWriter.writeLine(line: String = "") {
+fun BufferedWriter.writeLine(line: String = "") {
     write("$line\n")
 }
 
@@ -53,7 +42,6 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
     private val zoom = UIListHolderZoom<KSAnnotated>()
     private val logger = environment.logger
 
-    @Suppress("LongMethod")
     override fun process(resolver: Resolver): List<KSAnnotated> {
         count++
         val viewHolders =
@@ -62,6 +50,34 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
             resolver.getSymbolsWithAnnotation(BindClickEvent::class.java.canonicalName)
         val longClickEvents =
             resolver.getSymbolsWithAnnotation(BindLongClickEvent::class.java.canonicalName)
+
+        if (checkRound(viewHolders, clickEvents, longClickEvents)) return emptyList()
+
+        process(viewHolders, clickEvents, longClickEvents)
+
+        return emptyList()
+    }
+
+    private fun process(
+        viewHolders: Sequence<KSAnnotated>,
+        clickEvents: Sequence<KSAnnotated>,
+        longClickEvents: Sequence<KSAnnotated>
+    ) {
+        logger.logging("ui-list round $count ${zoom.debugState()}")
+        zoom.addHolderEntry(processEntry(viewHolders).toList())
+        zoom.addClickEvent(processEvent(clickEvents, isLong = false))
+        zoom.addLongClick(processEvent(longClickEvents, isLong = true))
+
+        zoom.grouped().forEach { (packageName, entries) ->
+            writeFile(packageName, entries)
+        }
+    }
+
+    private fun checkRound(
+        viewHolders: Sequence<KSAnnotated>,
+        clickEvents: Sequence<KSAnnotated>,
+        longClickEvents: Sequence<KSAnnotated>
+    ): Boolean {
         val viewHolderMap = viewHolders.groupBy {
             it.validate()
         }
@@ -86,99 +102,21 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
         }
         if (viewHolderCount == 0 && clickEventCount == 0 && longClickEventCount == 0) {
             logger.warn("ui-list round $count exit")
-            return emptyList()
+            return true
         }
-
-        logger.logging("ui-list round $count ${zoom.debugState()}")
-        zoom.addHolderEntry(processEntry(viewHolders).toList())
-        zoom.addClickEvent(processEvent(clickEvents, isLong = false))
-        zoom.addLongClick(processEvent(longClickEvents, isLong = true))
-
-        zoom.grouped().forEach { (packageName, entries) ->
-            writeFile(packageName, entries)
-        }
-
-        return emptyList()
+        return false
     }
 
     private fun writeFile(
         packageName: String,
         entries: List<Entry<KSAnnotated>>,
     ) {
-        val allItemHolderName = entries.map {
-            it.itemHolderFullName
-        }
         val uiListPackageName = "$packageName.ui_list"
         logger.info("ui-list package $uiListPackageName")
-        val (clickEventsMap, longClickEventsMap) = zoom.extractEventMap(allItemHolderName)
-        val dependencyFiles =
-            getDependencyFiles(entries, allItemHolderName, clickEventsMap, longClickEventsMap)
 
-        val allImports = allImports(entries, clickEventsMap, longClickEventsMap)
-        val affectInfo = getAffectFileInfo(uiListPackageName, dependencyFiles)
-        val generator = KotlinGenerator()
-        writer(uiListPackageName, dependencyFiles).use { writer ->
-            writer.writeLine("package $uiListPackageName\n")
-            writer.writeLine(affectInfo)
-            writer.writeLine()
-            writer.writeLine(
-                allImports.joinToString("\n") {
-                    "import $it"
-                }
-            )
-            writer.writeLine()
-            writer.writeLine("object $CLASS_NAME {")
-            writer.writeLine(
-                buildViewHolders(
-                    entries,
-                    clickEventsMap,
-                    longClickEventsMap
-                ).prependIndent()
-            )
-            writer.writeLine(generator.buildAddFunction(entries).prependIndent())
-            writer.writeLine("}\n")
-        }
-    }
-
-    private fun getAffectFileInfo(
-        uiListPackageName: String,
-        dependencyFiles: List<KSFile>
-    ): String {
-        val coverPart = getAllFilePathCoverPart(dependencyFiles)
-
-        val distinctName = dependencyFiles.map {
-            it.filePath.substring(coverPart.length)
-        }
-        val info = distinctName.joinToString("\n\t")
-        logger.warn(
-            "$uiListPackageName has changed, because processor changed or this file changed $coverPart\n\t$info"
-        )
-        val affectInfo = buildString {
-            appendLine("//scope: $coverPart")
-            distinctName.forEachIndexed { index, ksFile ->
-                appendLine("//file $index: $ksFile")
-            }
-        }
-        return affectInfo
-    }
-
-    private fun getAllFilePathCoverPart(
-        dependencyFiles: List<KSFile>,
-    ): String {
-        return dependencyFiles.map {
-            it.filePath
-        }.coverPart()
-    }
-
-    private fun allImports(
-        entries: List<Entry<KSAnnotated>>,
-        clickEventsMap: EventMap<KSAnnotated>,
-        longClickEventsMap: EventMap<KSAnnotated>
-    ): List<String> {
-        val bindingClass = zoom.importHolders(entries)
-        val receiverClass = zoom.importReceiverClass(clickEventsMap, longClickEventsMap)
-
-        return (bindingClass + receiverClass + UiAdapterGenerator.commonImports).distinct()
+        KotlinGenerator(entries, zoom, logger, uiListPackageName) {
+            writer(uiListPackageName, it)
+        }.write()
     }
 
     private fun writer(
@@ -196,211 +134,6 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
                 )
             )
         )
-    }
-
-    private fun UiListEventProcessor.getDependencyFiles(
-        entries: List<Entry<KSAnnotated>>,
-        allItemHolderName: List<ItemHolderFullName>,
-        clickEventsMap: EventMap<KSAnnotated>,
-        longClickEventsMap: EventMap<KSAnnotated>
-    ): List<KSFile> {
-        val dependencyFiles =
-            getDependencies(
-                entries,
-                allItemHolderName,
-                clickEventsMap,
-                longClickEventsMap
-            ).mapNotNull {
-                it.containingFile
-            }.distinctBy {
-                it.filePath
-            }
-        return dependencyFiles
-    }
-
-    private fun <T> getDependencies(
-        entries: List<Entry<T>>,
-        allItemHolderName: List<ItemHolderFullName>,
-        clickEventsMap: EventMap<T>,
-        longClickEventsMap: EventMap<T>,
-    ): List<T> {
-        val extractEventOrigin: (EventEntry<T>) -> List<T> = {
-            it.value.entries.flatMap { listEntry ->
-                listEntry.value.map(Event<T>::origin)
-            }
-        }
-        return (entries.filter {
-            allItemHolderName.any { entry ->
-                entry == it.itemHolderFullName
-            }
-        }.flatMap { entry ->
-            entry.viewHolders.map {
-                it.value.origin
-            }
-        } + clickEventsMap.flatMap(
-            extractEventOrigin
-        ) + longClickEventsMap.flatMap(
-            extractEventOrigin
-        ))
-    }
-
-    private fun buildViewHolders(
-        entries: List<Entry<KSAnnotated>>,
-        clickEventsMap: Map<ItemHolderFullName, Map<ViewName, List<Event<KSAnnotated>>>>,
-        longClickEventsMap: Map<ItemHolderFullName, Map<ViewName, List<Event<KSAnnotated>>>>,
-    ): String {
-        return entries.joinToString("\n\n") { entry ->
-            createMultiViewHolder(
-                entry,
-                clickEventsMap[entry.itemHolderFullName].orEmpty(),
-                longClickEventsMap[entry.itemHolderFullName].orEmpty()
-            )
-        }
-    }
-
-    private fun createMultiViewHolder(
-        entry: Entry<KSAnnotated>,
-        eventMapClick: Map<ViewName, List<Event<KSAnnotated>>>,
-        eventMapLongClick: Map<ViewName, List<Event<KSAnnotated>>>,
-    ): String {
-        val viewHolderBuilderContent = entry.viewHolders.map {
-            val viewHolderContent = if (it.value.bindingName.endsWith(
-                    "Binding"
-                )
-            ) {
-                buildViewHolder(it.value, eventMapClick, eventMapLongClick)
-            } else {
-                buildComposeViewHolder(it.value, eventMapClick, eventMapLongClick)
-            }
-            """
-                    if (type.equals("${it.key}")) {
-                        $1
-                    }//type if end
-            """.trimIndent().replaceCode(viewHolderContent.yes())
-        }.joinToString("\n")
-        return """
-                @Suppress("UNUSED_ANONYMOUS_PARAMETER")
-                fun buildFor${entry.itemHolderName}(view: ViewGroup, type: String): AbstractViewHolder<*> {
-                    $1
-                    throw Exception("unrecognized type:[${'$'}type]")
-                }
-                
-        """.trimIndent().replaceCode(viewHolderBuilderContent.yes())
-    }
-
-    private fun buildComposeViewHolder(
-        it: Holder<KSAnnotated>,
-        eventList: Map<ViewName, List<Event<KSAnnotated>>>,
-        eventList2: Map<ViewName, List<Event<KSAnnotated>>>,
-    ): String {
-        return """
-            val context = view.context
-            val composeView = EDComposeView(context)
-            val viewHolder = ${it.viewHolderName}(composeView)
-            @Suppress("UNUSED_VARIABLE") val v = viewHolder.itemView
-            composeView.clickListener = { s ->
-                $1
-            }
-            composeView.longClickListener = { s ->
-                $2
-            }
-            return viewHolder
-            """.trimAndReplaceCode(
-            buildComposeClickListener(eventList).yes(),
-            buildComposeClickListener(eventList2).yes()
-        )
-    }
-
-    private fun buildComposeClickListener(event: Map<ViewName, List<Event<KSAnnotated>>>) =
-        event.map {
-            if (it.value.map { event1 ->
-                    event1.group
-                }.dup()) {
-                throw Exception(
-                    "dup group ${
-                        it.value.map { event1 ->
-                            "${event1.receiver}#${event1.functionName} ${event1.group}"
-                        }
-                    }"
-                )
-            }
-            val clickBlock = it.value.joinToString("\n") { e ->
-                produceClickBlockForCompose(e)
-            }
-            """
-            if (s == "${it.key}") {
-                $1                
-            }//if end
-        """.trimAndReplaceCode(clickBlock.yes())
-        }.joinToString("\n")
-
-    private fun produceClickBlockForCompose(e: Event<KSAnnotated>): String {
-        val parameterList = e.parameterList
-        return if (e.receiver.contains("Activity")) {
-            """
-            if("${e.group}".equals(viewHolder.grouped)) 
-                (context as? ${e.receiver})?.${e.functionName}($parameterList)
-            """.trimIndent()
-        } else {
-            """
-            if("${e.group}".equals(viewHolder.grouped)) 
-                v.findFragmentOrNull<${e.receiver}>()?.${e.functionName}($parameterList)
-            """.trimIndent()
-        }
-    }
-
-    private fun buildViewHolder(
-        entry: Holder<KSAnnotated>,
-        eventMapClick: Map<String, List<Event<KSAnnotated>>>,
-        eventMapLongClick: Map<String, List<Event<KSAnnotated>>>,
-    ): String {
-        return """
-            val context = view.context
-            val inflate = ${entry.bindingName}.inflate(LayoutInflater.from(context), view, false)
-            
-            val viewHolder = ${entry.viewHolderName}(inflate)
-            $1       
-            return viewHolder
-            """.trimAndReplaceCode(buildInvokeClickEvent(eventMapClick, eventMapLongClick).no())
-    }
-
-    private fun buildInvokeClickEvent(
-        event: Map<String, List<Event<KSAnnotated>>>,
-        event2: Map<String, List<Event<KSAnnotated>>>,
-    ): String {
-        val singleClickListener = event.map(::produceClickListener).joinToString("\n")
-        val longClickListener = event2.map(::produceLongClickListener).joinToString("\n")
-        return singleClickListener + longClickListener
-    }
-
-    private fun produceClickListener(it: Map.Entry<String, List<Event<KSAnnotated>>>) = """
-            inflate.${it.key}.setOnClickListener { v ->
-                $1
-            }
-        """.trimAndReplaceCode(buildInvokeClickEvent(it.value).yes())
-
-    private fun produceLongClickListener(it: Map.Entry<String, List<Event<KSAnnotated>>>) = """
-            inflate.${it.key}.setOnLongClickListener { v ->
-                $1
-                return true;
-            }
-        """.trimAndReplaceCode(buildInvokeClickEvent(it.value).yes())
-
-    private fun buildInvokeClickEvent(events: List<Event<KSAnnotated>>): String {
-        return events.joinToString("\n") { event ->
-            val parameterList = event.parameterList
-            if (event.receiver.contains("Activity")) {
-                """
-                    if("${event.group}" == viewHolder.grouped) 
-                        (context as? ${event.receiver})?.${event.functionName}($parameterList)
-                """.trimIndent()
-            } else {
-                """
-                    if("${event.group}" == viewHolder.grouped)
-                        v.findFragmentOrNull<${event.receiver}>()?.${event.functionName}($parameterList)
-                """.trimIndent()
-            }
-        }
     }
 
     @OptIn(KspExperimental::class)
@@ -428,28 +161,33 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
                 it.getAnnotationsByType(BindClickEvent::class).first().group
             }
             val parent = it.parent as KSClassDeclaration
-            val r = parent.identity()
-            val parameterList = it.parameters.joinToString(", ") { parameter ->
-                val asString = parameter.name?.asString()
-                if (asString.isNullOrEmpty()) {
-                    ""
-                } else if (asString == "itemHolder") {
-                    "viewHolder.itemHolder"
-                } else if (asString == "binding") {
-                    "inflate"
-                } else {
-                    "v"
-                }
-            }
+            val identity = parent.identity()
+            val parameterList = argumentList(it)
             Event(
-                r.name,
-                r.fullName,
+                identity.name,
+                identity.fullName,
                 it.simpleName.asString(),
                 parameterList,
                 group,
                 it as KSAnnotated
             )
         }
+    }
+
+    private fun argumentList(it: KSFunctionDeclaration): String {
+        val parameterList = it.parameters.joinToString(", ") { parameter ->
+            val asString = parameter.name?.asString()
+            if (asString.isNullOrEmpty()) {
+                ""
+            } else if (asString == "itemHolder") {
+                "viewHolder.itemHolder"
+            } else if (asString == "binding") {
+                "inflate"
+            } else {
+                "v"
+            }
+        }
+        return parameterList
     }
 
     private fun KSDeclaration.identity(): Identity {
@@ -521,22 +259,6 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
         val bindingFullName = ksName?.asString() ?: ""
         return Pair(bindingName, bindingFullName)
     }
-}
-
-private fun List<String>.coverPart(): String {
-    val c = minOfOrNull {
-        it.length
-    } ?: return ""
-    val baseString = get(0)
-    for (i in 0 until c) {
-        val base = baseString[i]
-        if (any {
-                it[i] != base
-            }) {
-            return baseString.substring(0, i)
-        }
-    }
-    return baseString.substring(0, c)
 }
 
 class ProcessorProvider : SymbolProcessorProvider {
