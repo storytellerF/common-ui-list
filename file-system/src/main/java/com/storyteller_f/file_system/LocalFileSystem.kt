@@ -4,6 +4,14 @@ import android.annotation.SuppressLint
 import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
+import com.storyteller_f.file_system.LocalFileSystem.DATA
+import com.storyteller_f.file_system.LocalFileSystem.DATA_SUB_DATA
+import com.storyteller_f.file_system.LocalFileSystem.ROOT
+import com.storyteller_f.file_system.LocalFileSystem.SDCARD
+import com.storyteller_f.file_system.LocalFileSystem.SELF_PRIMARY
+import com.storyteller_f.file_system.LocalFileSystem.USER_APP
+import com.storyteller_f.file_system.LocalFileSystem.USER_DATA_FRONT_PATH
+import com.storyteller_f.file_system.LocalFileSystem.USER_EMULATED_FRONT_PATH
 import com.storyteller_f.file_system.instance.local.fake.getMyId
 import com.storyteller_f.slim_ktx.substringAt
 import kotlinx.coroutines.Dispatchers
@@ -11,14 +19,26 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 object LocalFileSystem {
+    const val ROOT = "/"
+
+    @SuppressLint("SdCardPath")
+    const val SDCARD = "/sdcard"
+
     const val STORAGE_PATH = "/storage"
     const val EMULATED_ROOT_PATH = "/storage/emulated"
 
+    const val DATA = "/data"
     const val USER_DATA = "/data/user"
+
+    @SuppressLint("SdCardPath")
+    const val USER_DATA_FRONT_PATH = "/data/user/"
+    const val USER_APP = "/data/app"
     const val USER_EMULATED_FRONT_PATH = "/storage/emulated/"
+    const val DATA_SUB_DATA = "/data/data"
 
     const val ROOT_USER_EMULATED_PATH = "/storage/emulated/0"
     const val CURRENT_EMULATED_PATH = "/storage/self"
+    const val SELF_PRIMARY = "/storage/self/primary"
 
     val publicPath = listOf("/system", "/mnt")
 }
@@ -33,8 +53,7 @@ sealed class LocalFileSystemPrefix(val key: String) {
     /**
      * /sdcard 本身以及所有的子文件
      */
-    @SuppressLint("SdCardPath")
-    data object SdCard : LocalFileSystemPrefix("/sdcard")
+    data object SdCard : LocalFileSystemPrefix(SDCARD)
 
     /**
      * /storage/self 本身
@@ -44,12 +63,12 @@ sealed class LocalFileSystemPrefix(val key: String) {
     /**
      * /storage/self/primary 本身以及所有的子文件
      */
-    data object SelfPrimary : LocalFileSystemPrefix("/storage/self/primary")
+    data object SelfPrimary : LocalFileSystemPrefix(SELF_PRIMARY)
 
     /**
      * /storage/emulated/0 本身以及所有的子文件
      */
-    class SelfEmulated(uid: Long) : LocalFileSystemPrefix("/storage/emulated/$uid")
+    class SelfEmulated(uid: Long) : LocalFileSystemPrefix("${USER_EMULATED_FRONT_PATH}$uid")
 
     /**
      * /storage/emulated 本身
@@ -74,22 +93,22 @@ sealed class LocalFileSystemPrefix(val key: String) {
     /**
      * 用户安装的app 路径/data/app
      */
-    data object InstalledApps : LocalFileSystemPrefix("/data/app")
+    data object InstalledApps : LocalFileSystemPrefix(USER_APP)
 
     /**
      * 根目录本身
      */
-    data object Root : LocalFileSystemPrefix("/")
+    data object Root : LocalFileSystemPrefix(ROOT)
 
     /**
      * /data 本身
      */
-    data object Data : LocalFileSystemPrefix("/data")
+    data object Data : LocalFileSystemPrefix(DATA)
 
     /**
      * /data/data 本身
      */
-    data object Data2 : LocalFileSystemPrefix("/data/data")
+    data object Data2 : LocalFileSystemPrefix(DATA_SUB_DATA)
 
     /**
      * /data/user 本身
@@ -99,11 +118,10 @@ sealed class LocalFileSystemPrefix(val key: String) {
     /**
      * /data/user/uid 本身
      */
-    @SuppressLint("SdCardPath")
-    class SelfDataRoot(uid: Long) : LocalFileSystemPrefix("/data/user/$uid")
+    class SelfDataRoot(uid: Long) : LocalFileSystemPrefix("${USER_DATA_FRONT_PATH}$uid")
 
-    @SuppressLint("SdCardPath")
-    class SelfPackage(uid: Long, packageName: String) : LocalFileSystemPrefix("/data/user/$uid/$packageName")
+    class SelfPackage(uid: Long, packageName: String) :
+        LocalFileSystemPrefix("${USER_DATA_FRONT_PATH}$uid/$packageName")
 }
 
 /**
@@ -127,20 +145,21 @@ fun getPrefix(
     }
 }
 
-@SuppressLint("SdCardPath")
 private fun getPublicFileSystemPrefix(context: Context, path: String): LocalFileSystemPrefix =
     when {
         LocalFileSystem.publicPath.any { path.startsWith(it) } -> LocalFileSystemPrefix.Public
         path.startsWith(LocalFileSystemPrefix.SdCard.key) -> LocalFileSystemPrefix.SdCard
         path.startsWith(context.appDataDir()) -> LocalFileSystemPrefix.AppData(context.appDataDir())
-        path.startsWith("/data/user/${context.getMyId()}/${context.packageName}") -> LocalFileSystemPrefix.SelfPackage(
+        path.startsWith(
+            "${USER_DATA_FRONT_PATH}${context.getMyId()}/${context.packageName}"
+        ) -> LocalFileSystemPrefix.SelfPackage(
             context.getMyId(),
             context.packageName
         )
 
-        path.startsWith(LocalFileSystem.USER_EMULATED_FRONT_PATH) -> LocalFileSystemPrefix.SelfEmulated(
+        path.startsWith(USER_EMULATED_FRONT_PATH) -> LocalFileSystemPrefix.SelfEmulated(
             path.substring(
-                LocalFileSystem.USER_EMULATED_FRONT_PATH.length
+                USER_EMULATED_FRONT_PATH.length
             ).substringAt("/").toLong()
         )
 
@@ -158,7 +177,7 @@ private fun getPublicFileSystemPrefix(context: Context, path: String): LocalFile
         path == LocalFileSystemPrefix.Data.key -> LocalFileSystemPrefix.Data
         path == LocalFileSystemPrefix.Data2.key -> LocalFileSystemPrefix.Data2
         path == LocalFileSystemPrefix.DataUser.key -> LocalFileSystemPrefix.DataUser
-        path == "/data/user/${context.getMyId()}" -> LocalFileSystemPrefix.SelfDataRoot(context.getMyId())
+        path == "${USER_DATA_FRONT_PATH}${context.getMyId()}" -> LocalFileSystemPrefix.SelfDataRoot(context.getMyId())
         path.startsWith(LocalFileSystemPrefix.InstalledApps.key) -> LocalFileSystemPrefix.InstalledApps
         else -> throw Exception("unrecognized path $path")
     }
@@ -172,8 +191,7 @@ private fun extractSdPath(path: String): String {
     return path.substring(0, endIndex)
 }
 
-@SuppressLint("SdCardPath")
-private fun Context.appDataDir() = "/data/data/$packageName"
+private fun Context.appDataDir() = "${DATA_SUB_DATA}/$packageName"
 
 suspend fun File.ensureFile(): File? {
     if (!exists()) {

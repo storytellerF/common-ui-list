@@ -7,6 +7,7 @@ import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.FileInfo
+import com.storyteller_f.file_system.util.getExtension
 import com.thegrizzlylabs.sardineandroid.DavAcl
 import com.thegrizzlylabs.sardineandroid.DavResource
 import com.thegrizzlylabs.sardineandroid.impl.OkHttpSardine
@@ -67,7 +68,13 @@ class WebDavFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.par
 
     override suspend fun fileKind(): FileKind {
         return reconnectResourcesIfNeed().let {
-            FileKind.build(!it.isDirectory, false, isHidden = false, size = it.fileLength())
+            FileKind.build(
+                !it.isDirectory,
+                false,
+                isHidden = false,
+                size = it.fileLength(),
+                extension
+            )
         }
     }
 
@@ -105,7 +112,8 @@ class WebDavFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.par
         }.forEach {
             val fileName = it.name
             val child = childUri(fileName)
-            val filePermissions = webDavInstance.acl(webDavInstance.buildAbsolutePath(it.path))?.filePermissions()!!
+            val filePermissions =
+                webDavInstance.acl(webDavInstance.buildAbsolutePath(it.path))?.filePermissions()!!
             val modified: Date? = it.modified
             val creation: Date? = it.creation
             val fileTime = FileTime(modified?.time, created = creation?.time)
@@ -119,7 +127,8 @@ class WebDavFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.par
                             isFile = false,
                             isSymbolicLink = false,
                             isHidden = false,
-                            0
+                            0,
+                            getExtension(fileName).orEmpty()
                         ),
                         filePermissions
                     )
@@ -134,7 +143,8 @@ class WebDavFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.par
                             isFile = true,
                             isSymbolicLink = false,
                             isHidden = false,
-                            it.fileLength()
+                            it.fileLength(),
+                            ""
                         ),
                         filePermissions,
                     )

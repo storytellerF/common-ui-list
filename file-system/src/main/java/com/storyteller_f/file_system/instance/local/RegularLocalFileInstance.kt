@@ -57,20 +57,27 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
     @Throws(IOException::class)
     private suspend fun checkChildExistsOtherwiseCreate(file: File, policy: FileCreatePolicy) {
         when {
-            !exists() -> throw IOException("当前文件或者文件夹不存在。path:$path")
-            fileKind().isFile -> throw IOException("当前是一个文件，无法向下操作")
+            !exists() -> "当前文件或者文件夹不存在。path:$path"
+            fileKind().isFile -> "当前是一个文件，无法向下操作"
             !file.exists() -> when {
-                policy !is Create -> throw IOException("不存在，且不能创建")
+                policy !is Create -> "不存在，且不能创建"
                 policy.isFile -> {
                     if (!withContext(Dispatchers.IO) {
                             file.createNewFile()
                         }) {
-                        throw IOException("新建文件失败")
+                        "新建文件失败"
+                    } else {
+                        null // 创建文件成功
                     }
                 }
 
-                !file.mkdirs() -> throw IOException("新建文件失败")
+                !file.mkdirs() -> "新建文件失败"
+                else -> null // 创建文件夹成功
             }
+
+            else -> null // 文件存在
+        }?.let {
+            throw IOException(it)
         }
     }
 
@@ -95,7 +102,13 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
 
     override suspend fun fileTime() = innerFile.fileTime()
     override suspend fun fileKind() =
-        FileKind.build(innerFile.isFile, innerFile.isSymbolicLink(), innerFile.isHidden, getFileLength())
+        FileKind.build(
+            innerFile.isFile,
+            innerFile.isSymbolicLink(),
+            innerFile.isHidden,
+            getFileLength(),
+            extension
+        )
 
     override suspend fun getFileLength(): Long = innerFile.length()
 
