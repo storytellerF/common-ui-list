@@ -13,6 +13,8 @@ import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.FileInfo
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -30,7 +32,8 @@ class AppLocalFileInstance(context: Context, uri: Uri) : BaseContextFileInstance
         isFile = false,
         isSymbolicLink = false,
         isHidden = false,
-        getFileLength()
+        getFileLength(),
+        "apk"
     )
 
     private val publicSourceDir: String =
@@ -38,9 +41,15 @@ class AppLocalFileInstance(context: Context, uri: Uri) : BaseContextFileInstance
 
     override suspend fun getFileLength() = File(publicSourceDir).length()
 
-    override suspend fun getFileInputStream() = FileInputStream(publicSourceDir)
+    override suspend fun getFileInputStream() =
+        withContext(Dispatchers.IO) {
+            FileInputStream(publicSourceDir)
+        }
 
-    override suspend fun getFileOutputStream() = FileOutputStream(publicSourceDir)
+    override suspend fun getFileOutputStream() =
+        withContext(Dispatchers.IO) {
+            FileOutputStream(publicSourceDir)
+        }
 
     override suspend fun listInternal(
         fileItems: MutableList<FileInfo>,
@@ -80,7 +89,6 @@ class AppLocalFileInstance(context: Context, uri: Uri) : BaseContextFileInstance
     }
 }
 
-@Suppress("DEPRECATION")
 fun PackageManager.getApplicationInfoCompat(packageName: String, flag: Long): ApplicationInfo {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         getApplicationInfo(packageName, PackageManager.ApplicationInfoFlags.of(flag))
@@ -90,7 +98,6 @@ fun PackageManager.getApplicationInfoCompat(packageName: String, flag: Long): Ap
 }
 
 @SuppressLint("QueryPermissionsNeeded")
-@Suppress("DEPRECATION")
 fun PackageManager.getInstalledApplicationsCompat(flag: Long): MutableList<ApplicationInfo> {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         getInstalledApplications(PackageManager.ApplicationInfoFlags.of(flag))

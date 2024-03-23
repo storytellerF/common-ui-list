@@ -7,6 +7,7 @@ import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermission
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.model.FileInfo
+import com.storyteller_f.file_system.util.getExtension
 import org.apache.commons.net.PrintCommandListener
 import org.apache.commons.net.ftp.FTPClient
 import org.apache.commons.net.ftp.FTPFile
@@ -43,7 +44,7 @@ class FtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse(
 
     override suspend fun fileTime() = reconnectIfNeed()!!.fileTime()
     override suspend fun fileKind() = reconnectIfNeed()!!.let {
-        FileKind.build(it.isFile, it.isSymbolicLink, false, it.fileLength())
+        FileKind.build(it.isFile, it.isSymbolicLink, false, it.fileLength(), extension)
     }
 
     override suspend fun getFileLength(): Long {
@@ -79,7 +80,13 @@ class FtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse(
                         name,
                         child,
                         fileTime,
-                        FileKind.build(true, isSymbolicLink, false, it.fileLength()),
+                        FileKind.build(
+                            true,
+                            isSymbolicLink,
+                            false,
+                            it.fileLength(),
+                            getExtension(name).orEmpty()
+                        ),
                         permission,
                     )
                 )
@@ -89,7 +96,7 @@ class FtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse(
                         name,
                         child,
                         fileTime,
-                        FileKind.build(false, isSymbolicLink, false, 0),
+                        FileKind.build(false, isSymbolicLink, false, 0, ""),
                         permission,
                     )
                 )

@@ -48,7 +48,8 @@ fun MutableCollection<FileInfo>.addDirectory(
             isFile = false,
             isSymbolicLink = false,
             isHidden = childDirectory.isHidden,
-            0
+            0,
+            ""
         )
     )
 }
@@ -62,16 +63,18 @@ fun MutableCollection<FileInfo>.addFile(
     fileTime: FileTime,
 ): FileInfo? {
     val (childFile, uri) = uriPair
+    val fileName = childFile.name
     return addFile(
         uri,
-        childFile.name,
+        fileName,
         permissions,
         fileTime,
         FileKind.build(
             isFile = true,
             isSymbolicLink = false,
             isHidden = childFile.isHidden,
-            childFile.length()
+            childFile.length(),
+            getExtension(fileName).orEmpty()
         )
     )
 }

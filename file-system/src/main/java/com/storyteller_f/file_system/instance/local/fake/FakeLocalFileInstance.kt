@@ -63,7 +63,8 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
         isFile = false,
         isSymbolicLink = false,
         isHidden = false,
-        getFileLength()
+        getFileLength(),
+        extension
     )
 
     @WorkerThread
@@ -78,7 +79,7 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
                 packageName,
                 child,
                 file.fileTime(),
-                FileKind.build(isFile = true, isSymbolicLink = false, isHidden = false, length),
+                FileKind.build(isFile = true, isSymbolicLink = false, isHidden = false, length, ""),
                 FilePermissions.USER_READABLE,
             )
         }?.forEach(fileItems::add)
@@ -93,7 +94,8 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
                     isFile = false,
                     isSymbolicLink = symLink.contains(it),
                     false,
-                    0
+                    0,
+                    ""
                 ),
                 FilePermissions.USER_READABLE
             )
@@ -120,7 +122,7 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
                 it.name,
                 child,
                 file.fileTime(),
-                FileKind.build(isFile = false, isSymbolicLink = false, isHidden = false, 0),
+                FileKind.build(isFile = false, isSymbolicLink = false, isHidden = false, 0, ""),
                 FilePermissions.USER_READABLE
             )
         }

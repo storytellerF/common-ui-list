@@ -5,6 +5,7 @@ import androidx.annotation.WorkerThread
 import androidx.core.util.ObjectsCompat
 import com.storyteller_f.file_system.model.FileInfo
 import com.storyteller_f.file_system.model.FileSystemPack
+import com.storyteller_f.file_system.util.getExtension
 import com.storyteller_f.file_system.util.parentPath
 import java.io.File
 import java.io.FileInputStream
@@ -28,6 +29,9 @@ abstract class FileInstance(val uri: Uri) {
 
     val name: String
         get() = File(path).name
+
+    val extension: String
+        get() = getExtension(name).orEmpty()
 
     @WorkerThread
     abstract suspend fun filePermissions(): FilePermissions

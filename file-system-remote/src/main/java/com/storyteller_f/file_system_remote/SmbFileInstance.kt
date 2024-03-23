@@ -18,6 +18,7 @@ import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.FileInfo
+import com.storyteller_f.file_system.util.getExtension
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -49,7 +50,8 @@ class SmbFileInstance(uri: Uri, private val shareSpec: ShareSpec = ShareSpec.par
                 allInformation.basicInformation.fileAttributes,
                 FileAttributes.FILE_ATTRIBUTE_HIDDEN
             ),
-            allInformation.fileLength()
+            allInformation.fileLength(),
+            extension
         )
     }
 
@@ -116,7 +118,8 @@ class SmbFileInstance(uri: Uri, private val shareSpec: ShareSpec = ShareSpec.par
                             isFile = false,
                             isSymbolicLink = false,
                             isHidden = false,
-                            it.allocationSize
+                            it.allocationSize,
+                            getExtension(fileName).orEmpty()
                         ),
                         filePermissions
                     )
@@ -127,7 +130,13 @@ class SmbFileInstance(uri: Uri, private val shareSpec: ShareSpec = ShareSpec.par
                         fileName,
                         child,
                         fileTime,
-                        FileKind.build(isFile = true, isSymbolicLink = false, isHidden = false, 0),
+                        FileKind.build(
+                            isFile = true,
+                            isSymbolicLink = false,
+                            isHidden = false,
+                            0,
+                            ""
+                        ),
                         filePermissions,
                     )
                 )

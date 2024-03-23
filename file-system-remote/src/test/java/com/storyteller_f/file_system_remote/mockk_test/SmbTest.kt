@@ -1,9 +1,8 @@
-package com.storyteller_f.file_system_remote.mocktio_test
+package com.storyteller_f.file_system_remote.mockk_test
 
-import com.storyteller_f.file_system_remote.CommonFileSystem
-import com.storyteller_f.file_system_remote.CommonFileSystemRule
-import com.storyteller_f.file_system_remote.SmbFileInstance
+import com.storyteller_f.file_system.getFileInstance
 import io.mockk.junit4.MockKRule
+import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -18,15 +17,17 @@ class SmbTest {
     val mockkRule = MockKRule(this)
 
     @get:Rule
-    val commonRelu = CommonFileSystemRule(null, CommonFileSystem.smbSpec)
+    val commonRelu = MockRemoteFileSystemRule(null, MockRemoteFileSystem.smbSpec)
 
     @Test
     fun test() {
         val context = RuntimeEnvironment.getApplication()
 
-        val test1Spec = CommonFileSystem.smbSpec
+        val test1Spec = MockRemoteFileSystem.smbSpec
         val uri = test1Spec.toUri()
-        val smbFileInstance = SmbFileInstance(uri)
-        CommonFileSystem.commonTest(smbFileInstance, context)
+        runBlocking {
+            val smbFileInstance = getFileInstance(context, uri)
+            MockRemoteFileSystem.commonTest(smbFileInstance)
+        }
     }
 }

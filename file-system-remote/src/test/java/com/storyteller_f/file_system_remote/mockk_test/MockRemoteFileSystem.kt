@@ -1,6 +1,5 @@
-package com.storyteller_f.file_system_remote
+package com.storyteller_f.file_system_remote.mockk_test
 
-import android.content.Context
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.hierynomus.msdtyp.AccessMask
@@ -15,8 +14,18 @@ import com.hierynomus.protocol.commons.EnumWithValue.EnumUtils
 import com.hierynomus.smbj.share.File
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
-import com.storyteller_f.file_system.toChildEfficiently
 import com.storyteller_f.file_system.util.buildPath
+import com.storyteller_f.file_system_remote.FtpsInstance
+import com.storyteller_f.file_system_remote.RemoteAccessType
+import com.storyteller_f.file_system_remote.RemoteSpec
+import com.storyteller_f.file_system_remote.SFtpInstance
+import com.storyteller_f.file_system_remote.ShareSpec
+import com.storyteller_f.file_system_remote.SmbInstance
+import com.storyteller_f.file_system_remote.WebDavInstance
+import com.storyteller_f.file_system_remote.ftpsClients
+import com.storyteller_f.file_system_remote.sftpChannels
+import com.storyteller_f.file_system_remote.smbSessions
+import com.storyteller_f.file_system_remote.webdavInstances
 import com.thegrizzlylabs.sardineandroid.DavAce
 import com.thegrizzlylabs.sardineandroid.DavAcl
 import com.thegrizzlylabs.sardineandroid.DavResource
@@ -31,7 +40,6 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.spyk
-import kotlinx.coroutines.runBlocking
 import net.schmizz.sshj.sftp.FileMode
 import net.schmizz.sshj.sftp.RemoteFile
 import net.schmizz.sshj.sftp.RemoteResourceInfo
@@ -63,22 +71,22 @@ import kotlin.io.path.pathString
 import kotlin.io.path.readAttributes
 import kotlin.io.path.walk
 
-class CommonFileSystemRule(
+class MockRemoteFileSystemRule(
     private val spec: RemoteSpec? = null,
     private val share: ShareSpec? = null
 ) : TestWatcher() {
     override fun starting(description: Description?) {
         super.starting(description)
-        CommonFileSystem.setup((spec?.type ?: share?.type)!!)
+        MockRemoteFileSystem.setup((spec?.type ?: share?.type)!!)
     }
 
     override fun finished(description: Description?) {
         super.finished(description)
-        CommonFileSystem.close()
+        MockRemoteFileSystem.close()
     }
 }
 
-object CommonFileSystem {
+object MockRemoteFileSystem {
     private var fs: FileSystem? = null
 
     val smbSpec = ShareSpec("localhost", 0, "test", "test", RemoteAccessType.SMB, "test1")
@@ -111,29 +119,26 @@ object CommonFileSystem {
         }
     }
 
-    fun commonTest(fileInstance: FileInstance, context: Context) {
-        runBlocking {
-            val list = fileInstance.list()
-            Assert.assertEquals(1, list.count)
-            val childInstance =
-                fileInstance.toChildEfficiently(context, "hello.txt", FileCreatePolicy.NotCreate)
-            Assert.assertTrue(childInstance.fileKind().isFile)
+    suspend fun commonTest(fileInstance: FileInstance) {
+        val list = fileInstance.list()
+        Assert.assertEquals(1, list.count)
+        val childInstance = fileInstance.toChild("hello.txt", FileCreatePolicy.NotCreate)!!
+        Assert.assertTrue(childInstance.fileKind().isFile)
 
-            val helloTxtLastModified =
-                fs!!.getPath("/test1/hello.txt").readAttributes<BasicFileAttributes>()
-                    .lastModifiedTime()
-                    .toMillis()
-            Assert.assertEquals(
-                helloTxtLastModified,
-                childInstance.fileTime().lastModified
-            )
-            Assert.assertEquals(helloTxtLastModified, childInstance.getFileInfo().time.lastModified)
-            Assert.assertTrue(childInstance.filePermissions().userPermission.readable)
-            val text = childInstance.getInputStream().bufferedReader().use {
-                it.readText()
-            }
-            Assert.assertEquals("world smb", text)
+        val helloTxtLastModified =
+            fs!!.getPath("/test1/hello.txt").readAttributes<BasicFileAttributes>()
+                .lastModifiedTime()
+                .toMillis()
+        Assert.assertEquals(
+            helloTxtLastModified,
+            childInstance.fileTime().lastModified
+        )
+        Assert.assertEquals(helloTxtLastModified, childInstance.getFileInfo().time.lastModified)
+        Assert.assertTrue(childInstance.filePermissions().userPermission.readable)
+        val text = childInstance.getInputStream().bufferedReader().use {
+            it.readText()
         }
+        Assert.assertEquals("world smb", text)
     }
 
     @OptIn(ExperimentalPathApi::class)
@@ -167,7 +172,7 @@ object CommonFileSystem {
                 mockDavResources(fs!!.getPath(realPath))
             }
         }.apply {
-            webdavInstances[this@CommonFileSystem.webDavSpec] = this
+            webdavInstances[MockRemoteFileSystem.webDavSpec] = this
         }
     }
 

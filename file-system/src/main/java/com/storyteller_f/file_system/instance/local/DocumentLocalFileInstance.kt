@@ -23,6 +23,7 @@ import com.storyteller_f.file_system.model.FileInfo
 import com.storyteller_f.file_system.util.addDirectory
 import com.storyteller_f.file_system.util.addFile
 import com.storyteller_f.file_system.util.buildPath
+import com.storyteller_f.file_system.util.getExtension
 import com.storyteller_f.file_system.util.parentPath
 import com.storyteller_f.file_system.util.permissions
 import kotlinx.coroutines.yield
@@ -82,7 +83,13 @@ class DocumentLocalFileInstance(
 
     override suspend fun fileTime() = relinkIfNeed()!!.fileTime()
     override suspend fun fileKind() = relinkIfNeed()!!.let {
-        FileKind.build(it.isFile, isSymbolicLink = false, isHidden = false, getFileLength())
+        FileKind.build(
+            it.isFile,
+            isSymbolicLink = false,
+            isHidden = false,
+            getFileLength(),
+            extension
+        )
     }
 
     init {
@@ -272,7 +279,8 @@ class DocumentLocalFileInstance(
                         isFile = true,
                         isSymbolicLink = false,
                         isHidden = false,
-                        documentFile.length()
+                        documentFile.length(),
+                        getExtension(documentFileName).orEmpty()
                     )
                 )
             } else {
@@ -285,7 +293,8 @@ class DocumentLocalFileInstance(
                         isFile = false,
                         isSymbolicLink = false,
                         isHidden = false,
-                        0
+                        0,
+                        ""
                     )
                 )
             }
@@ -342,6 +351,8 @@ class DocumentLocalFileInstance(
     companion object {
         @Suppress("SpellCheckingInspection")
         private const val TAG = "DocumentLocalFileInstan"
+
+        @Suppress("SpellCheckingInspection")
         const val EXTERNAL_STORAGE_DOCUMENTS = "com.android.externalstorage.documents"
         const val EXTERNAL_STORAGE_DOCUMENTS_TREE = "primary:"
 
@@ -371,6 +382,7 @@ class DocumentLocalFileInstance(
 
         fun getMountedTree(prefix: String) = prefix.substring(prefix.lastIndexOf("/") + 1) + ":"
 
+        @Suppress("unused")
         fun uriFromAuthority(authority: String, tree: String): Uri {
             return Uri.Builder().scheme(ContentResolver.SCHEME_CONTENT).authority(authority)
                 .path("/${tree.encodeByBase64()}")

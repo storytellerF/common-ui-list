@@ -28,7 +28,13 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
 
     override suspend fun fileTime() = extendedFile.fileTime()
     override suspend fun fileKind() =
-        FileKind.build(extendedFile.isFile, extendedFile.isSymlink, extendedFile.isHidden, extendedFile.length())
+        FileKind.build(
+            extendedFile.isFile,
+            extendedFile.isSymlink,
+            extendedFile.isHidden,
+            extendedFile.length(),
+            extension
+        )
 
     override suspend fun getFileLength(): Long {
         return extendedFile.length()
@@ -88,12 +94,18 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
 
     companion object {
         const val ROOT_FILESYSTEM_SCHEME = "root"
-        var remote: FileSystemManager? = null
+        private var libSuManager: FileSystemManager? = null
 
-        val isReady get() = remote != null
+        @Suppress("unused")
+        val isReady get() = libSuManager != null
 
-        fun instance(uri: Uri): RootAccessFileInstance? {
-            val r = remote ?: return null
+        @Suppress("unused")
+        fun registerLibSuRemote(manager: FileSystemManager) {
+            libSuManager = manager
+        }
+
+        fun buildInstance(uri: Uri): RootAccessFileInstance? {
+            val r = libSuManager ?: return null
             return RootAccessFileInstance(r, uri)
         }
     }

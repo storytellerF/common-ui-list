@@ -6,6 +6,7 @@ import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.FileInfo
+import com.storyteller_f.file_system.util.getExtension
 import org.apache.commons.net.PrintCommandListener
 import org.apache.commons.net.ftp.FTPClientConfig
 import org.apache.commons.net.ftp.FTPFile
@@ -41,7 +42,7 @@ class FtpsFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
 
     override suspend fun fileTime() = reconnectIfNeed()!!.fileTime()
     override suspend fun fileKind() = reconnectIfNeed()!!.let {
-        FileKind.build(it.isFile, it.isSymbolicLink, false, it.fileLength())
+        FileKind.build(it.isFile, it.isSymbolicLink, false, it.fileLength(), extension)
     }
 
     override suspend fun getFileLength(): Long {
@@ -77,7 +78,13 @@ class FtpsFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
                         name,
                         child,
                         time,
-                        FileKind.build(true, isSymbolicLink, false, it.fileLength()),
+                        FileKind.build(
+                            true,
+                            isSymbolicLink,
+                            false,
+                            it.fileLength(),
+                            getExtension(name).orEmpty()
+                        ),
                         filePermissions,
                     )
                 )
@@ -87,7 +94,7 @@ class FtpsFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
                         name,
                         child,
                         time,
-                        FileKind.build(true, isSymbolicLink, false, 0),
+                        FileKind.build(true, isSymbolicLink, false, 0, ""),
                         filePermissions
                     )
                 )
@@ -178,7 +185,7 @@ class FtpsInstance(private val spec: RemoteSpec) {
     /**
      * @return 返回是否可用
      */
-    private fun<T : Any> client(block: FTPSClient.() -> T): T {
+    private fun <T : Any> client(block: FTPSClient.() -> T): T {
         if (isAvailable()) {
             if (!open()) {
                 throw Exception("login failed.")

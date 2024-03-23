@@ -4,7 +4,6 @@ import android.net.Uri
 import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
-import com.storyteller_f.file_system.util.getExtension
 
 open class FileInfo(
     val name: String,
@@ -14,5 +13,5 @@ open class FileInfo(
     val permissions: FilePermissions,
 ) {
     val fullPath: String = uri.path!!
-    val extension = getExtension(name).orEmpty()
+    val extension = (kind as? FileKind.File)?.extension
 }

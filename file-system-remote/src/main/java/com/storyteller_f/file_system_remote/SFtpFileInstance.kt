@@ -7,6 +7,7 @@ import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.FileInfo
+import com.storyteller_f.file_system.util.getExtension
 import com.storyteller_f.slim_ktx.bit
 import net.schmizz.sshj.AndroidConfig
 import net.schmizz.sshj.SSHClient
@@ -80,7 +81,8 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
             typeMask.bit(FileMode.Type.REGULAR.toMask()),
             typeMask.bit(FileMode.Type.SYMLINK.toMask()),
             false,
-            fileAttributes.fileLength()
+            fileAttributes.fileLength(),
+            extension
         )
     }
 
@@ -119,7 +121,13 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
                         fileName,
                         child,
                         fileTime,
-                        FileKind.build(false, isSymLink, false, it.fileLength()),
+                        FileKind.build(
+                            false,
+                            isSymLink,
+                            false,
+                            it.fileLength(),
+                            getExtension(fileName).orEmpty()
+                        ),
                         filePermissions
                     )
                 )
@@ -129,7 +137,7 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
                         fileName,
                         child,
                         fileTime,
-                        FileKind.build(true, isSymLink, false, attributes.fileLength()),
+                        FileKind.build(true, isSymLink, false, attributes.fileLength(), ""),
                         filePermissions,
                     )
                 )

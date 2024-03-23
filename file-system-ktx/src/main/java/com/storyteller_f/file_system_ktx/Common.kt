@@ -7,15 +7,17 @@ import com.storyteller_f.file_system.model.FileInfo
 val FileInfo.isFile
     get() = kind.isFile
 
+@Suppress("unused")
 val FileInfo.isDirectory get() = kind.isDirectory
 
+@Suppress("unused")
 fun ImageView.fileIcon(fileInfo: FileInfo) {
     if (fileInfo.isFile) {
         if (fileInfo.fullPath.startsWith("/data/app/")) {
             setImageDrawable(context.packageManager.getApplicationIcon(fileInfo.name))
             return
         }
-        val extension = fileInfo.extension
+        val extension = fileInfo.extension!!
         if (extension.isNotEmpty()) {
             val placeholder = when (extension) {
                 "mp3", "wav", "flac" -> R.drawable.ic_music

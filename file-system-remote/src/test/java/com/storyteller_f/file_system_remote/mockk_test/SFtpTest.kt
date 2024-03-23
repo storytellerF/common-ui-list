@@ -1,9 +1,8 @@
-package com.storyteller_f.file_system_remote.mocktio_test
+package com.storyteller_f.file_system_remote.mockk_test
 
-import com.storyteller_f.file_system_remote.CommonFileSystem
-import com.storyteller_f.file_system_remote.CommonFileSystemRule
-import com.storyteller_f.file_system_remote.FtpsFileInstance
+import com.storyteller_f.file_system.getFileInstance
 import io.mockk.junit4.MockKRule
+import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -13,20 +12,22 @@ import org.robolectric.annotation.Config
 
 @Config(manifest = Config.NONE)
 @RunWith(RobolectricTestRunner::class)
-class FtpsTest {
+class SFtpTest {
     @get:Rule
     val mockkRule = MockKRule(this)
 
     @get:Rule
-    val commonRelu = CommonFileSystemRule(CommonFileSystem.ftpsSpec)
+    val commonRelu = MockRemoteFileSystemRule(MockRemoteFileSystem.sftpSpec)
 
     @Test
     fun test() {
         val context = RuntimeEnvironment.getApplication()
 
-        val test1Spec = CommonFileSystem.ftpsSpec
+        val test1Spec = MockRemoteFileSystem.sftpSpec
         val uri = test1Spec.toUri().buildUpon().appendPath("test1").build()
-        val ftpsFileInstance = FtpsFileInstance(uri)
-        CommonFileSystem.commonTest(ftpsFileInstance, context)
+        runBlocking {
+            val sFtpFileInstance = getFileInstance(context, uri)
+            MockRemoteFileSystem.commonTest(sFtpFileInstance)
+        }
     }
 }
