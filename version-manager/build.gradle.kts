@@ -21,7 +21,7 @@ gradlePlugin {
 }
 
 dependencies {
-    val androidVersion = "8.2.2"
+    val androidVersion = "8.3.0"
     val kotlinVersion = "1.9.21"
     val navVersion = "2.7.7"
     implementation("com.android.tools.build:gradle:$androidVersion")
