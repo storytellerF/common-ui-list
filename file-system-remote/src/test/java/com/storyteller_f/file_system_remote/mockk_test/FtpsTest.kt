@@ -26,7 +26,7 @@ class FtpsTest {
         val test1Spec = MockRemoteFileSystem.ftpsSpec
         val uri = test1Spec.toUri().buildUpon().appendPath("test1").build()
         runBlocking {
-            val ftpsFileInstance = getFileInstance(context, uri)
+            val ftpsFileInstance = getFileInstance(context, uri)!!
             MockRemoteFileSystem.commonTest(ftpsFileInstance)
         }
     }

@@ -10,8 +10,8 @@ import android.os.storage.StorageVolume
 import android.provider.DocumentsContract
 import androidx.annotation.RequiresApi
 import androidx.documentfile.provider.DocumentFile
+import com.storyteller_f.file_system.FileSystemPrefix
 import com.storyteller_f.file_system.LocalFileSystem
-import com.storyteller_f.file_system.LocalFileSystemPrefix
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.local.DocumentLocalFileInstance
 import com.storyteller_f.file_system.simplePath
@@ -80,7 +80,7 @@ fun Context.getStorageCompat(): List<File> {
 fun volumePathName(uuid: String?): String =
     Objects.requireNonNullElse(uuid, "emulated")
 
-fun Activity.generateSAFRequestIntent(prefix: LocalFileSystemPrefix): Intent? {
+fun Activity.generateSAFRequestIntent(prefix: FileSystemPrefix): Intent? {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
         val sm = getSystemService(StorageManager::class.java)
         val volume = sm.getStorageVolume(File(prefix.key))
@@ -91,13 +91,13 @@ fun Activity.generateSAFRequestIntent(prefix: LocalFileSystemPrefix): Intent? {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (prefix is LocalFileSystemPrefix.SelfEmulated) {
+            if (prefix is FileSystemPrefix.SelfEmulated) {
                 val primary = DocumentsContract.buildRootUri(
                     DocumentLocalFileInstance.EXTERNAL_STORAGE_DOCUMENTS,
                     DocumentLocalFileInstance.EXTERNAL_STORAGE_DOCUMENTS_TREE
                 )
                 intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, primary)
-            } else if (prefix is LocalFileSystemPrefix.Mounted) {
+            } else if (prefix is FileSystemPrefix.Mounted) {
                 val tree = DocumentLocalFileInstance.getMountedTree(prefix.key)
                 val primary = DocumentsContract.buildRootUri(
                     DocumentLocalFileInstance.EXTERNAL_STORAGE_DOCUMENTS,

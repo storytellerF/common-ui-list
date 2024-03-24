@@ -17,6 +17,9 @@ import java.io.OutputStream
 // todo file descriptor
 abstract class FileInstance(val uri: Uri) {
 
+    /**
+     * 相对于根的path，主要用于展示。在不同的文件系统中有不同的实现
+     */
     open val path: String = uri.path!!
 
     /**

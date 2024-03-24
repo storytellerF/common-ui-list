@@ -8,6 +8,6 @@ class RootFileInstanceFactory : FileInstanceFactory {
     override val scheme: List<String>
         get() = listOf(RootAccessFileInstance.ROOT_FILESYSTEM_SCHEME)
 
-    override fun build(context: Context, uri: Uri) =
+    override suspend fun buildInstance(context: Context, uri: Uri) =
         RootAccessFileInstance.buildInstance(uri)!!
 }

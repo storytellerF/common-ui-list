@@ -1,20 +1,20 @@
-package com.storyteller_f.file_system
+package com.storyteller_f.file_system.operate
 
 import androidx.core.net.toUri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.storyteller_f.file_system.getCurrentUserDataPath
+import com.storyteller_f.file_system.getFileInstance
 import com.storyteller_f.file_system.instance.FileCreatePolicy
-import com.storyteller_f.file_system.operate.ScopeFileMoveOpInShell
+import com.storyteller_f.file_system.toChildEfficiently
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
 
-
 @RunWith(AndroidJUnit4::class)
-class MoveFileTest {
+class ScopeFileMoveOpInShellTest {
     @Test
     fun shellMoveFileInUserPackage() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -22,20 +22,19 @@ class MoveFileTest {
         val userDataUri = File(currentUserDataPath).toUri()
 
         runBlocking {
-            val userData = getLocalFileInstance(context, userDataUri)
+            val userData = getFileInstance(context, userDataUri)
             val pack = userData.list()
             val userPackageModel = pack.directories.first()
             val userPackage = userData.toChildEfficiently(
                 context,
                 userPackageModel.name,
-                FileCreatePolicy.NotCreate
             )
 
             val filesInstance = userPackage.toChildEfficiently(context, "files", FileCreatePolicy.Create(false))
 
             //在cache 下面创建一个文件
             val cacheInstance =
-                userPackage.toChildEfficiently(context, "cache", FileCreatePolicy.NotCreate)
+                userPackage.toChildEfficiently(context, "cache")
             val testFile =
                 cacheInstance.toChildEfficiently(context, "test.txt", FileCreatePolicy.Create(true))
             testFile.getFileOutputStream().bufferedWriter().use {
@@ -45,10 +44,10 @@ class MoveFileTest {
             assertTrue(ScopeFileMoveOpInShell(testFile, filesInstance, context).call())
             //读取移动后的文件
             val readContent =
-                filesInstance.toChildEfficiently(context, "test.txt", FileCreatePolicy.NotCreate)
+                filesInstance.toChildEfficiently(context, "test.txt")
                     .getFileInputStream().bufferedReader().use {
-                    it.readText()
-                }
+                        it.readText()
+                    }
             assertEquals("hello world", readContent)
             assertEquals(false, testFile.exists())
         }

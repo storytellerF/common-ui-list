@@ -11,7 +11,11 @@ import java.util.ServiceLoader
 interface FileInstanceFactory {
 
     val scheme: List<String>
-    fun build(context: Context, uri: Uri): FileInstance
+    suspend fun buildInstance(context: Context, uri: Uri): FileInstance?
+
+    fun getPrefix(context: Context, uri: Uri): FileSystemPrefix? = FileSystemPrefix.NoLocal
+
+    fun buildNestedFile(context: Context, name: String, fileInstance: FileInstance): Uri? = null
 }
 
 @Suppress("unused")
@@ -19,7 +23,26 @@ suspend fun getFileInstance(
     context: Context,
     uri: Uri,
     policy: FileCreatePolicy = FileCreatePolicy.NotCreate
-): FileInstance {
+) = getFactory(uri) { safeUri ->
+    buildInstance(context, safeUri)
+}?.apply {
+    if (policy is FileCreatePolicy.Create && !exists()) {
+        if (policy.isFile) {
+            createFile()
+        } else {
+            createDirectory()
+        }
+    }
+}
+
+suspend fun getFileSystemPrefix(
+    context: Context,
+    uri: Uri,
+) = getFactory(uri) { safeUri ->
+    getPrefix(context, safeUri)
+}
+
+suspend fun <R> getFactory(uri: Uri, schemeFilter: Boolean = true, block: suspend FileInstanceFactory.(Uri) -> R?): R? {
     val unsafePath = uri.path!!
     assert(!unsafePath.endsWith("/") || unsafePath.length == 1) {
         "invalid path [$unsafePath]"
@@ -28,27 +51,28 @@ suspend fun getFileInstance(
     val scheme = uri.scheme!!
     val safeUri = uri.buildUpon().path(path).build()
     val loader = ServiceLoader.load(FileInstanceFactory::class.java)
-    return loader.first {
-        it.scheme.contains(scheme)
-    }!!.build(context, safeUri).apply {
-        if (policy is FileCreatePolicy.Create && !exists()) {
-            if (policy.isFile) {
-                createFile()
-            } else {
-                createDirectory()
+    return loader.let {
+        if (schemeFilter) {
+            it.filter { factory ->
+                factory.scheme.contains(scheme)
             }
+        } else {
+            it
         }
+    }.firstNotNullOfOrNull {
+        it.block(safeUri)
     }
 }
 
 /**
  * 会针对. 和.. 特殊路径进行处理。
+ * 无法正确处理toChild 时是ArchiveFileInstance 的情况
  */
 @Throws(Exception::class)
 suspend fun FileInstance.toChildEfficiently(
     context: Context,
     name: String,
-    policy: FileCreatePolicy
+    policy: FileCreatePolicy = FileCreatePolicy.NotCreate
 ): FileInstance {
     assert(name.last() != '/') {
         "$name is not a valid name"
@@ -59,15 +83,25 @@ suspend fun FileInstance.toChildEfficiently(
     if (name == "..") {
         return toParentEfficiently(context)
     }
+    if (fileKind().isFile) {
+        val uri1 = getFactory(uri, schemeFilter = false) {
+            buildNestedFile(context, name, this@toChildEfficiently)
+        }
+        if (uri1 != null) {
+            return getFileInstance(context, uri1)!!
+        } else {
+            throw IllegalAccessException("is file")
+        }
+    }
     val path = buildPath(path, name)
     val childUri = uri.buildUpon().path(path).build()
 
-    val currentPrefix = getPrefix(context, uri)
-    val childPrefix = getPrefix(context, childUri)
+    val currentPrefix = getFileSystemPrefix(context, uri)
+    val childPrefix = getFileSystemPrefix(context, childUri)
     return if (currentPrefix == childPrefix) {
         toChild(name, policy)!!
     } else {
-        getFileInstance(context, childUri, policy)
+        getFileInstance(context, childUri, policy)!!
     }
 }
 
@@ -78,11 +112,11 @@ suspend fun FileInstance.toParentEfficiently(
     val parentPath = parentPath(path)
     val parentUri = uri.buildUpon().path(parentPath).build()
 
-    val parentPrefix = getPrefix(context, parentUri)
-    val childPrefix = getPrefix(context, uri)
+    val parentPrefix = getFileSystemPrefix(context, parentUri)
+    val childPrefix = getFileSystemPrefix(context, uri)
     return if (parentPrefix == childPrefix) {
         toParent()
     } else {
-        getFileInstance(context, parentUri)
+        getFileInstance(context, parentUri)!!
     }
 }

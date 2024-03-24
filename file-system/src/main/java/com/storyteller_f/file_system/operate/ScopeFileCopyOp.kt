@@ -46,7 +46,8 @@ abstract class AbstractFileOperation(
 }
 
 /**
- * target 必须是一个目录
+ * 有目标地址
+ * @param target 必须是一个目录
  */
 abstract class ScopeFileOperation(
     fileInstance: FileInstance,

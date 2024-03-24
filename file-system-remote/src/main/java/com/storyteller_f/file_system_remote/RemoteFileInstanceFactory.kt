@@ -9,7 +9,7 @@ class RemoteFileInstanceFactory : FileInstanceFactory {
     override val scheme: List<String>
         get() = RemoteAccessType.ALL_PROTOCOL
 
-    override fun build(context: Context, uri: Uri): FileInstance {
+    override suspend fun buildInstance(context: Context, uri: Uri): FileInstance {
         val scheme = uri.scheme!!
         return if (scheme == RemoteAccessType.HTTP || scheme == RemoteAccessType.HTTPS) {
             HttpFileInstance(context, uri)

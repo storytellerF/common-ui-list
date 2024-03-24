@@ -13,10 +13,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.lifecycleScope
 import com.storyteller_f.compat_ktx.getParcelableCompat
 import com.storyteller_f.file_system.instance.local.DocumentLocalFileInstance
 import com.storyteller_f.file_system.util.generateSAFRequestIntent
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
@@ -91,15 +93,18 @@ class MainActivity : AppCompatActivity() {
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private fun requestForSdcard(path: Uri) {
-        val prefix = getPrefix(this, path)!!
-        registerForActivityResult(
-            ActivityResultContracts.StartActivityForResult()
-        ) {
-            if (processResult(it)) return@registerForActivityResult
-            failure()
-        }.launch(
-            this.generateSAFRequestIntent(prefix)
-        )
+        val context = this
+        lifecycleScope.launch {
+            val prefix = getFileSystemPrefix(context, path)!!
+            registerForActivityResult(
+                ActivityResultContracts.StartActivityForResult()
+            ) {
+                if (processResult(it)) return@registerForActivityResult
+                failure()
+            }.launch(
+                generateSAFRequestIntent(prefix)
+            )
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -128,20 +133,23 @@ class MainActivity : AppCompatActivity() {
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private fun requestForEmulatedSAF(path: Uri) {
-        val prefix = getPrefix(this, path)!!
-        registerForActivityResult(
-            ActivityResultContracts.StartActivityForResult()
-        ) {
-            if (processResult(
-                    it
-                )
+        val context = this
+        lifecycleScope.launch {
+            val prefix = getFileSystemPrefix(context, path)!!
+            registerForActivityResult(
+                ActivityResultContracts.StartActivityForResult()
             ) {
-                return@registerForActivityResult
-            }
-            failure()
-        }.launch(
-            generateSAFRequestIntent(prefix)
-        )
+                if (processResult(
+                        it
+                    )
+                ) {
+                    return@registerForActivityResult
+                }
+                failure()
+            }.launch(
+                generateSAFRequestIntent(prefix)
+            )
+        }
     }
 
     private fun failure() {

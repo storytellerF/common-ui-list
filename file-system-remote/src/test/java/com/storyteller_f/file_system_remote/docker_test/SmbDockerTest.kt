@@ -26,7 +26,7 @@ class SmbDockerTest {
         remoteSpec.checkSmbConnection()
         val uri = remoteSpec.toUri()
         runBlocking {
-            getFileInstance(context, uri).exists()
+            getFileInstance(context, uri)!!.exists()
         }
     }
 }

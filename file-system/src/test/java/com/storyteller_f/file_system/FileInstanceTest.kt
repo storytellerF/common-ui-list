@@ -14,11 +14,11 @@ import org.robolectric.annotation.Config
 class FileInstanceTest {
     @Config(minSdk = Build.VERSION_CODES.JELLY_BEAN)
     @Test
-    fun test() {
+    fun testFakeEmulatedPath() {
         val uri = Uri.parse("file:///storage/emulated")
         val context = RuntimeEnvironment.getApplication()
         runBlocking {
-            assert(getFileInstance(context, uri).list().count > 0)
+            assert(getFileInstance(context, uri)!!.list().count > 0)
         }
     }
 }

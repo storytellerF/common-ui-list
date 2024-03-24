@@ -33,11 +33,11 @@ suspend fun File.fileTime(): FileTime {
  * 添加普通目录，判断过滤监听事件
  */
 fun MutableCollection<FileInfo>.addDirectory(
-    uriPair: Pair<File, Uri>,
+    childPair: Pair<File, Uri>,
     permissions: FilePermissions,
     fileTime: FileTime,
 ): FileInfo? {
-    val (childDirectory, uri) = uriPair
+    val (childDirectory, uri) = childPair
 
     return addDirectory(
         uri,
