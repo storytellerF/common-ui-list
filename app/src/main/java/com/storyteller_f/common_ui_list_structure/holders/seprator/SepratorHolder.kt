@@ -1,10 +1,11 @@
 package com.storyteller_f.common_ui_list_structure.holders.seprator
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Card
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -57,9 +58,9 @@ private fun Separator(
     @PreviewParameter(RepoSeparatorProvider::class) itemHolder: SeparatorItemHolder,
     edComposeView: EdComposeViewEventEmitter = EdComposeViewEventEmitter.default
 ) {
-    Card(
-        backgroundColor = colorResource(id = R.color.separatorBackground),
+    Box(
         modifier = Modifier
+            .background(colorResource(id = R.color.separatorBackground))
             .combinedClickable(
                 onClick = { edComposeView.notifyClickEvent("card") },
                 onLongClick = { edComposeView.notifyLongClickEvent("card") }

@@ -12,7 +12,9 @@ import android.widget.FrameLayout
 import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.distinctUntilChanged
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.map
 import androidx.lifecycle.repeatOnLifecycle
@@ -23,6 +25,8 @@ import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.storyteller_f.common_vm_ktx.combine
+import com.storyteller_f.common_vm_ktx.debounce
 import com.storyteller_f.slim_ktx.exceptionMessage
 import com.storyteller_f.ui_list.adapter.ManualAdapter
 import com.storyteller_f.ui_list.adapter.SimpleDataAdapter
@@ -59,6 +63,7 @@ class ListWithState @JvmOverloads constructor(
         binding.list.setHasFixedSize(true)
     }
 
+    @Suppress("MemberVisibilityCanBePrivate")
     fun flash(uiState: UIState) {
         // Only show the list if refresh succeeds.
         binding.list.isVisible = uiState.data
@@ -82,7 +87,6 @@ class ListWithState @JvmOverloads constructor(
         lifecycleOwner: LifecycleOwner,
         plugLayoutManager: Boolean = true,
         refresh: () -> Unit = { },
-        dampingSwipe: ((AbstractViewHolder<out DataItemHolder>, Int) -> Unit)? = null,
         flash: (CombinedLoadStates, Int) -> UIState = Companion::simple,
     ) {
         setAdapter(
@@ -110,10 +114,6 @@ class ListWithState @JvmOverloads constructor(
                     }
                 }
             }
-        }
-
-        if (dampingSwipe != null) {
-            setupDampingSwipeSupport(dampingSwipe)
         }
     }
 
@@ -148,14 +148,13 @@ class ListWithState @JvmOverloads constructor(
         setupSwapSupport(adapter)
     }
 
+    @Suppress("unused")
     fun manualUp(
         adapter: ManualAdapter<*, *>,
-        dampingSwipe: ((RecyclerView.ViewHolder, Int) -> Unit)? = null,
         refresh: (() -> Unit)? = null
     ) {
         recyclerView.adapter = adapter
         setupLinearLayoutManager()
-        if (dampingSwipe != null) setupDampingSwipeSupport(dampingSwipe)
         binding.refreshLayout.isEnabled = refresh != null
         binding.refreshLayout.setOnRefreshListener {
             refresh?.invoke()
@@ -206,7 +205,8 @@ class ListWithState @JvmOverloads constructor(
         }).attachToRecyclerView(binding.list)
     }
 
-    private fun setupDampingSwipeSupport(block: (AbstractViewHolder<out DataItemHolder>, Int) -> Unit) {
+    @Suppress("unused")
+    fun setupDampingSwipeSupport(block: (AbstractViewHolder<out DataItemHolder>, Int) -> Unit) {
         ItemTouchHelper(object :
             ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.START or ItemTouchHelper.END) {
             private var swipeEvent = false
@@ -290,13 +290,16 @@ class ListWithState @JvmOverloads constructor(
     fun setupClickSelectableSupport(
         editing: MutableLiveData<Boolean>,
         lifecycleOwner: LifecycleOwner,
-        selectableDrawer: SelectableDrawer
+        selectableDrawer: SelectableDrawer,
+        selectedItemHolders: LiveData<List<DataItemHolder>>,
     ) {
-        editing.observe(lifecycleOwner) {
-            val adapter = binding.list.adapter
-            binding.list.adapter = adapter
-        }
-        val value = object : RecyclerView.ItemDecoration() {
+        combine(("editing" to editing), ("selected" to selectedItemHolders)).distinctUntilChanged()
+            .debounce(200)
+            .observe(lifecycleOwner) {
+                val adapter = binding.list.adapter
+                binding.list.adapter = adapter
+            }
+        val decoration = object : RecyclerView.ItemDecoration() {
             override fun getItemOffsets(
                 outRect: Rect,
                 view: View,
@@ -307,10 +310,10 @@ class ListWithState @JvmOverloads constructor(
                 if (editing.value == true) {
                     val childAdapterPosition = parent.getChildAdapterPosition(view)
                     val childViewHolder = parent.getChildViewHolder(view)
-                    val absoluteAdapterPosition =
+                    val itemHolder =
                         (childViewHolder as AbstractViewHolder<*>).itemHolder
                     outRect.right = selectableDrawer.width(
-                        view, parent, state, childAdapterPosition, absoluteAdapterPosition
+                        view, parent, state, childAdapterPosition, itemHolder
                     )
                 } else {
                     outRect.right = 0
@@ -324,6 +327,9 @@ class ListWithState @JvmOverloads constructor(
                         val child = parent.getChildAt(i)
                         val top = child.top
                         val bottom = child.bottom
+                        val childViewHolder = parent.getChildViewHolder(child)
+                        val itemHolder =
+                            (childViewHolder as AbstractViewHolder<*>).itemHolder
                         selectableDrawer.draw(
                             c,
                             top,
@@ -334,13 +340,15 @@ class ListWithState @JvmOverloads constructor(
                             parent.height,
                             child,
                             parent,
-                            state
+                            state,
+                            itemHolder,
+                            selectedItemHolders.value?.contains(itemHolder) == true
                         )
                     }
                 }
             }
         }
-        binding.list.addItemDecoration(value)
+        binding.list.addItemDecoration(decoration)
     }
 
     private fun setupLinearLayoutManager() {
@@ -438,6 +446,7 @@ class ListWithState @JvmOverloads constructor(
         /**
          * 远程加载出错时，会显示数据
          */
+        @Suppress("unused")
         fun remote(loadState: CombinedLoadStates, itemCount: Int): UIState {
             val refresh = if (loadState.mediator?.refresh !is LoadState.Loading) false else null
             val error = loadState.source.append as? LoadState.Error
@@ -494,8 +503,10 @@ class ListWithState @JvmOverloads constructor(
             parentHeight: Int,
             child: View,
             parent: RecyclerView,
-            state: RecyclerView.State
-        )
+            state: RecyclerView.State,
+            itemHolder: DataItemHolder,
+            isSelected: Boolean
+        ): Boolean
     }
 }
 
@@ -514,33 +525,3 @@ fun CombinedLoadStates.debugEmoji() =
         "prepend: ${prepend.debugEmoji()} " +
         "refresh: ${refresh.debugEmoji()} " +
         "append: ${append.debugEmoji()}"
-
-/**
- * 反选。pair 的first 作为key。
- */
-fun List<Pair<DataItemHolder, Int>>?.toggle(
-    pair: Pair<DataItemHolder, Int>
-): Pair<List<Pair<DataItemHolder, Int>>, Boolean> {
-    val oldSelectedHolders = this ?: mutableListOf()
-    val otherHolders = oldSelectedHolders.filter {
-        !it.first.areItemsTheSame(pair.first)
-    }
-    val stateSelected = otherHolders.size == oldSelectedHolders.size
-    val selected = if (stateSelected) otherHolders + pair else otherHolders
-    return selected to stateSelected
-}
-
-fun List<Pair<DataItemHolder, Int>>.valueContains(pair: Pair<DataItemHolder, Int>): Boolean {
-    val firstOrNull = firstOrNull {
-        it.first.areItemsTheSame(pair.first)
-    }
-    return firstOrNull != null
-}
-
-fun MutableLiveData<List<Pair<DataItemHolder, Int>>>.toggle(viewHolder: RecyclerView.ViewHolder) {
-    val adapterViewHolder = viewHolder as AbstractViewHolder<out DataItemHolder>
-    val (selectedHolders, currentSelected) =
-        value.toggle(adapterViewHolder.itemHolder to viewHolder.absoluteAdapterPosition)
-    viewHolder.view.isSelected = currentSelected
-    value = selectedHolders
-}

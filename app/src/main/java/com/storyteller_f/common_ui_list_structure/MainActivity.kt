@@ -39,6 +39,8 @@ import com.storyteller_f.common_ui_list_structure.holders.RepoItemHolder
 import com.storyteller_f.common_ui_list_structure.holders.seprator.SeparatorItemHolder
 import com.storyteller_f.common_ui_list_structure.test_model.TestViewModelActivity
 import com.storyteller_f.common_ui_list_structure.test_navigation.TestNavigationResultActivity
+import com.storyteller_f.common_vm_ktx.update
+import com.storyteller_f.slim_ktx.toggle
 import com.storyteller_f.ui_list.core.AbstractViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.event.viewBinding
@@ -78,6 +80,8 @@ class MainActivity : AppCompatActivity() {
     private val adapter =
         ComposeSourceAdapter<DataItemHolder, AbstractViewHolder<DataItemHolder>>()
 
+    private val selectedItemHolder = MutableLiveData<List<DataItemHolder>>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding.content.sourceUp(adapter, this)
@@ -106,19 +110,27 @@ class MainActivity : AppCompatActivity() {
                     parentHeight: Int,
                     child: View,
                     parent: RecyclerView,
-                    state: RecyclerView.State
-                ) {
-                    val offset = (childHeight - dp24) / 2
-                    val t = top + offset
-                    ContextCompat.getDrawable(
-                        this@MainActivity,
-                        R.drawable.ic_baseline_radio_button_unchecked_24
-                    )?.run {
-                        setBounds(parentWidth - dp24 * 2, t, (parentWidth - dp24), t + dp24)
-                        draw(c)
+                    state: RecyclerView.State,
+                    itemHolder: DataItemHolder,
+                    isSelected: Boolean
+                ): Boolean {
+                    return if (itemHolder is RepoItemHolder) {
+                        val offset = (childHeight - dp24) / 2
+                        val t = top + offset
+                        ContextCompat.getDrawable(
+                            this@MainActivity,
+                            getCircleCheckDrawable(isSelected)
+                        )?.run {
+                            setBounds(parentWidth - dp24 * 2, t, (parentWidth - dp24), t + dp24)
+                            draw(c)
+                        }
+                        true
+                    } else {
+                        false
                     }
                 }
-            }
+            },
+            selectedItemHolder
         )
         supportNavigatorBarImmersive(binding.root)
         repeatOnViewResumed {
@@ -151,9 +163,21 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun getCircleCheckDrawable(isSelected: Boolean) =
+        if (isSelected) {
+            R.drawable.ic_baseline_check_circle_outline_24
+        } else {
+            R.drawable.ic_baseline_radio_button_unchecked_24
+        }
+
     @BindClickEvent(RepoItemHolder::class)
     fun clickRepo(itemHolder: RepoItemHolder) {
         Toast.makeText(this, itemHolder.repo.fullName, Toast.LENGTH_SHORT).show()
+        selectedItemHolder.update {
+            it?.toMutableList()?.apply {
+                toggle(itemHolder)
+            } ?: listOf(itemHolder)
+        }
     }
 
     @BindClickEvent(SeparatorItemHolder::class, "card")
