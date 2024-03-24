@@ -1,3 +1,5 @@
+# 将pre-commit.template 作为git hooks 的文件
+# 实际执行的是pre-commit.sh，可以随意修改此文件而不必重复设置
 destination_dir=".git/hooks"
 # 生成时间戳，格式为YYYYMMDD-HHMMSS
 timestamp=$(date +%Y%m%d-%H%M%S)

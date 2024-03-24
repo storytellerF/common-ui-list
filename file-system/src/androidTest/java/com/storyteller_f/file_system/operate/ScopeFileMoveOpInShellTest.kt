@@ -22,7 +22,7 @@ class ScopeFileMoveOpInShellTest {
         val userDataUri = File(currentUserDataPath).toUri()
 
         runBlocking {
-            val userData = getFileInstance(context, userDataUri)
+            val userData = getFileInstance(context, userDataUri)!!
             val pack = userData.list()
             val userPackageModel = pack.directories.first()
             val userPackage = userData.toChildEfficiently(
