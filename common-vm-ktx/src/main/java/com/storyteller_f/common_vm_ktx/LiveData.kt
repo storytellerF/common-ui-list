@@ -196,3 +196,8 @@ fun <X> LiveData<X>.distinctUntilChangedBy(f: (X, X) -> Boolean): LiveData<X?> {
     )
     return outputLiveData
 }
+
+fun <T> MutableLiveData<T>.update(function: (T?) -> T) {
+    val old = value
+    value = function(old)
+}
