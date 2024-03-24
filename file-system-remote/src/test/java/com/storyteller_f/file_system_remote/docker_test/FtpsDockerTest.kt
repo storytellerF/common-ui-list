@@ -26,7 +26,7 @@ class FtpsDockerTest {
         remoteSpec.checkFtpsConnection()
         val uri = remoteSpec.toUri()
         runBlocking {
-            getFileInstance(context, uri).exists()
+            getFileInstance(context, uri)!!.exists()
         }
     }
 }

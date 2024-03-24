@@ -26,7 +26,7 @@ class SmbTest {
         val test1Spec = MockRemoteFileSystem.smbSpec
         val uri = test1Spec.toUri()
         runBlocking {
-            val smbFileInstance = getFileInstance(context, uri)
+            val smbFileInstance = getFileInstance(context, uri)!!
             MockRemoteFileSystem.commonTest(smbFileInstance)
         }
     }

@@ -45,7 +45,7 @@ class FilePermissions(
     }
 
     companion object {
-        val USER_READABLE = FilePermissions(FilePermission(true))
+        val USER_READABLE = FilePermissions(FilePermission(readable = true))
 
         fun fromMask(value: Int): FilePermissions {
             val userPermission = FilePermission.fromMask(value.shl(6).and(0x111))

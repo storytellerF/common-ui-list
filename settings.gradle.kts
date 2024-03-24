@@ -1,5 +1,8 @@
 @file:Suppress("UnstableApiUsage")
 
+include(":file-system-archive")
+
+
 pluginManagement {
     val smlFolder: String by settings
     includeBuild("version-manager")

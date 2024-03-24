@@ -26,7 +26,7 @@ class WebDavTest {
         val test1Spec = MockRemoteFileSystem.webDavSpec
         val uri = test1Spec.toUri().buildUpon().appendPath("test1").build()
         runBlocking {
-            val webDavFileInstance = getFileInstance(context, uri)
+            val webDavFileInstance = getFileInstance(context, uri)!!
             MockRemoteFileSystem.commonTest(webDavFileInstance)
         }
     }

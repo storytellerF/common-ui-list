@@ -19,7 +19,7 @@ import java.io.File
 
 
 @RunWith(AndroidJUnit4::class)
-class RequestPermissionTest {
+class PermissionRequestTest {
 
     @get:Rule
     var mActivityRule = ActivityScenarioRule(
@@ -28,7 +28,7 @@ class RequestPermissionTest {
 
     @SdkSuppress(minSdkVersion = Build.VERSION_CODES.Q, maxSdkVersion = Build.VERSION_CODES.Q)
     @Test
-    fun testRequestPermission() {
+    fun testRequestFilePermission() {
         val uri = File(LocalFileSystem.ROOT_USER_EMULATED_PATH).toUri()
 
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
