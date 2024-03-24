@@ -17,6 +17,7 @@ import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSClassifierReference
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
@@ -255,9 +256,25 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
     private fun getBindingDetail(viewHolder: KSClassDeclaration): Pair<String, String> {
         val firstProperty = viewHolder.getAllProperties().first()
         val ksName = firstProperty.type.resolve().declaration.qualifiedName
-        val bindingName = ksName?.getShortName() ?: ""
-        val bindingFullName = ksName?.asString() ?: ""
-        return Pair(bindingName, bindingFullName)
+        if (ksName != null) {
+            val bindingName = ksName.getShortName()
+            val bindingFullName = ksName.asString()
+            return Pair(bindingName, bindingFullName)
+        } else {
+            val propertyName = firstProperty.simpleName.getShortName()
+            return if (propertyName == "binding") {
+                val bindingPackageName = firstProperty.packageName.asString()
+                val bindingName =
+                    (firstProperty.type.element as KSClassifierReference).referencedName()
+                val bindingFullName = "$bindingPackageName.databinding.$bindingName"
+                Pair(bindingName, bindingFullName)
+            } else {
+                val asString = firstProperty.type.resolve().declaration.qualifiedName
+                val bindingName = asString?.getShortName() ?: ""
+                val bindingFullName = asString?.asString() ?: ""
+                Pair(bindingName, bindingFullName)
+            }
+        }
     }
 }
 
