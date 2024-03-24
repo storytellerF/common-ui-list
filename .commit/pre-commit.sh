@@ -1,1 +1,1 @@
-sh gradlew build
+sh gradlew build connectedCheck
