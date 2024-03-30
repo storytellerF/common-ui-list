@@ -5,17 +5,20 @@ class FileSystemPack(
     val directories: MutableList<FileInfo>
 ) {
 
-    fun addFiles(fileItemModels: List<FileInfo>) {
-        files.addAll(fileItemModels)
+    fun addFiles(infoList: List<FileInfo>) {
+        files.addAll(infoList)
     }
 
-    fun addDirectory(directoryItemModels: List<FileInfo>) {
-        directories.addAll(directoryItemModels)
+    fun addDirectories(infoList: List<FileInfo>) {
+        directories.addAll(infoList)
     }
 
-    fun destroy() {
-        files.clear()
-        directories.clear()
+    fun addFile(info: FileInfo): Boolean {
+        return files.add(info)
+    }
+
+    fun addDirectory(info: FileInfo): Boolean {
+        return directories.add(info)
     }
 
     val count: Int

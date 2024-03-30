@@ -1,11 +1,7 @@
 package com.storyteller_f.file_system.util
 
-import android.net.Uri
 import android.os.Build
-import com.storyteller_f.file_system.instance.FileKind
-import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
-import com.storyteller_f.file_system.model.FileInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -27,54 +23,4 @@ suspend fun File.fileTime(): FileTime {
         }
     }
     return FileTime(lastModified())
-}
-
-/**
- * 添加普通目录，判断过滤监听事件
- */
-fun MutableCollection<FileInfo>.addDirectory(
-    childPair: Pair<File, Uri>,
-    permissions: FilePermissions,
-    fileTime: FileTime,
-): FileInfo? {
-    val (childDirectory, uri) = childPair
-
-    return addDirectory(
-        uri,
-        childDirectory.name,
-        permissions,
-        fileTime,
-        FileKind.build(
-            isFile = false,
-            isSymbolicLink = false,
-            isHidden = childDirectory.isHidden,
-            0,
-            ""
-        )
-    )
-}
-
-/**
- * 添加普通目录，判断过滤监听事件
- */
-fun MutableCollection<FileInfo>.addFile(
-    uriPair: Pair<File, Uri>,
-    permissions: FilePermissions,
-    fileTime: FileTime,
-): FileInfo? {
-    val (childFile, uri) = uriPair
-    val fileName = childFile.name
-    return addFile(
-        uri,
-        fileName,
-        permissions,
-        fileTime,
-        FileKind.build(
-            isFile = true,
-            isSymbolicLink = false,
-            isHidden = childFile.isHidden,
-            childFile.length(),
-            getExtension(fileName).orEmpty()
-        )
-    )
 }

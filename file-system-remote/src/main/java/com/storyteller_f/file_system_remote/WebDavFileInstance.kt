@@ -7,6 +7,7 @@ import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.FileInfo
+import com.storyteller_f.file_system.model.FileSystemPack
 import com.storyteller_f.file_system.util.getExtension
 import com.thegrizzlylabs.sardineandroid.DavAcl
 import com.thegrizzlylabs.sardineandroid.DavResource
@@ -103,8 +104,7 @@ class WebDavFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.par
     }
 
     override suspend fun listInternal(
-        fileItems: MutableList<FileInfo>,
-        directoryItems: MutableList<FileInfo>,
+        fileSystemPack: FileSystemPack,
     ) {
         val webDavInstance = getWebDavInstance()
         webDavInstance.list(webDavInstance.buildRelativePath(path)).filter {
@@ -118,7 +118,7 @@ class WebDavFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.par
             val creation: Date? = it.creation
             val fileTime = FileTime(modified?.time, created = creation?.time)
             if (it.isDirectory) {
-                directoryItems.add(
+                fileSystemPack.addDirectory(
                     FileInfo(
                         fileName,
                         child,
@@ -134,7 +134,7 @@ class WebDavFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.par
                     )
                 )
             } else {
-                fileItems.add(
+                fileSystemPack.addFile(
                     FileInfo(
                         fileName,
                         child,

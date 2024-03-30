@@ -18,6 +18,7 @@ import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.FileInfo
+import com.storyteller_f.file_system.model.FileSystemPack
 import com.storyteller_f.file_system.util.getExtension
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -96,8 +97,7 @@ class SmbFileInstance(uri: Uri, private val shareSpec: ShareSpec = ShareSpec.par
     }
 
     override suspend fun listInternal(
-        fileItems: MutableList<FileInfo>,
-        directoryItems: MutableList<FileInfo>
+        fileSystemPack: FileSystemPack
     ) {
         getDiskShare().list(path).filter {
             it.fileName != "." && it.fileName != ".."
@@ -109,7 +109,7 @@ class SmbFileInstance(uri: Uri, private val shareSpec: ShareSpec = ShareSpec.par
             val fileTime = it.fileTime()
             val filePermissions = FilePermissions.USER_READABLE
             if (isDirectory) {
-                directoryItems.add(
+                fileSystemPack.addDirectory(
                     FileInfo(
                         fileName,
                         child,
@@ -125,7 +125,7 @@ class SmbFileInstance(uri: Uri, private val shareSpec: ShareSpec = ShareSpec.par
                     )
                 )
             } else {
-                fileItems.add(
+                fileSystemPack.addFile(
                     FileInfo(
                         fileName,
                         child,

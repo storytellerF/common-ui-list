@@ -7,6 +7,7 @@ import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.FileInfo
+import com.storyteller_f.file_system.model.FileSystemPack
 import com.storyteller_f.file_system.util.getExtension
 import com.storyteller_f.slim_ktx.bit
 import net.schmizz.sshj.AndroidConfig
@@ -105,8 +106,7 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
     }
 
     override suspend fun listInternal(
-        fileItems: MutableList<FileInfo>,
-        directoryItems: MutableList<FileInfo>
+        fileSystemPack: FileSystemPack
     ) {
         getInstance().ls(path).forEach {
             val attributes = it.attributes
@@ -116,7 +116,7 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
             val fileTime = attributes.fileTime()
             val filePermissions = attributes.permissions.filePermissions()
             if (it.isDirectory) {
-                directoryItems.add(
+                fileSystemPack.addDirectory(
                     FileInfo(
                         fileName,
                         child,
@@ -132,7 +132,7 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
                     )
                 )
             } else {
-                fileItems.add(
+                fileSystemPack.addFile(
                     FileInfo(
                         fileName,
                         child,

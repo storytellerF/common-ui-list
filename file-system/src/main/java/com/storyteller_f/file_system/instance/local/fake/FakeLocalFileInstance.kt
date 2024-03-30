@@ -15,6 +15,7 @@ import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.FileInfo
+import com.storyteller_f.file_system.model.FileSystemPack
 import com.storyteller_f.file_system.util.fileTime
 import com.storyteller_f.file_system.util.getStorageCompat
 import java.io.File
@@ -69,8 +70,7 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
 
     @WorkerThread
     override suspend fun listInternal(
-        fileItems: MutableList<FileInfo>,
-        directoryItems: MutableList<FileInfo>
+        fileSystemPack: FileSystemPack
     ) {
         presetFiles[path]?.map { packageName ->
             val (file, child) = child(packageName)
@@ -82,7 +82,7 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
                 FileKind.build(isFile = true, isSymbolicLink = false, isHidden = false, length, ""),
                 FilePermissions.USER_READABLE,
             )
-        }?.forEach(fileItems::add)
+        }?.let(fileSystemPack::addFiles)
 
         (presetSystemDirectories[path] ?: presetDirectories[path])?.map {
             val (file, child) = child(it)
@@ -99,10 +99,10 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
                 ),
                 FilePermissions.USER_READABLE
             )
-        }?.forEach(directoryItems::add)
+        }?.let(fileSystemPack::addDirectories)
 
         if (path == LocalFileSystem.STORAGE_PATH) {
-            storageVolumes().forEach(directoryItems::add)
+            storageVolumes().let(fileSystemPack::addDirectories)
         }
     }
 
@@ -136,10 +136,8 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
 
     override suspend fun getDirectorySize(): Long = TODO("Not yet implemented")
 
-    override suspend fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
-        val (_, child) = child(name)
-        return FakeLocalFileInstance(context, child)
-    }
+    override suspend fun toChild(name: String, policy: FileCreatePolicy) =
+        FakeLocalFileInstance(context, childUri(name))
 
     companion object {
         val presetSystemDirectories = mapOf(

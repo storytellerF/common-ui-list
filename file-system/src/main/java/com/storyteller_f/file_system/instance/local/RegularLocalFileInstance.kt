@@ -10,9 +10,9 @@ import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermission
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.model.FileInfo
-import com.storyteller_f.file_system.util.addDirectory
-import com.storyteller_f.file_system.util.addFile
+import com.storyteller_f.file_system.model.FileSystemPack
 import com.storyteller_f.file_system.util.fileTime
+import com.storyteller_f.file_system.util.getExtension
 import com.storyteller_f.file_system.util.permissions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -114,19 +114,47 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
 
     @WorkerThread
     public override suspend fun listInternal(
-        fileItems: MutableList<FileInfo>,
-        directoryItems: MutableList<FileInfo>
+        fileSystemPack: FileSystemPack
     ) {
         val listFiles = innerFile.listFiles() // 获取子文件
         if (listFiles != null) {
             for (childFile in listFiles) {
-                val child = child(childFile.name)
+                val childUri = childUri(childFile.name)
                 val permissions = childFile.permissions()
-                val fileTime = child.first.fileTime()
+                val fileTime = childFile.fileTime()
                 (if (childFile.isDirectory) {
-                    directoryItems.addDirectory(child, permissions, fileTime)
+                    fileSystemPack.addDirectory(
+                        FileInfo(
+                            childFile.name,
+                            childUri,
+                            fileTime,
+                            FileKind.build(
+                                isFile = false,
+                                isSymbolicLink = false,
+                                isHidden = childFile.isHidden,
+                                0,
+                                ""
+                            ),
+                            permissions
+                        )
+                    )
                 } else {
-                    fileItems.addFile(child, permissions, fileTime)
+                    val fileName = childFile.name
+                    fileSystemPack.addFile(
+                        FileInfo(
+                            fileName,
+                            childUri,
+                            fileTime,
+                            FileKind.build(
+                                isFile = true,
+                                isSymbolicLink = false,
+                                isHidden = childFile.isHidden,
+                                childFile.length(),
+                                getExtension(fileName).orEmpty()
+                            ),
+                            permissions,
+                        )
+                    )
                 })
             }
         }
