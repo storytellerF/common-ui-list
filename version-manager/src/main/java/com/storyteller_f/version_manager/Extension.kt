@@ -267,20 +267,19 @@ fun Project.constraintCommonUIListVersion(
                 "ext-func-compiler",
                 "ext-func-definition",
                 "file-system",
+                "file-system-archive",
                 "file-system-ktx",
                 "file-system-remote",
                 "file-system-root",
                 "slim-ktx",
                 "ui-list",
                 "ui-list-annotation-common",
-                "ui-list-annotation-compiler",
                 "ui-list-annotation-compiler-ksp",
                 "ui-list-annotation-definition",
                 "view-holder-compose"
             ).forEach {
                 "implementation"("$group:$it:$version")
                 "ksp"("$group:$it:$version")
-                "kapt"("$group:$it:$version")
             }
         }
     }
