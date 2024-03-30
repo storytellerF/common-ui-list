@@ -20,9 +20,6 @@ android {
 baseLibrary()
 
 dependencies {
-
-    commonAndroidDependency()
-
     val libsuVersion = "5.0.3"
     implementation("com.github.topjohnwu.libsu:nio:${libsuVersion}")
 

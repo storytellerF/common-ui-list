@@ -26,23 +26,10 @@ dependencies {
     implModule(":slim-ktx")
     implModule(":file-system")
     unitTestDependency()
-    commonAndroidDependency()
-    implementation("androidx.room:room-common:${Versions.ROOM}")
+    //确保guava 依赖不会冲突。com.google.guava:listenablefuture:1.0
+    implementation("androidx.core:core-ktx:${Versions.CORE}")
 
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
-    // https://mvnrepository.com/artifact/commons-net/commons-net
-    implementation("commons-net:commons-net:3.10.0")
-    // https://mvnrepository.com/artifact/org.mockftpserver/MockFtpServer
-    testImplementation("org.mockftpserver:MockFtpServer:3.1.0")
-    // https://mvnrepository.com/artifact/com.hierynomus/smbj
-    implementation("com.hierynomus:smbj:0.13.0")
-    // https://mvnrepository.com/artifact/com.hierynomus/sshj
-    implementation("com.hierynomus:sshj:0.38.0")
-    implementation("com.madgag.spongycastle:prov:1.58.0.0")
-
-    loadSardine()
-
+    loadRemoteDependencies()
 
     val mockkVersion = "1.13.8"
     testImplementation("io.mockk:mockk-android:${mockkVersion}")
@@ -59,4 +46,20 @@ fun DependencyHandlerScope.loadSardine() {
 //        implementation("com.github.storytellerF:sardine-android:7da4aa36e1")
         implementation("com.github.thegrizzlylabs:sardine-android:0.9")
     }
+}
+
+fun DependencyHandlerScope.loadRemoteDependencies() {
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+    // https://mvnrepository.com/artifact/commons-net/commons-net
+    implementation("commons-net:commons-net:3.10.0")
+    // https://mvnrepository.com/artifact/org.mockftpserver/MockFtpServer
+    testImplementation("org.mockftpserver:MockFtpServer:3.1.0")
+    // https://mvnrepository.com/artifact/com.hierynomus/smbj
+    implementation("com.hierynomus:smbj:0.13.0")
+    // https://mvnrepository.com/artifact/com.hierynomus/sshj
+    implementation("com.hierynomus:sshj:0.38.0")
+    implementation("com.madgag.spongycastle:prov:1.58.0.0")
+
+    loadSardine()
 }
