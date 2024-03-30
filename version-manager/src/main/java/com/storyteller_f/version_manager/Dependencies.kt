@@ -40,6 +40,8 @@ object Versions {
     const val BAO = "2.4.0"
     const val NAVIGATION = "2.7.7"
     const val SWIPE_REFRESH = "1.1.0"
+
+    const val JITPACK_RELEASE_GROUP = "com.github.storytellerF.common-ui-list"
 }
 
 fun Project.implModule(moduleName: String) {
@@ -48,7 +50,7 @@ fun Project.implModule(moduleName: String) {
         if (module != null) {
             "implementation"(module)
         } else {
-            "implementation"("com.github.storytellerF.common-ui-list$moduleName")
+            "implementation"("${Versions.JITPACK_RELEASE_GROUP}$moduleName")
         }
     }
 
@@ -60,7 +62,7 @@ fun Project.apiModule(moduleName: String) {
         if (module != null) {
             "api"(module)
         } else {
-            "api"("com.github.storytellerF.common-ui-list$moduleName")
+            "api"("${Versions.JITPACK_RELEASE_GROUP}$moduleName")
         }
     }
 
@@ -72,7 +74,7 @@ fun Project.kaptModule(moduleName: String) {
         if (module != null) {
             "kapt"(module)
         } else {
-            "kapt"("com.github.storytellerF.common-ui-list$moduleName")
+            "kapt"("${Versions.JITPACK_RELEASE_GROUP}$moduleName")
         }
     }
 
@@ -84,7 +86,7 @@ fun Project.kspModule(moduleName: String) {
         if (module != null) {
             "ksp"(module)
         } else {
-            "ksp"("com.github.storytellerF.common-ui-list$moduleName")
+            "ksp"("${Versions.JITPACK_RELEASE_GROUP}$moduleName")
         }
     }
 
