@@ -6,15 +6,15 @@ import com.storyteller_f.file_system.FileInstanceFactory
 import com.storyteller_f.file_system.instance.FileInstance
 
 class RemoteFileInstanceFactory : FileInstanceFactory {
-    override val scheme: List<String>
+    override val schemes: List<String>
         get() = RemoteAccessType.ALL_PROTOCOL
 
-    override suspend fun buildInstance(context: Context, uri: Uri): FileInstance {
+    override suspend fun buildInstance(context: Context, uri: Uri): FileInstance? {
         val scheme = uri.scheme!!
-        return if (scheme == RemoteAccessType.HTTP || scheme == RemoteAccessType.HTTPS) {
-            HttpFileInstance(context, uri)
-        } else {
-            getRemoteInstance(uri)
+        return when {
+            RemoteAccessType.HTTP_PROTOCOL.contains(scheme) -> HttpFileInstance(context, uri)
+            RemoteAccessType.EXCLUDE_HTTP_PROTOCOL.contains(scheme) -> getRemoteInstance(uri)
+            else -> null
         }
     }
 }

@@ -59,6 +59,7 @@ val androidLibModules = listOf(
     "compat-ktx",
     "file-system",
     "file-system-ktx",
+    "file-system-local",
     "file-system-remote",
     "file-system-root",
     "ui-list",

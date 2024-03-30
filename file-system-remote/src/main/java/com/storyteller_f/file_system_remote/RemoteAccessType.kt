@@ -17,6 +17,9 @@ object RemoteAccessType {
     val EXCLUDE_HTTP_PROTOCOL = listOf(SMB, SFTP, FTP, FTP_ES, FTPS, WEB_DAV)
 
     @Suppress("unused")
+    val HTTP_PROTOCOL = listOf(HTTP, HTTPS)
+
+    @Suppress("unused")
     val ALL_PROTOCOL = listOf(
         FTP,
         SMB,

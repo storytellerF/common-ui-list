@@ -4,16 +4,16 @@ import android.content.Context
 import android.net.Uri
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
-import com.storyteller_f.file_system.util.buildPath
-import com.storyteller_f.file_system.util.parentPath
 import java.util.ServiceLoader
+
+interface FileSystemPrefix
 
 interface FileInstanceFactory {
 
-    val scheme: List<String>
+    val schemes: List<String>
     suspend fun buildInstance(context: Context, uri: Uri): FileInstance?
 
-    fun getPrefix(context: Context, uri: Uri): FileSystemPrefix? = FileSystemPrefix.NoLocal
+    fun getPrefix(context: Context, uri: Uri): FileSystemPrefix? = null
 
     fun buildNestedFile(context: Context, name: String, fileInstance: FileInstance): Uri? = null
 }
@@ -42,24 +42,15 @@ suspend fun getFileSystemPrefix(
     getPrefix(context, safeUri)
 }
 
-suspend fun <R> getFactory(uri: Uri, schemeFilter: Boolean = true, block: suspend FileInstanceFactory.(Uri) -> R?): R? {
+suspend fun <R> getFactory(uri: Uri, block: suspend FileInstanceFactory.(Uri) -> R?): R? {
     val unsafePath = uri.path!!
     assert(!unsafePath.endsWith("/") || unsafePath.length == 1) {
         "invalid path [$unsafePath]"
     }
     val path = simplePath(unsafePath)
-    val scheme = uri.scheme!!
     val safeUri = uri.buildUpon().path(path).build()
     val loader = ServiceLoader.load(FileInstanceFactory::class.java)
-    return loader.let {
-        if (schemeFilter) {
-            it.filter { factory ->
-                factory.scheme.contains(scheme)
-            }
-        } else {
-            it
-        }
-    }.firstNotNullOfOrNull {
+    return loader.firstNotNullOfOrNull {
         it.block(safeUri)
     }
 }
@@ -84,7 +75,7 @@ suspend fun FileInstance.toChildEfficiently(
         return toParentEfficiently(context)
     }
     if (fileKind().isFile) {
-        val uri1 = getFactory(uri, schemeFilter = false) {
+        val uri1 = getFactory(uri) {
             buildNestedFile(context, name, this@toChildEfficiently)
         }
         if (uri1 != null) {

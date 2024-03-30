@@ -1,6 +1,8 @@
 package com.storyteller_f.file_system_root
 
 import android.net.Uri
+import com.storyteller_f.file_system.buildPath
+import com.storyteller_f.file_system.getExtension
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.FileKind
@@ -9,11 +11,9 @@ import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.FileInfo
 import com.storyteller_f.file_system.model.FileSystemPack
-import com.storyteller_f.file_system.util.buildPath
-import com.storyteller_f.file_system.util.getExtension
-import com.storyteller_f.file_system.util.permissions
 import com.topjohnwu.superuser.nio.ExtendedFile
 import com.topjohnwu.superuser.nio.FileSystemManager
+import java.io.File
 
 class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : FileInstance(uri) {
 
@@ -115,7 +115,9 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
     }
 
     override suspend fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
-        val newUri = uri.buildUpon().path(buildPath(extendedFile.path, name)).build()
+        val newUri = uri.buildUpon().path(
+            buildPath(extendedFile.path, name)
+        ).build()
         return RootAccessFileInstance(remote, newUri)
     }
 
@@ -139,3 +141,10 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
 }
 
 private fun ExtendedFile.fileTime(): FileTime = FileTime(lastModified())
+
+fun File.permissions(): FilePermissions {
+    val w = canWrite()
+    val e = canExecute()
+    val r = canRead()
+    return FilePermissions.permissions(r, w, e)
+}

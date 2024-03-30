@@ -8,16 +8,22 @@ import com.storyteller_f.file_system.decodeByBase64
 import com.storyteller_f.file_system.encodeByBase64
 import com.storyteller_f.file_system.instance.FileInstance
 
+data class ArchiveFileSystemPrefix(val key: String) : FileSystemPrefix
+
 class ArchiveFileInstanceFactory : FileInstanceFactory {
-    override val scheme: List<String>
+    override val schemes: List<String>
         get() = listOf("archive")
 
-    override suspend fun buildInstance(context: Context, uri: Uri): FileInstance {
-        return ArchiveFileInstance(context, uri)
+    override suspend fun buildInstance(context: Context, uri: Uri): FileInstance? {
+        return if (schemes.contains(uri.scheme)) {
+            ArchiveFileInstance(context, uri)
+        } else {
+            null
+        }
     }
 
     override fun getPrefix(context: Context, uri: Uri): FileSystemPrefix {
-        return FileSystemPrefix.Archive(uri.pathSegments.first().decodeByBase64())
+        return ArchiveFileSystemPrefix(uri.pathSegments.first().decodeByBase64())
     }
 
     override fun buildNestedFile(context: Context, name: String, fileInstance: FileInstance): Uri? {

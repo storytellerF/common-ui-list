@@ -1,11 +1,5 @@
 package com.storyteller_f.ui_list_annotation_compiler_ksp
 
-import com.example.ui_list_annotation_common.Entry
-import com.example.ui_list_annotation_common.Event
-import com.example.ui_list_annotation_common.Holder
-import com.example.ui_list_annotation_common.JavaGenerator.Companion.CLASS_NAME
-import com.example.ui_list_annotation_common.UIListHolderZoom
-import com.example.ui_list_annotation_common.nestedGroupBy
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getAnnotationsByType
 import com.google.devtools.ksp.getDeclaredFunctions
@@ -28,6 +22,12 @@ import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.annotation_defination.BindLongClickEvent
 import com.storyteller_f.annotation_defination.ItemHolder
+import com.storyteller_f.ui_list_annotation_common.Entry
+import com.storyteller_f.ui_list_annotation_common.Event
+import com.storyteller_f.ui_list_annotation_common.Holder
+import com.storyteller_f.ui_list_annotation_common.JavaGenerator.Companion.CLASS_NAME
+import com.storyteller_f.ui_list_annotation_common.UIListHolderZoom
+import com.storyteller_f.ui_list_annotation_common.nestedGroupBy
 import java.io.BufferedWriter
 import java.io.OutputStreamWriter
 import kotlin.reflect.KClass
