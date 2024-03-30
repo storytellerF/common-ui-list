@@ -44,13 +44,10 @@ class FtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse(
     override suspend fun filePermissions() = reconnectIfNeed()!!.permissions()
 
     override suspend fun fileTime() = reconnectIfNeed()!!.fileTime()
-    override suspend fun fileKind() = reconnectIfNeed()!!.let {
-        FileKind.build(it.isFile, it.isSymbolicLink, false, it.fileLength(), extension)
-    }
+    override suspend fun fileKind() = reconnectIfNeed()!!.fileKind1()
 
-    suspend fun getFileLength(): Long {
-        return reconnectIfNeed()!!.size
-    }
+    private fun FTPFile.fileKind1() =
+        FileKind.build(isFile, isSymbolicLink, false, fileLength(), getExtension(name).orEmpty())
 
     override suspend fun getFileInputStream(): FileInputStream {
         TODO("Not yet implemented")
@@ -73,33 +70,18 @@ class FtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse(
             val child = childUri(name)
             val permission = it.permissions()
             val fileTime = it.fileTime()
-            val isSymbolicLink = it.isSymbolicLink
+            val kind = it.fileKind1()
+            val info = FileInfo(
+                name,
+                child,
+                fileTime,
+                kind,
+                permission,
+            )
             if (it.isFile) {
-                fileSystemPack.addFile(
-                    FileInfo(
-                        name,
-                        child,
-                        fileTime,
-                        FileKind.build(
-                            true,
-                            isSymbolicLink,
-                            false,
-                            it.fileLength(),
-                            getExtension(name).orEmpty()
-                        ),
-                        permission,
-                    )
-                )
+                fileSystemPack.addFile(info)
             } else {
-                fileSystemPack.addDirectory(
-                    FileInfo(
-                        name,
-                        child,
-                        fileTime,
-                        FileKind.build(false, isSymbolicLink, false, 0, ""),
-                        permission,
-                    )
-                )
+                fileSystemPack.addDirectory(info)
             }
         }
     }

@@ -99,15 +99,15 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
 
     override suspend fun fileTime() = innerFile.fileTime()
     override suspend fun fileKind() =
-        FileKind.build(
-            innerFile.isFile,
-            innerFile.isSymbolicLink(),
-            innerFile.isHidden,
-            getFileLength(),
-            extension
-        )
+        innerFile.fileKind1()
 
-    suspend fun getFileLength(): Long = innerFile.length()
+    private fun File.fileKind1() = FileKind.build(
+        isFile,
+        isSymbolicLink(),
+        isHidden,
+        length(),
+        getExtension(name).orEmpty()
+    )
 
     @WorkerThread
     public override suspend fun listInternal(
@@ -119,40 +119,21 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
                 val childUri = childUri(childFile.name)
                 val permissions = childFile.permissions()
                 val fileTime = childFile.fileTime()
-                (if (childFile.isDirectory) {
-                    fileSystemPack.addDirectory(
-                        FileInfo(
-                            childFile.name,
-                            childUri,
-                            fileTime,
-                            FileKind.build(
-                                isFile = false,
-                                isSymbolicLink = false,
-                                isHidden = childFile.isHidden,
-                                0,
-                                ""
-                            ),
-                            permissions
-                        )
-                    )
+                val kind = childFile.fileKind1()
+                val name = childFile.name
+
+                val info = FileInfo(
+                    name,
+                    childUri,
+                    fileTime,
+                    kind,
+                    permissions
+                )
+                if (childFile.isDirectory) {
+                    fileSystemPack.addDirectory(info)
                 } else {
-                    val fileName = childFile.name
-                    fileSystemPack.addFile(
-                        FileInfo(
-                            fileName,
-                            childUri,
-                            fileTime,
-                            FileKind.build(
-                                isFile = true,
-                                isSymbolicLink = false,
-                                isHidden = childFile.isHidden,
-                                childFile.length(),
-                                getExtension(fileName).orEmpty()
-                            ),
-                            permissions,
-                        )
-                    )
-                })
+                    fileSystemPack.addFile(info)
+                }
             }
         }
     }

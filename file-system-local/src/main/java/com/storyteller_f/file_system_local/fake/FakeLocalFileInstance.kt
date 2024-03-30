@@ -53,7 +53,7 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
         isFile = false,
         isSymbolicLink = false,
         isHidden = false,
-        getFileLength(),
+        0,
         extension
     )
 

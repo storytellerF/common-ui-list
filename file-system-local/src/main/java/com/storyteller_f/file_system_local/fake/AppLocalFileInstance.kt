@@ -32,14 +32,12 @@ class AppLocalFileInstance(context: Context, uri: Uri) : BaseContextFileInstance
         isFile = false,
         isSymbolicLink = false,
         isHidden = false,
-        getFileLength(),
+        File(publicSourceDir).length(),
         "apk"
     )
 
     private val publicSourceDir: String =
         context.packageManager.getApplicationInfoCompat(name, 0).publicSourceDir
-
-    suspend fun getFileLength() = File(publicSourceDir).length()
 
     override suspend fun getFileInputStream() =
         withContext(Dispatchers.IO) {

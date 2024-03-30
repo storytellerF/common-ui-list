@@ -269,6 +269,8 @@ fun Project.constraintCommonUIListVersion(
                 "file-system",
                 "file-system-archive",
                 "file-system-ktx",
+                "file-system-local",
+                "file-system-memory",
                 "file-system-remote",
                 "file-system-root",
                 "slim-ktx",
