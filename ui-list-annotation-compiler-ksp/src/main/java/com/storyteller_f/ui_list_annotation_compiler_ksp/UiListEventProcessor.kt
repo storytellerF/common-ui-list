@@ -254,7 +254,10 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
     }
 
     private fun getBindingDetail(viewHolder: KSClassDeclaration): Pair<String, String> {
-        val firstProperty = viewHolder.getAllProperties().first()
+        val firstProperty = viewHolder.getAllProperties().first {
+            val shortName = it.simpleName.getShortName()
+            shortName == "binding" || shortName == "edComposeView"
+        }
         val ksName = firstProperty.type.resolve().declaration.qualifiedName
         if (ksName != null) {
             val bindingName = ksName.getShortName()

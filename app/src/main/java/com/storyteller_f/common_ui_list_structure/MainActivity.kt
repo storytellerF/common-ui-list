@@ -71,7 +71,6 @@ class MainActivity : AppCompatActivity() {
                     after.roundedStarCount >= 1 -> SeparatorItemHolder("${after.roundedStarCount}0.000+ stars")
                     else -> SeparatorItemHolder("< 10.000+ stars")
                 }
-                println("add separator ${dataItemHolder?.info}")
                 dataItemHolder
             }
         )

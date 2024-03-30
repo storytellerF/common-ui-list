@@ -31,9 +31,9 @@ class KotlinGenerator(
     private val allItemHolderName = entries.map {
         it.itemHolderFullName
     }
-    private val t = zoom.extractEventMap(allItemHolderName)
-    private val dependencyFiles = getDependencyFiles(entries, allItemHolderName, t.first, t.second)
-    private val allImports = allImports(entries, t.first, t.second)
+    private val mapPair = zoom.extractEventMap(allItemHolderName)
+    private val dependencyFiles = getDependencyFiles(entries, allItemHolderName, mapPair.first, mapPair.second)
+    private val allImports = allImports(entries, mapPair.first, mapPair.second)
     private val affectInfo = getAffectFileInfo(packageName, dependencyFiles)
     override fun buildAddFunction(entry: List<Entry<KSAnnotated>>): String {
         var index = 0
@@ -152,8 +152,8 @@ class KotlinGenerator(
             writer.writeLine(
                 buildViewHolders(
                     entries,
-                    t.first,
-                    t.second
+                    mapPair.first,
+                    mapPair.second
                 ).prependIndent()
             )
             writer.writeLine(buildAddFunction(entries).prependIndent())

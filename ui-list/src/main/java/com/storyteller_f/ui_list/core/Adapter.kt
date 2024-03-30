@@ -2,10 +2,17 @@
 
 package com.storyteller_f.ui_list.core
 
+import android.content.Context
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.ColorRes
+import androidx.annotation.DimenRes
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -54,6 +61,11 @@ abstract class DataItemHolder(val variant: String = "") {
 
 abstract class AbstractViewHolder<IH : DataItemHolder>(val view: View) :
     RecyclerView.ViewHolder(view) {
+    val context: Context = view.context
+    private var _holderLifecycleOwner: BindLifecycleOwner? = null
+    val holderLifecycleOwner: LifecycleOwner
+        get() = _holderLifecycleOwner!!
+
     private var _itemHolder: IH? = null
 
     /**
@@ -62,15 +74,60 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(val view: View) :
     lateinit var grouped: String
 
     // 需要保证当前已经绑定过数据了
-    val itemHolder get() = _itemHolder as IH
+    val itemHolder get() = _itemHolder!!
+
     fun onBind(itemHolder: IH) {
-        this._itemHolder = itemHolder
         bindData(itemHolder)
     }
 
     abstract fun bindData(itemHolder: IH)
 
-    fun getColor(@ColorRes id: Int) = ContextCompat.getColor(view.context, id)
+    fun getColor(@ColorRes id: Int) = ContextCompat.getColor(context, id)
+
+    fun getDrawable(@DrawableRes id: Int) = ContextCompat.getDrawable(context, id)
+
+    fun getDimen(@DimenRes id: Int) = context.resources.getDimension(id)
+
+    fun getString(@StringRes id: Int) = context.resources.getString(id)
+
+    internal fun moveStateToCreate() {
+        assert(_holderLifecycleOwner == null)
+        _holderLifecycleOwner = BindLifecycleOwner()
+        moveToState(Lifecycle.Event.ON_CREATE)
+    }
+
+    internal fun attachItemHolder(itemHolder: IH) {
+        _itemHolder = itemHolder
+    }
+
+    internal fun detachItemHolder() {
+        _itemHolder = null
+    }
+
+    inner class BindLifecycleOwner : LifecycleOwner {
+        val lifecycleRegistry = LifecycleRegistry(this)
+        override val lifecycle: Lifecycle = lifecycleRegistry
+    }
+
+    internal fun moveStateToResume() {
+        val event = Lifecycle.Event.ON_RESUME
+        moveToState(event)
+    }
+
+    internal fun moveStateToPause() {
+        moveToState(Lifecycle.Event.ON_PAUSE)
+    }
+
+    internal fun moveStateToDestroy() {
+        moveToState(Lifecycle.Event.ON_DESTROY)
+        _holderLifecycleOwner = null
+    }
+
+    private fun moveToState(event: Lifecycle.Event) {
+        val lifecycleOwner = _holderLifecycleOwner
+        require(lifecycleOwner != null)
+        lifecycleOwner.lifecycleRegistry.handleLifecycleEvent(event)
+    }
 }
 
 abstract class BindingViewHolder<IH : DataItemHolder>(binding: ViewBinding) :
@@ -93,7 +150,10 @@ open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(priv
     }
 
     override fun onBindViewHolder(holder: VH, position: Int) {
-        holder.onBind(getItemAbstract(position) as IH)
+        val itemHolder = getItemAbstract(position) as IH
+        holder.attachItemHolder(itemHolder)
+        holder.moveStateToCreate()
+        holder.onBind(itemHolder)
     }
 
     protected open fun getItemAbstract(position: Int): IH? {
@@ -111,6 +171,22 @@ open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(priv
         val ihClass = item::class.java
         return getType(ihClass, item)
             ?: throw Exception("${ihClass.canonicalName} not found.registerCenter count: ${registerCenter.size}")
+    }
+
+    override fun onViewAttachedToWindow(holder: VH) {
+        super.onViewAttachedToWindow(holder)
+        holder.moveStateToResume()
+    }
+
+    override fun onViewDetachedFromWindow(holder: VH) {
+        super.onViewDetachedFromWindow(holder)
+        holder.moveStateToPause()
+    }
+
+    override fun onViewRecycled(holder: VH) {
+        super.onViewRecycled(holder)
+        holder.moveStateToDestroy()
+        holder.detachItemHolder()
     }
 
     private fun getType(ihClass: Class<out IH>, item: IH): Int? {
