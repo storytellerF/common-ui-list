@@ -71,12 +71,6 @@ abstract class FileInstance(val uri: Uri) {
         return getFileOutputStream()
     }
 
-    @WorkerThread
-    abstract suspend fun getDirectorySize(): Long
-
-    @WorkerThread
-    abstract suspend fun getFileLength(): Long
-
     /**
      * 应该仅用于目录。可能会抛出异常，内部不会处理。
      */

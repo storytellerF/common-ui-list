@@ -87,7 +87,7 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
         )
     }
 
-    override suspend fun getFileLength(): Long {
+    suspend fun getFileLength(): Long {
         return fetchAttributesIfNeed().fileLength()
     }
 
@@ -158,10 +158,6 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
     }
 
     override suspend fun toParent(): FileInstance {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun getDirectorySize(): Long {
         TODO("Not yet implemented")
     }
 

@@ -18,15 +18,17 @@ android {
     }
 }
 baseLibrary()
-
+configurations.all {
+    resolutionStrategy.capabilitiesResolution.withCapability("com.google.guava:listenablefuture") {
+        select("com.google.guava:guava:0")
+    }
+}
 dependencies {
-
     implModule(":common-ktx")
     implModule(":slim-ktx")
     implModule(":file-system")
     unitTestDependency()
-    //确保guava 依赖不会冲突。com.google.guava:listenablefuture:1.0
-    implementation("androidx.core:core-ktx:${Versions.CORE}")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.COROUTINES}")
 
     loadRemoteDependencies()
 

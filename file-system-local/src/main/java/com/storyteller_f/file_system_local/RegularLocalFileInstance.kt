@@ -14,7 +14,6 @@ import com.storyteller_f.file_system.model.FileInfo
 import com.storyteller_f.file_system.model.FileSystemPack
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.yield
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
@@ -108,7 +107,7 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
             extension
         )
 
-    override suspend fun getFileLength(): Long = innerFile.length()
+    suspend fun getFileLength(): Long = innerFile.length()
 
     @WorkerThread
     public override suspend fun listInternal(
@@ -172,23 +171,6 @@ class RegularLocalFileInstance(context: Context, uri: Uri) : LocalFileInstance(c
 
     override suspend fun toParent(): LocalFileInstance {
         return RegularLocalFileInstance(context, getUri(innerFile.parentFile!!))
-    }
-
-    override suspend fun getDirectorySize(): Long = getFileSize(innerFile)
-
-    @WorkerThread
-    private suspend fun getFileSize(file: File): Long {
-        var size: Long = 0
-        val files = file.listFiles() ?: return 0
-        for (f in files) {
-            yield()
-            size += if (f.isFile) {
-                f.length()
-            } else {
-                getFileSize(f)
-            }
-        }
-        return size
     }
 
     companion object {

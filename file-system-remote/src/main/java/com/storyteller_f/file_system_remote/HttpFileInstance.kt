@@ -83,7 +83,7 @@ class HttpFileInstance(context: Context, uri: Uri) : BaseContextFileInstance(con
         extension
     )
 
-    override suspend fun getFileLength() = createIfNeed().length()
+    suspend fun getFileLength() = createIfNeed().length()
 
     override suspend fun getFileInputStream() = createIfNeed().inputStream()
 
@@ -106,8 +106,6 @@ class HttpFileInstance(context: Context, uri: Uri) : BaseContextFileInstance(con
     override suspend fun toParent(): FileInstance {
         TODO("Not yet implemented")
     }
-
-    override suspend fun getDirectorySize() = 0L
 
     override suspend fun createFile() = false
 

@@ -44,7 +44,6 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
 
     override suspend fun getFileOutputStream(): FileOutputStream = TODO("Not yet implemented")
 
-    override suspend fun getFileLength(): Long = -1
     override suspend fun filePermissions() = FilePermissions.USER_READABLE
     override suspend fun fileTime(): FileTime {
         TODO("Not yet implemented")
@@ -123,8 +122,6 @@ class FakeLocalFileInstance(val context: Context, uri: Uri) :
     override suspend fun toParent(): FileInstance {
         TODO("Not yet implemented")
     }
-
-    override suspend fun getDirectorySize(): Long = TODO("Not yet implemented")
 
     override suspend fun toChild(name: String, policy: FileCreatePolicy) =
         FakeLocalFileInstance(context, childUri(name))

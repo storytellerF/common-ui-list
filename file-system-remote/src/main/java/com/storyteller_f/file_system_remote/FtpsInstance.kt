@@ -46,7 +46,7 @@ class FtpsFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
         FileKind.build(it.isFile, it.isSymbolicLink, false, it.fileLength(), extension)
     }
 
-    override suspend fun getFileLength(): Long {
+    suspend fun getFileLength(): Long {
         return reconnectIfNeed()!!.size
     }
 
@@ -119,10 +119,6 @@ class FtpsFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
     }
 
     override suspend fun toParent(): FileInstance {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun getDirectorySize(): Long {
         TODO("Not yet implemented")
     }
 

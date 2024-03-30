@@ -36,7 +36,7 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
             extension
         )
 
-    override suspend fun getFileLength(): Long {
+    suspend fun getFileLength(): Long {
         return extendedFile.length()
     }
 
@@ -100,10 +100,6 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
     override suspend fun toParent(): FileInstance {
         val newUri = uri.buildUpon().path(extendedFile.parent!!).build()
         return RootAccessFileInstance(remote, newUri)
-    }
-
-    override suspend fun getDirectorySize(): Long {
-        TODO("Not yet implemented")
     }
 
     override suspend fun createFile(): Boolean {

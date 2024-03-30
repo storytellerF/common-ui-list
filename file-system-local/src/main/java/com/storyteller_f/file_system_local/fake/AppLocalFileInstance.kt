@@ -39,7 +39,7 @@ class AppLocalFileInstance(context: Context, uri: Uri) : BaseContextFileInstance
     private val publicSourceDir: String =
         context.packageManager.getApplicationInfoCompat(name, 0).publicSourceDir
 
-    override suspend fun getFileLength() = File(publicSourceDir).length()
+    suspend fun getFileLength() = File(publicSourceDir).length()
 
     override suspend fun getFileInputStream() =
         withContext(Dispatchers.IO) {
@@ -68,10 +68,6 @@ class AppLocalFileInstance(context: Context, uri: Uri) : BaseContextFileInstance
     }
 
     override suspend fun toParent(): FileInstance {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun getDirectorySize(): Long {
         TODO("Not yet implemented")
     }
 
