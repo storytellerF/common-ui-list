@@ -1,6 +1,5 @@
 @file:Suppress("UnstableApiUsage")
 
-import com.storyteller_f.version_manager.Versions
 import com.storyteller_f.version_manager.baseLibrary
 import com.storyteller_f.version_manager.implModule
 import com.storyteller_f.version_manager.unitTestDependency
@@ -27,16 +26,12 @@ android {
 }
 baseLibrary(true)
 dependencies {
+    implementation("androidx.core:core-ktx:1.12.0")
     implModule(":common-ktx")
     implModule(":slim-ktx")
     implModule(":compat-ktx")
 
-    implementation("com.google.android.material:material:${Versions.MATERIAL}")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1-Beta")
 
     unitTestDependency()
-    // https://mvnrepository.com/artifact/androidx.test.uiautomator/uiautomator
-    androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")
-    androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:${Versions.COROUTINES}")
-
-    implementation("com.google.code.gson:gson:2.10.1")
 }

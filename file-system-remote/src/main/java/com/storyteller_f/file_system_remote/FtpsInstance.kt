@@ -1,13 +1,13 @@
 package com.storyteller_f.file_system_remote
 
 import android.net.Uri
+import com.storyteller_f.file_system.getExtension
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.FileInfo
 import com.storyteller_f.file_system.model.FileSystemPack
-import com.storyteller_f.file_system.util.getExtension
 import org.apache.commons.net.PrintCommandListener
 import org.apache.commons.net.ftp.FTPClientConfig
 import org.apache.commons.net.ftp.FTPFile

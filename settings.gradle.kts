@@ -1,5 +1,8 @@
 @file:Suppress("UnstableApiUsage")
 
+include(":file-system-local")
+
+
 include(":file-system-archive")
 
 

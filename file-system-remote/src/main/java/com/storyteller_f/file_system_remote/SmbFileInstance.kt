@@ -12,6 +12,7 @@ import com.hierynomus.protocol.commons.EnumWithValue.EnumUtils
 import com.hierynomus.smbj.SMBClient
 import com.hierynomus.smbj.auth.AuthenticationContext
 import com.hierynomus.smbj.share.DiskShare
+import com.storyteller_f.file_system.getExtension
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.FileKind
@@ -19,7 +20,6 @@ import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.FileInfo
 import com.storyteller_f.file_system.model.FileSystemPack
-import com.storyteller_f.file_system.util.getExtension
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.InputStream

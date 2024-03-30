@@ -5,6 +5,7 @@ import android.net.Uri
 import android.os.Build
 import androidx.core.net.toUri
 import com.storyteller_f.file_system.decodeByBase64
+import com.storyteller_f.file_system.getExtension
 import com.storyteller_f.file_system.getFileInstance
 import com.storyteller_f.file_system.instance.BaseContextFileInstance
 import com.storyteller_f.file_system.instance.FileCreatePolicy
@@ -14,7 +15,6 @@ import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.FileInfo
 import com.storyteller_f.file_system.model.FileSystemPack
-import com.storyteller_f.file_system.util.getExtension
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.InputStream

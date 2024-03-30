@@ -3,10 +3,10 @@ package com.storyteller_f.file_system.instance
 import android.net.Uri
 import androidx.annotation.WorkerThread
 import androidx.core.util.ObjectsCompat
+import com.storyteller_f.file_system.getExtension
 import com.storyteller_f.file_system.model.FileInfo
 import com.storyteller_f.file_system.model.FileSystemPack
-import com.storyteller_f.file_system.util.getExtension
-import com.storyteller_f.file_system.util.parentPath
+import com.storyteller_f.file_system.parentPath
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream

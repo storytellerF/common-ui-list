@@ -38,4 +38,4 @@ constraintCommonUIListVersion("e0696030b5")
 baseApp()
 ```
 
-具体可以参照[GiantExplorer](https://github.com/storytellerF/common-ui-list-structure/tree/master/examples/GiantExplorer)
+具体可以参照[GiantExplorer](https://github.com/storytellerF/GiantExplorer) 和[Ping](https://github.com/storytellerF/Ping)

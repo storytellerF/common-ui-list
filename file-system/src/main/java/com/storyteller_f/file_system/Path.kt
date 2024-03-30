@@ -1,10 +1,7 @@
 package com.storyteller_f.file_system
 
 import android.content.ContentResolver
-import android.content.Context
 import android.net.Uri
-import com.storyteller_f.file_system.instance.local.fake.getMyId
-import com.storyteller_f.file_system.util.buildPath
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -12,23 +9,30 @@ import java.util.LinkedList
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
-@Suppress("unused")
-fun Context.getCurrentUserEmulatedPath() =
-    buildPath(LocalFileSystem.EMULATED_ROOT_PATH, getMyId().toString())
-
-fun Context.getCurrentUserDataPath() =
-    buildPath(LocalFileSystem.USER_DATA, getMyId().toString())
-
 /**
- * /storage/XX44-XX55 或者是/storage/XX44-XX55/test。最终结果应该是/storage/XX44-XX55
+ * 返回的即是canonical path，也是absolute path
  */
-fun extractSdPath(path: String): String {
-    var endIndex = path.indexOf("/", LocalFileSystem.STORAGE_PATH.length + 1)
-    if (endIndex == -1) endIndex = path.length
-    return path.substring(0, endIndex)
+fun buildPath(vararg part: String) = part.fold("/") { acc, s ->
+    simplePath("$acc/$s")
 }
 
-fun Context.appDataDir() = "${LocalFileSystem.DATA_SUB_DATA}/$packageName"
+fun parentPath(vararg part: String): String? {
+    val currentPath = buildPath(*part)
+    if (currentPath == "/") return null
+    val endIndex = if (currentPath.last() == '/') {
+        currentPath.lastIndex - 1
+    } else {
+        currentPath.lastIndex
+    }
+    val index = currentPath.lastIndexOf("/", endIndex)
+    if (index == 0) return "/"
+    return currentPath.substring(0, index)
+}
+
+fun getExtension(name: String): String? {
+    val index = name.lastIndexOf('.')
+    return if (index == -1) null else name.substring(index + 1)
+}
 
 suspend fun File.ensureFile(): File? {
     if (!exists()) {

@@ -56,6 +56,18 @@ fun Project.implModule(moduleName: String) {
 
 }
 
+fun Project.androidTestImplModule(moduleName: String) {
+    dependencies {
+        val module = findProject(moduleName)
+        if (module != null) {
+            "androidTestImplementation"(module)
+        } else {
+            "androidTestImplementation"("${Versions.JITPACK_RELEASE_GROUP}$moduleName")
+        }
+    }
+
+}
+
 fun Project.apiModule(moduleName: String) {
     dependencies {
         val module = findProject(moduleName)

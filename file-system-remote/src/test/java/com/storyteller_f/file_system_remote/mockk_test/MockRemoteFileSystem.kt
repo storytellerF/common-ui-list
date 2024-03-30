@@ -12,9 +12,9 @@ import com.hierynomus.msfscc.fileinformation.FileStandardInformation
 import com.hierynomus.mssmb2.SMB2CreateDisposition
 import com.hierynomus.protocol.commons.EnumWithValue.EnumUtils
 import com.hierynomus.smbj.share.File
+import com.storyteller_f.file_system.buildPath
 import com.storyteller_f.file_system.instance.FileCreatePolicy
 import com.storyteller_f.file_system.instance.FileInstance
-import com.storyteller_f.file_system.util.buildPath
 import com.storyteller_f.file_system_remote.FtpsInstance
 import com.storyteller_f.file_system_remote.RemoteAccessType
 import com.storyteller_f.file_system_remote.RemoteSpec
@@ -525,7 +525,9 @@ object MockRemoteFileSystem {
         mockk {
             every {
                 inputStream
-            } returns fs!!.getPath(buildPath(smbSpec.share, relativePath)).inputStream()
+            } returns fs!!.getPath(
+                buildPath(smbSpec.share, relativePath)
+            ).inputStream()
         }
 
     @OptIn(ExperimentalPathApi::class)

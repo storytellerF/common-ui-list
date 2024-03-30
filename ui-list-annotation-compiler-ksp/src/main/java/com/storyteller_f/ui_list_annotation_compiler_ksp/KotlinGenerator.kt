@@ -1,15 +1,5 @@
 package com.storyteller_f.ui_list_annotation_compiler_ksp
 
-import com.example.ui_list_annotation_common.Entry
-import com.example.ui_list_annotation_common.Event
-import com.example.ui_list_annotation_common.EventEntry
-import com.example.ui_list_annotation_common.EventMap
-import com.example.ui_list_annotation_common.Holder
-import com.example.ui_list_annotation_common.ItemHolderFullName
-import com.example.ui_list_annotation_common.JavaGenerator
-import com.example.ui_list_annotation_common.UIListHolderZoom
-import com.example.ui_list_annotation_common.UiAdapterGenerator
-import com.example.ui_list_annotation_common.ViewName
 import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSAnnotated
@@ -19,6 +9,16 @@ import com.storyteller_f.slim_ktx.no
 import com.storyteller_f.slim_ktx.replaceCode
 import com.storyteller_f.slim_ktx.trimAndReplaceCode
 import com.storyteller_f.slim_ktx.yes
+import com.storyteller_f.ui_list_annotation_common.Entry
+import com.storyteller_f.ui_list_annotation_common.Event
+import com.storyteller_f.ui_list_annotation_common.EventEntry
+import com.storyteller_f.ui_list_annotation_common.EventMap
+import com.storyteller_f.ui_list_annotation_common.Holder
+import com.storyteller_f.ui_list_annotation_common.ItemHolderFullName
+import com.storyteller_f.ui_list_annotation_common.JavaGenerator
+import com.storyteller_f.ui_list_annotation_common.UIListHolderZoom
+import com.storyteller_f.ui_list_annotation_common.UiAdapterGenerator
+import com.storyteller_f.ui_list_annotation_common.ViewName
 import java.io.BufferedWriter
 
 class KotlinGenerator(

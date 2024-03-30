@@ -1,3 +1,4 @@
+import com.storyteller_f.version_manager.androidTestImplModule
 import com.storyteller_f.version_manager.baseLibrary
 import com.storyteller_f.version_manager.implModule
 import com.storyteller_f.version_manager.unitTestDependency
@@ -20,5 +21,6 @@ android {
 dependencies {
     implModule(":file-system")
     implementation("androidx.core:core-ktx:1.12.0")
+    androidTestImplModule(":file-system-local")
     unitTestDependency()
 }
