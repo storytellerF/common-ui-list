@@ -87,10 +87,6 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
         )
     }
 
-    suspend fun getFileLength(): Long {
-        return fetchAttributesIfNeed().fileLength()
-    }
-
     override suspend fun getInputStream() =
         getInstance().open(path)!!.RemoteFileInputStream()
 
@@ -115,32 +111,24 @@ class SFtpFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.parse
             val isSymLink = attributes.mode.type.toMask().bit(FileMode.Type.SYMLINK.toMask())
             val fileTime = attributes.fileTime()
             val filePermissions = attributes.permissions.filePermissions()
+            val kind = FileKind.build(
+                it.isRegularFile,
+                isSymLink,
+                false,
+                it.fileLength(),
+                getExtension(fileName).orEmpty()
+            )
+            val info = FileInfo(
+                fileName,
+                child,
+                fileTime,
+                kind,
+                filePermissions
+            )
             if (it.isDirectory) {
-                fileSystemPack.addDirectory(
-                    FileInfo(
-                        fileName,
-                        child,
-                        fileTime,
-                        FileKind.build(
-                            false,
-                            isSymLink,
-                            false,
-                            it.fileLength(),
-                            getExtension(fileName).orEmpty()
-                        ),
-                        filePermissions
-                    )
-                )
+                fileSystemPack.addDirectory(info)
             } else {
-                fileSystemPack.addFile(
-                    FileInfo(
-                        fileName,
-                        child,
-                        fileTime,
-                        FileKind.build(true, isSymLink, false, attributes.fileLength(), ""),
-                        filePermissions,
-                    )
-                )
+                fileSystemPack.addFile(info)
             }
         }
     }

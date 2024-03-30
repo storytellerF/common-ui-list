@@ -76,9 +76,6 @@ class SmbFileInstance(uri: Uri, private val shareSpec: ShareSpec = ShareSpec.par
         return information
     }
 
-    suspend fun getFileLength() =
-        reconnectIfNeed().fileLength()
-
     override suspend fun getInputStream(): InputStream = getDiskShare().open(
         path,
         emptySet(),
@@ -108,38 +105,24 @@ class SmbFileInstance(uri: Uri, private val shareSpec: ShareSpec = ShareSpec.par
                 EnumUtils.isSet(it.fileAttributes, FileAttributes.FILE_ATTRIBUTE_DIRECTORY)
             val fileTime = it.fileTime()
             val filePermissions = FilePermissions.USER_READABLE
+            val kind = FileKind.build(
+                isFile = !isDirectory,
+                isSymbolicLink = false,
+                isHidden = false,
+                it.allocationSize,
+                getExtension(fileName).orEmpty()
+            )
+            val info = FileInfo(
+                fileName,
+                child,
+                fileTime,
+                kind,
+                filePermissions,
+            )
             if (isDirectory) {
-                fileSystemPack.addDirectory(
-                    FileInfo(
-                        fileName,
-                        child,
-                        fileTime,
-                        FileKind.build(
-                            isFile = false,
-                            isSymbolicLink = false,
-                            isHidden = false,
-                            it.allocationSize,
-                            getExtension(fileName).orEmpty()
-                        ),
-                        filePermissions
-                    )
-                )
+                fileSystemPack.addDirectory(info)
             } else {
-                fileSystemPack.addFile(
-                    FileInfo(
-                        fileName,
-                        child,
-                        fileTime,
-                        FileKind.build(
-                            isFile = true,
-                            isSymbolicLink = false,
-                            isHidden = false,
-                            0,
-                            ""
-                        ),
-                        filePermissions,
-                    )
-                )
+                fileSystemPack.addFile(info)
             }
         }
     }

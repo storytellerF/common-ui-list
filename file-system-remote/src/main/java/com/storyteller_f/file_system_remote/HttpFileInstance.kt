@@ -79,11 +79,9 @@ class HttpFileInstance(context: Context, uri: Uri) : BaseContextFileInstance(con
         isFile = true,
         isSymbolicLink = false,
         isHidden = false,
-        getFileLength(),
+        createIfNeed().length(),
         extension
     )
-
-    suspend fun getFileLength() = createIfNeed().length()
 
     override suspend fun getFileInputStream() = createIfNeed().inputStream()
 

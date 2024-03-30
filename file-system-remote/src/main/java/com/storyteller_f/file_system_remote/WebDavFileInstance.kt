@@ -68,22 +68,20 @@ class WebDavFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.par
     }
 
     override suspend fun fileKind(): FileKind {
-        return reconnectResourcesIfNeed().let {
-            FileKind.build(
-                !it.isDirectory,
-                false,
-                isHidden = false,
-                size = it.fileLength(),
-                extension
-            )
-        }
+        return reconnectResourcesIfNeed().fileKind1()
     }
+
+    private fun DavResource.fileKind1() = FileKind.build(
+        !isDirectory,
+        false,
+        isHidden = false,
+        size = fileLength(),
+        getExtension(name).orEmpty()
+    )
 
     private fun getWebDavInstance() = webdavInstances.getOrPut(spec) {
         WebDavInstance(spec)
     }
-
-    suspend fun getFileLength() = reconnectResourcesIfNeed().fileLength()
 
     override suspend fun getInputStream(): InputStream {
         return getWebDavInstance().run {
@@ -117,38 +115,18 @@ class WebDavFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.par
             val modified: Date? = it.modified
             val creation: Date? = it.creation
             val fileTime = FileTime(modified?.time, created = creation?.time)
+            val kind = it.fileKind1()
+            val info = FileInfo(
+                fileName,
+                child,
+                fileTime,
+                kind,
+                filePermissions
+            )
             if (it.isDirectory) {
-                fileSystemPack.addDirectory(
-                    FileInfo(
-                        fileName,
-                        child,
-                        fileTime,
-                        FileKind.build(
-                            isFile = false,
-                            isSymbolicLink = false,
-                            isHidden = false,
-                            0,
-                            getExtension(fileName).orEmpty()
-                        ),
-                        filePermissions
-                    )
-                )
+                fileSystemPack.addDirectory(info)
             } else {
-                fileSystemPack.addFile(
-                    FileInfo(
-                        fileName,
-                        child,
-                        fileTime,
-                        FileKind.build(
-                            isFile = true,
-                            isSymbolicLink = false,
-                            isHidden = false,
-                            it.fileLength(),
-                            ""
-                        ),
-                        filePermissions,
-                    )
-                )
+                fileSystemPack.addFile(info)
             }
         }
     }

@@ -28,17 +28,15 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
 
     override suspend fun fileTime() = extendedFile.fileTime()
     override suspend fun fileKind() =
-        FileKind.build(
-            extendedFile.isFile,
-            extendedFile.isSymlink,
-            extendedFile.isHidden,
-            extendedFile.length(),
-            extension
-        )
+        extendedFile.fileKind1()
 
-    suspend fun getFileLength(): Long {
-        return extendedFile.length()
-    }
+    private fun ExtendedFile.fileKind1() = FileKind.build(
+        isFile,
+        isSymlink,
+        isHidden,
+        length(),
+        getExtension(name).orEmpty()
+    )
 
     override suspend fun getFileInputStream() = extendedFile.inputStream()
 
@@ -52,39 +50,20 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
             val permissions = it.permissions()
             val child = childUri(it.name)
             val fileTime = it.fileTime()
+
+            val fileName = it.name
+            val kind = it.fileKind1()
+            val info = FileInfo(
+                fileName,
+                child,
+                fileTime,
+                kind,
+                permissions
+            )
             if (it.isFile) {
-                val fileName = it.name
-                fileSystemPack.addFile(
-                    FileInfo(
-                        fileName,
-                        child,
-                        fileTime,
-                        FileKind.build(
-                            isFile = true,
-                            isSymbolicLink = false,
-                            isHidden = it.isHidden,
-                            it.length(),
-                            getExtension(fileName).orEmpty()
-                        ),
-                        permissions,
-                    )
-                )
+                fileSystemPack.addFile(info)
             } else if (it.isDirectory) {
-                fileSystemPack.addDirectory(
-                    FileInfo(
-                        it.name,
-                        child,
-                        fileTime,
-                        FileKind.build(
-                            isFile = false,
-                            isSymbolicLink = false,
-                            isHidden = it.isHidden,
-                            0,
-                            ""
-                        ),
-                        permissions
-                    )
-                )
+                fileSystemPack.addDirectory(info)
             }
         }
     }

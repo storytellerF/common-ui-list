@@ -1,6 +1,7 @@
 package com.storyteller_f.file_system_remote.mock_test
 
 import android.net.Uri
+import com.storyteller_f.file_system.size
 import com.storyteller_f.file_system_remote.HttpFileInstance
 import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockResponse
@@ -55,7 +56,7 @@ class HttpTest {
             }
             assertTrue(httpFileInstance.fileKind().isFile)
             assertFalse(httpFileInstance.fileKind().isDirectory)
-            assertEquals(11, httpFileInstance.getFileLength())
+            assertEquals(11, httpFileInstance.size())
             assertFalse(httpFileInstance.createFile())
             assertFalse(httpFileInstance.createDirectory())
         }

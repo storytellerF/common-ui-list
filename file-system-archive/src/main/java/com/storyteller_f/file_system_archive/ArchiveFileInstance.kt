@@ -54,15 +54,19 @@ class ArchiveFileInstance(context: Context, uri: Uri) :
 
     override suspend fun fileKind(): FileKind {
         return readCurrentFileData {
-            val size = it.size
-            FileKind.build(
-                !it.isDirectory,
-                isSymbolicLink = false,
-                isHidden = false,
-                size = size,
-                extension = extension
-            )
+            it.fileKind1()
         }!!
+    }
+
+    private fun ZipEntry.fileKind1(): FileKind {
+        val size = size
+        return FileKind.build(
+            !isDirectory,
+            isSymbolicLink = false,
+            isHidden = false,
+            size = size,
+            extension = getExtension(name).orEmpty()
+        )
     }
 
     override suspend fun getFileInputStream(): FileInputStream {
@@ -87,10 +91,6 @@ class ArchiveFileInstance(context: Context, uri: Uri) :
 
     override suspend fun getOutputStream(): OutputStream {
         return super.getOutputStream()
-    }
-
-    suspend fun getFileLength(): Long {
-        TODO("Not yet implemented")
     }
 
     private suspend fun readEntry(
@@ -167,38 +167,18 @@ class ArchiveFileInstance(context: Context, uri: Uri) :
             } else {
                 FileTime(zipEntry.time)
             }
+            val kind = zipEntry.fileKind1()
+            val info = FileInfo(
+                zipEntry.name,
+                childUri,
+                fileTime,
+                kind,
+                FilePermissions.USER_READABLE,
+            )
             if (zipEntry.isDirectory) {
-                fileSystemPack.addDirectory(
-                    FileInfo(
-                        zipEntry.name,
-                        childUri,
-                        fileTime,
-                        FileKind.build(
-                            isFile = false,
-                            isSymbolicLink = false,
-                            isHidden = false,
-                            size = 0,
-                            extension = ""
-                        ),
-                        FilePermissions.USER_READABLE
-                    )
-                )
+                fileSystemPack.addDirectory(info)
             } else {
-                fileSystemPack.addFile(
-                    FileInfo(
-                        zipEntry.name,
-                        childUri,
-                        fileTime,
-                        FileKind.build(
-                            isFile = true,
-                            isSymbolicLink = false,
-                            isHidden = false,
-                            size = zipEntry.size,
-                            extension = getExtension(name).orEmpty()
-                        ),
-                        FilePermissions.USER_READABLE,
-                    )
-                )
+                fileSystemPack.addFile(info)
             }
             false
         }

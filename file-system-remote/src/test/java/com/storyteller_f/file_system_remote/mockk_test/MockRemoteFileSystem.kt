@@ -365,6 +365,9 @@ object MockRemoteFileSystem {
                     isDirectory
                 } returns pathObject.isDirectory()
                 every {
+                    isRegularFile
+                } returns pathObject.isRegularFile()
+                every {
                     name
                 } returns pathObject.name
             }
@@ -563,5 +566,8 @@ object MockRemoteFileSystem {
             every {
                 lastAccessTime
             } returns FileTime(fileAttributes.lastAccessTime().toMillis())
+            every {
+                allocationSize
+            } returns if (pathObject.isRegularFile()) pathObject.fileSize() else 0
         }
 }

@@ -84,15 +84,15 @@ class DocumentLocalFileInstance(
     })
 
     override suspend fun fileTime() = relinkIfNeed()!!.fileTime()
-    override suspend fun fileKind() = relinkIfNeed()!!.let {
-        FileKind.build(
-            it.isFile,
-            isSymbolicLink = false,
-            isHidden = false,
-            getFileLength(),
-            extension
-        )
-    }
+    override suspend fun fileKind() = relinkIfNeed()!!.fileKind1()
+
+    private fun DocumentFile.fileKind1() = FileKind.build(
+        isFile,
+        isSymbolicLink = false,
+        isHidden = false,
+        length(),
+        getExtension(name!!).orEmpty()
+    )
 
     init {
         assert(uriFullPath.startsWith(prefix))
@@ -182,20 +182,6 @@ class DocumentLocalFileInstance(
         }
     }
 
-    private suspend fun getDocumentFileSize(documentFile: DocumentFile?): Long {
-        var size: Long = 0
-        val documentFiles = documentFile!!.listFiles()
-        for (documentFi in documentFiles) {
-            yield()
-            size += if (documentFile.isFile) {
-                documentFi.length()
-            } else {
-                getDocumentFileSize(documentFi)
-            }
-        }
-        return size
-    }
-
     override suspend fun createDirectory(): Boolean {
         if (relinkIfNeed() != null) return true
         val created = tryCreate(false)
@@ -268,38 +254,18 @@ class DocumentLocalFileInstance(
             val permissions = documentFile.permissions()
             val uri = childUri(documentFileName)
             val fileTime = documentFile.fileTime()
+            val kind = documentFile.fileKind1()
+            val info = FileInfo(
+                documentFileName,
+                uri,
+                fileTime,
+                kind,
+                permissions,
+            )
             if (documentFile.isFile) {
-                fileSystemPack.addFile(
-                    FileInfo(
-                        documentFileName,
-                        uri,
-                        fileTime,
-                        FileKind.build(
-                            isFile = true,
-                            isSymbolicLink = false,
-                            isHidden = false,
-                            documentFile.length(),
-                            getExtension(documentFileName).orEmpty()
-                        ),
-                        permissions,
-                    )
-                )
+                fileSystemPack.addFile(info)
             } else {
-                fileSystemPack.addDirectory(
-                    FileInfo(
-                        documentFileName,
-                        uri,
-                        fileTime,
-                        FileKind.build(
-                            isFile = false,
-                            isSymbolicLink = false,
-                            isHidden = false,
-                            0,
-                            ""
-                        ),
-                        permissions
-                    )
-                )
+                fileSystemPack.addDirectory(info)
             }
         }
     }
@@ -348,8 +314,6 @@ class DocumentLocalFileInstance(
             "w"
         )!!.fileDescriptor
     )
-
-    suspend fun getFileLength(): Long = relinkIfNeed()!!.length()
 
     companion object {
         @Suppress("SpellCheckingInspection")
