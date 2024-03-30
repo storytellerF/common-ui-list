@@ -1,7 +1,6 @@
 package com.storyteller_f.file_system_ktx
 
 import android.widget.ImageView
-import com.storyteller_f.file_system.R
 import com.storyteller_f.file_system.model.FileInfo
 
 val FileInfo.isFile
