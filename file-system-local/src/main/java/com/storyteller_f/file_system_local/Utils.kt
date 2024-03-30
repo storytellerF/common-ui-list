@@ -6,6 +6,9 @@ import android.os.Process
 import android.os.UserManager
 import androidx.core.content.ContextCompat
 import com.storyteller_f.file_system.buildPath
+import com.storyteller_f.file_system.instance.FileCreatePolicy
+import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system.instance.FileKind
 
 fun Context.getMyId() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
     ContextCompat.getSystemService(this, UserManager::class.java)!!
@@ -37,3 +40,15 @@ fun extractSdPath(path: String): String {
 }
 
 fun Context.appDataDir() = "${LocalFileSystem.DATA_SUB_DATA}/$packageName"
+
+suspend fun FileInstance.getDirectorySize(): Long {
+    var size: Long = 0
+    val pack = list()
+    pack.files.forEach {
+        size += (it.kind as FileKind.File).size
+    }
+    pack.directories.forEach {
+        size += (toChild(it.name, FileCreatePolicy.NotCreate)?.getDirectorySize() ?: 0)
+    }
+    return size
+}

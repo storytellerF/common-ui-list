@@ -89,11 +89,7 @@ class ArchiveFileInstance(context: Context, uri: Uri) :
         return super.getOutputStream()
     }
 
-    override suspend fun getDirectorySize(): Long {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun getFileLength(): Long {
+    suspend fun getFileLength(): Long {
         TODO("Not yet implemented")
     }
 

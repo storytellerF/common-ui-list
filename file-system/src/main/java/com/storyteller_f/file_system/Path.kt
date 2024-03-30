@@ -2,6 +2,8 @@ package com.storyteller_f.file_system
 
 import android.content.ContentResolver
 import android.net.Uri
+import com.storyteller_f.file_system.instance.FileInstance
+import com.storyteller_f.file_system.instance.FileKind
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -136,3 +138,7 @@ val Uri.rawTree: String
         assert(scheme == ContentResolver.SCHEME_CONTENT)
         return pathSegments.first()!!
     }
+
+suspend fun FileInstance.size(): Long {
+    return (fileKind() as FileKind.File).size
+}

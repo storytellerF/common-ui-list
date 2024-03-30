@@ -182,8 +182,6 @@ class DocumentLocalFileInstance(
         }
     }
 
-    override suspend fun getDirectorySize(): Long = getDocumentFileSize(relinkIfNeed())
-
     private suspend fun getDocumentFileSize(documentFile: DocumentFile?): Long {
         var size: Long = 0
         val documentFiles = documentFile!!.listFiles()
@@ -351,7 +349,7 @@ class DocumentLocalFileInstance(
         )!!.fileDescriptor
     )
 
-    override suspend fun getFileLength(): Long = relinkIfNeed()!!.length()
+    suspend fun getFileLength(): Long = relinkIfNeed()!!.length()
 
     companion object {
         @Suppress("SpellCheckingInspection")

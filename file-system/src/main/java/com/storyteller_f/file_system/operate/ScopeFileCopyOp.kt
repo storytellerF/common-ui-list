@@ -6,6 +6,7 @@ import com.storyteller_f.file_system.instance.FileCreatePolicy.NotCreate
 import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.message.Message
 import com.storyteller_f.file_system.model.FileInfo
+import com.storyteller_f.file_system.size
 import com.storyteller_f.file_system.toChildEfficiently
 import com.storyteller_f.slim_ktx.exceptionMessage
 import kotlinx.coroutines.Dispatchers
@@ -141,7 +142,7 @@ open class ScopeFileCopyOp(
                 out.write(byteBuffer)
                 byteBuffer.clear()
             }
-            notifyFileDone(f, Message(""), f.getFileLength(), 0)
+            notifyFileDone(f, Message(""), f.size(), 0)
         }
     }
 }
@@ -197,7 +198,7 @@ class ScopeFileMoveOpInShell(
         val cmdFailed = mvResult != 0
         when {
             cmdFailed -> onError(Message("process return $mvResult"))
-            target.fileKind().isFile -> onFileDone(target, Message("success"), target.getFileLength())
+            target.fileKind().isFile -> onFileDone(target, Message("success"), target.size())
             else -> onDirectoryDone(fileInstance, Message("success"))
         }
         return !cmdFailed
@@ -277,7 +278,7 @@ class FileDeleteOp(
             onFileDone(
                 childFile,
                 Message("delete ${it.name} success"),
-                fileInstance.getFileLength()
+                fileInstance.size()
             )
         } else {
             onError(Message("delete ${it.name} failed"))

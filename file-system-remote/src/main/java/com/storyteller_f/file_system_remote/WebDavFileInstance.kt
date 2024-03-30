@@ -83,7 +83,7 @@ class WebDavFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.par
         WebDavInstance(spec)
     }
 
-    override suspend fun getFileLength() = reconnectResourcesIfNeed().fileLength()
+    suspend fun getFileLength() = reconnectResourcesIfNeed().fileLength()
 
     override suspend fun getInputStream(): InputStream {
         return getWebDavInstance().run {
@@ -169,10 +169,6 @@ class WebDavFileInstance(uri: Uri, private val spec: RemoteSpec = RemoteSpec.par
     }
 
     override suspend fun toParent(): FileInstance {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun getDirectorySize(): Long {
         TODO("Not yet implemented")
     }
 

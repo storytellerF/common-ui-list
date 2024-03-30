@@ -1,6 +1,6 @@
 package com.storyteller_f.file_system_remote.mock_test
 
-import androidx.core.net.toUri
+import android.net.Uri
 import com.storyteller_f.file_system_remote.HttpFileInstance
 import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockResponse
@@ -46,7 +46,7 @@ class HttpTest {
     fun test() {
         val appContext = RuntimeEnvironment.getApplication()
 
-        val uri = "http://localhost:${server.port}".toUri()
+        val uri = Uri.parse("http://localhost:${server.port}")
         val httpFileInstance = HttpFileInstance(appContext, uri)
         runBlocking {
             httpFileInstance.getInputStream().bufferedReader().use {

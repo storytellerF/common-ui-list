@@ -76,7 +76,7 @@ class SmbFileInstance(uri: Uri, private val shareSpec: ShareSpec = ShareSpec.par
         return information
     }
 
-    override suspend fun getFileLength() =
+    suspend fun getFileLength() =
         reconnectIfNeed().fileLength()
 
     override suspend fun getInputStream(): InputStream = getDiskShare().open(
@@ -157,10 +157,6 @@ class SmbFileInstance(uri: Uri, private val shareSpec: ShareSpec = ShareSpec.par
     }
 
     override suspend fun toParent(): FileInstance {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun getDirectorySize(): Long {
         TODO("Not yet implemented")
     }
 
