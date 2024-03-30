@@ -18,16 +18,24 @@ class SimpleDataAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(group:
     ListAdapter<IH, VH>(common_diff_util as DiffUtil.ItemCallback<IH>) {
 
     private var fatData: SimpleDataViewModel.FatData<*, IH, *>? = null
-    val d = DefaultAdapter<IH, VH>(group).apply {
+    private val proxy = DefaultAdapter<IH, VH>(group).apply {
         target = this@SimpleDataAdapter
     }
     private val skipNext = AtomicBoolean(false)
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH = d.onCreateViewHolder(parent, viewType)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH =
+        proxy.onCreateViewHolder(parent, viewType)
 
-    override fun getItemViewType(position: Int) = d.getItemViewType(position)
+    override fun getItemViewType(position: Int) = proxy.getItemViewType(position)
 
-    override fun onBindViewHolder(holder: VH, position: Int) = d.onBindViewHolder(holder, position)
+    override fun onBindViewHolder(holder: VH, position: Int) =
+        proxy.onBindViewHolder(holder, position)
+
+    override fun onViewAttachedToWindow(holder: VH) = proxy.onViewAttachedToWindow(holder)
+
+    override fun onViewDetachedFromWindow(holder: VH) = proxy.onViewDetachedFromWindow(holder)
+
+    override fun onViewRecycled(holder: VH) = proxy.onViewRecycled(holder)
 
     fun submitData(fatData: SimpleDataViewModel.FatData<*, IH, *>) {
         if (skipNext.compareAndSet(true, false)) return

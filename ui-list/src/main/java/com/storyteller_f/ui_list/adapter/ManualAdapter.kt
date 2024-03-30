@@ -16,9 +16,17 @@ class ManualAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(
         target = this@ManualAdapter
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH = proxy.onCreateViewHolder(parent, viewType)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH =
+        proxy.onCreateViewHolder(parent, viewType)
 
     override fun getItemViewType(position: Int) = proxy.getItemViewType(position)
 
-    override fun onBindViewHolder(holder: VH, position: Int) = proxy.onBindViewHolder(holder, position)
+    override fun onBindViewHolder(holder: VH, position: Int) =
+        proxy.onBindViewHolder(holder, position)
+
+    override fun onViewAttachedToWindow(holder: VH) = proxy.onViewAttachedToWindow(holder)
+
+    override fun onViewDetachedFromWindow(holder: VH) = proxy.onViewDetachedFromWindow(holder)
+
+    override fun onViewRecycled(holder: VH) = proxy.onViewRecycled(holder)
 }
