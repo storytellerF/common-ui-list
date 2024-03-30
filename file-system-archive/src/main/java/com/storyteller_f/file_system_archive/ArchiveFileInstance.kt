@@ -13,8 +13,7 @@ import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.FileInfo
-import com.storyteller_f.file_system.util.addDirectory
-import com.storyteller_f.file_system.util.addFile
+import com.storyteller_f.file_system.model.FileSystemPack
 import com.storyteller_f.file_system.util.getExtension
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -159,8 +158,7 @@ class ArchiveFileInstance(context: Context, uri: Uri) :
     }
 
     override suspend fun listInternal(
-        fileItems: MutableList<FileInfo>,
-        directoryItems: MutableList<FileInfo>
+        fileSystemPack: FileSystemPack
     ) {
         readEntry { zipEntry ->
             val childUri = childUri(zipEntry.name)
@@ -174,31 +172,35 @@ class ArchiveFileInstance(context: Context, uri: Uri) :
                 FileTime(zipEntry.time)
             }
             if (zipEntry.isDirectory) {
-                directoryItems.addDirectory(
-                    childUri,
-                    zipEntry.name,
-                    FilePermissions.USER_READABLE,
-                    fileTime,
-                    FileKind.build(
-                        isFile = false,
-                        isSymbolicLink = false,
-                        isHidden = false,
-                        size = 0,
-                        extension = ""
+                fileSystemPack.addDirectory(
+                    FileInfo(
+                        zipEntry.name,
+                        childUri,
+                        fileTime,
+                        FileKind.build(
+                            isFile = false,
+                            isSymbolicLink = false,
+                            isHidden = false,
+                            size = 0,
+                            extension = ""
+                        ),
+                        FilePermissions.USER_READABLE
                     )
                 )
             } else {
-                fileItems.addFile(
-                    childUri,
-                    zipEntry.name,
-                    FilePermissions.USER_READABLE,
-                    fileTime,
-                    FileKind.build(
-                        isFile = true,
-                        isSymbolicLink = false,
-                        isHidden = false,
-                        size = zipEntry.size,
-                        extension = getExtension(name).orEmpty()
+                fileSystemPack.addFile(
+                    FileInfo(
+                        zipEntry.name,
+                        childUri,
+                        fileTime,
+                        FileKind.build(
+                            isFile = true,
+                            isSymbolicLink = false,
+                            isHidden = false,
+                            size = zipEntry.size,
+                            extension = getExtension(name).orEmpty()
+                        ),
+                        FilePermissions.USER_READABLE,
                     )
                 )
             }
@@ -218,7 +220,7 @@ class ArchiveFileInstance(context: Context, uri: Uri) :
         TODO("Not yet implemented")
     }
 
-    override suspend fun toChild(name: String, policy: FileCreatePolicy): FileInstance? {
+    override suspend fun toChild(name: String, policy: FileCreatePolicy): FileInstance {
         val child = childUri(name)
         return ArchiveFileInstance(context, child)
     }

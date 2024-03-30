@@ -12,7 +12,7 @@ import com.storyteller_f.file_system.instance.FileInstance
 import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
-import com.storyteller_f.file_system.model.FileInfo
+import com.storyteller_f.file_system.model.FileSystemPack
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -52,8 +52,7 @@ class AppLocalFileInstance(context: Context, uri: Uri) : BaseContextFileInstance
         }
 
     override suspend fun listInternal(
-        fileItems: MutableList<FileInfo>,
-        directoryItems: MutableList<FileInfo>
+        fileSystemPack: FileSystemPack
     ) {
         TODO("Not yet implemented")
     }

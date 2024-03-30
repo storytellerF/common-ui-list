@@ -18,11 +18,6 @@ class Message(val name: String) {
         return this
     }
 
-    fun append(message: String?): Message {
-        add(message)
-        return this
-    }
-
     fun get(): String {
         return content.toString()
     }

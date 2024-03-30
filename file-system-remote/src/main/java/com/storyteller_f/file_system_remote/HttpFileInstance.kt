@@ -12,7 +12,7 @@ import com.storyteller_f.file_system.instance.FileKind
 import com.storyteller_f.file_system.instance.FilePermission
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
-import com.storyteller_f.file_system.model.FileInfo
+import com.storyteller_f.file_system.model.FileSystemPack
 import kotlinx.coroutines.yield
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -92,8 +92,7 @@ class HttpFileInstance(context: Context, uri: Uri) : BaseContextFileInstance(con
     }
 
     override suspend fun listInternal(
-        fileItems: MutableList<FileInfo>,
-        directoryItems: MutableList<FileInfo>
+        fileSystemPack: FileSystemPack
     ) {
         TODO("Not yet implemented")
     }

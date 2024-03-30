@@ -20,8 +20,7 @@ import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.instance.GetDocumentFile
 import com.storyteller_f.file_system.model.FileInfo
-import com.storyteller_f.file_system.util.addDirectory
-import com.storyteller_f.file_system.util.addFile
+import com.storyteller_f.file_system.model.FileSystemPack
 import com.storyteller_f.file_system.util.buildPath
 import com.storyteller_f.file_system.util.getExtension
 import com.storyteller_f.file_system.util.parentPath
@@ -258,8 +257,7 @@ class DocumentLocalFileInstance(
 
     @Throws(Exception::class)
     public override suspend fun listInternal(
-        fileItems: MutableList<FileInfo>,
-        directoryItems: MutableList<FileInfo>
+        fileSystemPack: FileSystemPack
     ) {
         val c = relinkIfNeed() ?: throw Exception("no permission")
         val documentFiles = c.listFiles()
@@ -270,31 +268,35 @@ class DocumentLocalFileInstance(
             val uri = childUri(documentFileName)
             val fileTime = documentFile.fileTime()
             if (documentFile.isFile) {
-                fileItems.addFile(
-                    uri,
-                    documentFileName,
-                    permissions,
-                    fileTime,
-                    FileKind.build(
-                        isFile = true,
-                        isSymbolicLink = false,
-                        isHidden = false,
-                        documentFile.length(),
-                        getExtension(documentFileName).orEmpty()
+                fileSystemPack.addFile(
+                    FileInfo(
+                        documentFileName,
+                        uri,
+                        fileTime,
+                        FileKind.build(
+                            isFile = true,
+                            isSymbolicLink = false,
+                            isHidden = false,
+                            documentFile.length(),
+                            getExtension(documentFileName).orEmpty()
+                        ),
+                        permissions,
                     )
                 )
             } else {
-                directoryItems.addDirectory(
-                    uri,
-                    documentFileName,
-                    permissions,
-                    fileTime,
-                    FileKind.build(
-                        isFile = false,
-                        isSymbolicLink = false,
-                        isHidden = false,
-                        0,
-                        ""
+                fileSystemPack.addDirectory(
+                    FileInfo(
+                        documentFileName,
+                        uri,
+                        fileTime,
+                        FileKind.build(
+                            isFile = false,
+                            isSymbolicLink = false,
+                            isHidden = false,
+                            0,
+                            ""
+                        ),
+                        permissions
                     )
                 )
             }

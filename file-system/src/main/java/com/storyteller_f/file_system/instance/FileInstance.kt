@@ -82,14 +82,13 @@ abstract class FileInstance(val uri: Uri) {
      */
     @WorkerThread
     protected abstract suspend fun listInternal(
-        fileItems: MutableList<FileInfo>,
-        directoryItems: MutableList<FileInfo>
+        fileSystemPack: FileSystemPack
     )
 
     @WorkerThread
     suspend fun list(): FileSystemPack {
         val fileSystemPack = FileSystemPack(buildFilesContainer(), buildDirectoryContainer())
-        listInternal(fileSystemPack.files, fileSystemPack.directories)
+        listInternal(fileSystemPack)
         return fileSystemPack
     }
 

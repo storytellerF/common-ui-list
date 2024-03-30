@@ -8,9 +8,9 @@ import com.storyteller_f.file_system.instance.FilePermission
 import com.storyteller_f.file_system.instance.FilePermissions
 import com.storyteller_f.file_system.instance.FileTime
 import com.storyteller_f.file_system.model.FileInfo
-import com.storyteller_f.file_system.util.addDirectory
-import com.storyteller_f.file_system.util.addFile
+import com.storyteller_f.file_system.model.FileSystemPack
 import com.storyteller_f.file_system.util.buildPath
+import com.storyteller_f.file_system.util.getExtension
 import com.storyteller_f.file_system.util.permissions
 import com.topjohnwu.superuser.nio.ExtendedFile
 import com.topjohnwu.superuser.nio.FileSystemManager
@@ -45,19 +45,46 @@ class RootAccessFileInstance(private val remote: FileSystemManager, uri: Uri) : 
     override suspend fun getFileOutputStream() = extendedFile.outputStream()
 
     override suspend fun listInternal(
-        fileItems: MutableList<FileInfo>,
-        directoryItems: MutableList<FileInfo>
+        fileSystemPack: FileSystemPack
     ) {
         val listFiles = extendedFile.listFiles()
         listFiles?.forEach {
             val permissions = it.permissions()
             val child = childUri(it.name)
-            val pair = it to child
             val fileTime = it.fileTime()
             if (it.isFile) {
-                fileItems.addFile(pair, permissions, fileTime)
+                val fileName = it.name
+                fileSystemPack.addFile(
+                    FileInfo(
+                        fileName,
+                        child,
+                        fileTime,
+                        FileKind.build(
+                            isFile = true,
+                            isSymbolicLink = false,
+                            isHidden = it.isHidden,
+                            it.length(),
+                            getExtension(fileName).orEmpty()
+                        ),
+                        permissions,
+                    )
+                )
             } else if (it.isDirectory) {
-                directoryItems.addDirectory(pair, permissions, fileTime)
+                fileSystemPack.addDirectory(
+                    FileInfo(
+                        it.name,
+                        child,
+                        fileTime,
+                        FileKind.build(
+                            isFile = false,
+                            isSymbolicLink = false,
+                            isHidden = it.isHidden,
+                            0,
+                            ""
+                        ),
+                        permissions
+                    )
+                )
             }
         }
     }
