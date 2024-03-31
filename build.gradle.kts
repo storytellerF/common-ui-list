@@ -49,13 +49,6 @@ setupKover(
         "common-ui",
         "common-vm-ktx",
         "compat-ktx",
-        "file-system",
-        "file-system-archive",
-        "file-system-ktx",
-        "file-system-local",
-        "file-system-memory",
-        "file-system-remote",
-        "file-system-root",
         "ui-list",
         "view-holder-compose"
     ), listOf(
