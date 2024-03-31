@@ -1,4 +1,9 @@
-import com.storyteller_f.version_manager.*
+import com.storyteller_f.version_manager.Versions
+import com.storyteller_f.version_manager.baseLibrary
+import com.storyteller_f.version_manager.commonAppDependency
+import com.storyteller_f.version_manager.implModule
+import com.storyteller_f.version_manager.setupExtFunc
+import com.storyteller_f.version_manager.unitTestDependency
 
 plugins {
     id("com.android.library")
@@ -23,7 +28,7 @@ dependencies {
     implModule(":common-ktx")
     implModule(":common-vm-ktx")
     implModule(":common-ui")
-    commonAndroidDependency()
+    commonAppDependency()
     unitTestDependency()
     // https://mvnrepository.com/artifact/androidx.navigation/navigation-common-ktx
     implementation("androidx.navigation:navigation-common-ktx:${Versions.NAV}")

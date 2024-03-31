@@ -202,6 +202,12 @@ fun Project.baseLibrary(enableMultiDex: Boolean = false) {
             jvmTarget = javaVersion.toString()
             addArgs("-opt-in=kotlin.RequiresOptIn")
         }
+
+        publishing {
+            singleVariant("release") {
+                withSourcesJar()
+            }
+        }
     }
 }
 
@@ -281,7 +287,8 @@ fun Project.constraintCommonUIListVersion(
                 "view-holder-compose"
             ).forEach {
                 "implementation"("$group:$it:$version")
-                "ksp"("$group:$it:$version")
+                if (extensions.findByName("ksp") != null)
+                    "ksp"("$group:$it:$version")
             }
         }
     }

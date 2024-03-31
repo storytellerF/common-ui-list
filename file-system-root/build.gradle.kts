@@ -1,6 +1,5 @@
 import com.storyteller_f.version_manager.baseLibrary
 import com.storyteller_f.version_manager.unitTestDependency
-import com.storyteller_f.version_manager.commonAndroidDependency
 import com.storyteller_f.version_manager.implModule
 
 plugins {

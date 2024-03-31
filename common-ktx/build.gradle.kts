@@ -1,4 +1,6 @@
-import com.storyteller_f.version_manager.*
+import com.storyteller_f.version_manager.baseLibrary
+import com.storyteller_f.version_manager.commonAppDependency
+import com.storyteller_f.version_manager.unitTestDependency
 
 plugins {
     id("com.android.library")
@@ -17,6 +19,6 @@ android {
 baseLibrary(true)
 
 dependencies {
-    commonAndroidDependency()
+    commonAppDependency()
     unitTestDependency()
 }
