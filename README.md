@@ -10,7 +10,9 @@
 //build
 sh gradlew build
 //publish
-sh gradlew clean -Pgroup=com.github.storytellerF -xtest -xlint assemble publishToMavenLocal :version-manager:publishToMavenLocal
+sh gradlew -Pgroup=com.github.storytellerF.common-ui-list clean -xtest -xlint assemble publishToMavenLocal :version-manager:publishToMavenLocal
+//也可以选择和jitpack 使用相同的group。
+//-Pgroup=com.github.storytellerF.common-ui-list -Pversion=version
 ```
 
 ## Usage

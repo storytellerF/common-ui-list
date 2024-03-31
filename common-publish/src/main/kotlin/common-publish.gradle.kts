@@ -2,10 +2,9 @@ plugins {
     `maven-publish`
 }
 
-group = "com.storyteller_f"
-version = System.getenv().let {
-    if (it["JITPACK"] == null) "0.0.1-local" else it["VERSION"]!!
-}
+val env: MutableMap<String, String> = System.getenv()
+group = group.takeIf { it.toString().contains(".") } ?: env["GROUP"] ?: "com.storyteller_f"
+version = version.takeIf { it != "unspecified" } ?: env["VERSION"] ?: "0.0.1-local"
 
 afterEvaluate {
     publishing {

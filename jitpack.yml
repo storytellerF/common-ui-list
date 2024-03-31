@@ -1,4 +1,4 @@
 jdk:
     - openjdk17
 install:
-    - sh gradlew clean -Pgroup=com.github.storytellerF -xtest -xlint assemble publishToMavenLocal :version-manager:publishToMavenLocal
+    - sh gradlew clean -xtest -xlint assemble publishToMavenLocal :version-manager:publishToMavenLocal

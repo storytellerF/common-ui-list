@@ -1,4 +1,9 @@
-import com.storyteller_f.version_manager.*
+import com.storyteller_f.version_manager.Versions
+import com.storyteller_f.version_manager.apiModule
+import com.storyteller_f.version_manager.baseLibrary
+import com.storyteller_f.version_manager.commonAppDependency
+import com.storyteller_f.version_manager.implModule
+import com.storyteller_f.version_manager.unitTestDependency
 
 plugins {
     id("com.android.library")
@@ -29,7 +34,7 @@ dependencies {
     unitTestDependency()
 
     //components
-    commonAndroidDependency()
+    commonAppDependency()
     implementation("androidx.recyclerview:recyclerview:${Versions.RECYCLERVIEW}")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:${Versions.SWIPE_REFRESH}")
 

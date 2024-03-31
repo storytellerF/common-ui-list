@@ -1,7 +1,7 @@
 import com.storyteller_f.version_manager.Versions
 import com.storyteller_f.version_manager.apiModule
 import com.storyteller_f.version_manager.baseLibrary
-import com.storyteller_f.version_manager.commonAndroidDependency
+import com.storyteller_f.version_manager.commonAppDependency
 import com.storyteller_f.version_manager.implModule
 import com.storyteller_f.version_manager.setupCompose
 import com.storyteller_f.version_manager.setupExtFunc
@@ -38,6 +38,6 @@ dependencies {
     implementation("androidx.navigation:navigation-runtime-ktx:${Versions.NAVIGATION}")
     implementation("androidx.databinding:viewbinding:${Versions.DATA_BINDING_COMPILER}")
 
-    commonAndroidDependency()
+    commonAppDependency()
     unitTestDependency()
 }
