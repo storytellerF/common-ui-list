@@ -1,14 +1,5 @@
 @file:Suppress("UnstableApiUsage")
 
-include(":file-system-memory")
-
-
-include(":file-system-local")
-
-
-include(":file-system-archive")
-
-
 pluginManagement {
     val smlFolder: String by settings
     includeBuild("version-manager")
@@ -59,12 +50,6 @@ include(":common-ktx")
 include(":common-pr")
 include(":slim-ktx")
 include(":compat-ktx")
-
-include(":file-system")
-include(":file-system-ktx")
-include(":file-system-remote")
-include(":file-system-root")
-
 
 //val userHome: String? = System.getProperty("user.home")
 //include("sardine-android")
