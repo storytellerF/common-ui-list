@@ -260,6 +260,7 @@ fun Project.constraintCommonUIListVersion(
     version: String,
     group: String = "com.github.storytellerF.common-ui-list"
 ) {
+    val p = this
     dependencies {
         constraints {
             listOf(
@@ -280,7 +281,7 @@ fun Project.constraintCommonUIListVersion(
                 "view-holder-compose"
             ).forEach {
                 "implementation"("$group:$it:$version")
-                if (extensions.findByName("ksp") != null)
+                if (p.extensions.findByName("ksp") != null)
                     "ksp"("$group:$it:$version")
             }
         }

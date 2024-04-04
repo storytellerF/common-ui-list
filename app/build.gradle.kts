@@ -34,7 +34,6 @@ kapt {
 dependencies {
     networkDependency()
     implementation("com.squareup.retrofit2:converter-gson:${Versions.RETROFIT}")
-    ksp
 }
 baseApp()
 setupGeneric()
