@@ -5,18 +5,26 @@ package com.storyteller_f.ui_list.core
 import android.content.Context
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.ComponentActivity
 import androidx.annotation.ColorRes
 import androidx.annotation.DimenRes
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
+import com.storyteller_f.ui_list.event.findActivityOrNull
+import com.storyteller_f.ui_list.event.findFragmentOrNull
 
 typealias BuildViewHolderFunction = (ViewGroup, String) -> AbstractViewHolder<out DataItemHolder>
 
@@ -59,12 +67,15 @@ abstract class DataItemHolder(val variant: String = "") {
     open fun areContentsTheSame(other: DataItemHolder): Boolean = this == other
 }
 
-abstract class AbstractViewHolder<IH : DataItemHolder>(val view: View) :
-    RecyclerView.ViewHolder(view) {
-    val context: Context = view.context
-    private var _holderLifecycleOwner: BindLifecycleOwner? = null
+abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View) :
+    RecyclerView.ViewHolder(itemView) {
+    val context: Context = itemView.context
+
+    private val _holderLifecycleOwnerLiveData = MutableLiveData<BindLifecycleOwner?>()
+    val holderLifecycleLiveData: LiveData<BindLifecycleOwner?> by ::_holderLifecycleOwnerLiveData
+
     val holderLifecycleOwner: LifecycleOwner
-        get() = _holderLifecycleOwner!!
+        get() = _holderLifecycleOwnerLiveData.value!!
 
     private var _itemHolder: IH? = null
 
@@ -75,6 +86,8 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(val view: View) :
 
     // 需要保证当前已经绑定过数据了
     val itemHolder get() = _itemHolder!!
+
+    private var _observer: LifecycleObserver? = null
 
     fun onBind(itemHolder: IH) {
         bindData(itemHolder)
@@ -89,13 +102,6 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(val view: View) :
     fun getDimen(@DimenRes id: Int) = context.resources.getDimension(id)
 
     fun getString(@StringRes id: Int) = context.resources.getString(id)
-
-    internal fun moveStateToCreate() {
-        assert(_holderLifecycleOwner == null)
-        _holderLifecycleOwner = BindLifecycleOwner()
-        moveToState(Lifecycle.Event.ON_CREATE)
-    }
-
     internal fun attachItemHolder(itemHolder: IH) {
         _itemHolder = itemHolder
     }
@@ -104,29 +110,99 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(val view: View) :
         _itemHolder = null
     }
 
-    inner class BindLifecycleOwner : LifecycleOwner {
-        val lifecycleRegistry = LifecycleRegistry(this)
-        override val lifecycle: Lifecycle = lifecycleRegistry
+    /**
+     * onViewAttachedToWindow 被触发或者外部生命周期onStart 触发
+     */
+    internal fun moveStateToStart(resetObserverIfNeed: Boolean = true) {
+        moveToState(Lifecycle.Event.ON_START)
+        // 开始监听外部LifecycleOwner
+        val owner: LifecycleOwner? = itemView.findFragmentOrNull<Fragment>()
+            ?: itemView.findActivityOrNull() as? ComponentActivity
+        requireNotNull(owner)
+        // 确保外部生命周期引起变化时，不会导致再次注册observer，仅在onViewAttachedToWindow 中才会注册
+        if (_observer == null || resetObserverIfNeed) {
+            _observer?.let {
+                owner.lifecycle.removeObserver(it)
+            }
+            val observer = BindLifecycleObserver()
+            owner.lifecycle.addObserver(observer)
+            _observer = observer
+        }
     }
 
+    /**
+     * onViewDetachedFromWindow 被触发或者外部生命周期触发onStop
+     *
+     * onViewDetachedFromWindow 会通过onViewAttachedToWindow 恢复
+     * 外部生命周期会通过再次变成onStart 恢复。如果外部生命周期来自Fragment，监听Fragment 本身而不是viewLifecycleOwner
+     * 确保在Fragment 恢复的时候可以获得onStart 事件
+     * 两者都使用moveStateToStart 恢复状态
+     */
+    internal fun moveStateToStop() {
+        moveToState(Lifecycle.Event.ON_STOP)
+        // 不会关闭监听LifecycleOwner，为了能够获得onStart 的回调
+    }
+
+    /**
+     * 完全通过外部生命周期确定
+     */
     internal fun moveStateToResume() {
-        val event = Lifecycle.Event.ON_RESUME
-        moveToState(event)
+        moveToState(Lifecycle.Event.ON_RESUME)
     }
 
+    /**
+     * 完全通过外部生命周期确定
+     */
     internal fun moveStateToPause() {
         moveToState(Lifecycle.Event.ON_PAUSE)
     }
 
+    internal fun moveStateToCreate() {
+        assert(_holderLifecycleOwnerLiveData.value == null)
+        _holderLifecycleOwnerLiveData.value = BindLifecycleOwner()
+        moveToState(Lifecycle.Event.ON_CREATE)
+    }
+
     internal fun moveStateToDestroy() {
         moveToState(Lifecycle.Event.ON_DESTROY)
-        _holderLifecycleOwner = null
+        _holderLifecycleOwnerLiveData.value = null
     }
 
     private fun moveToState(event: Lifecycle.Event) {
-        val lifecycleOwner = _holderLifecycleOwner
+        val lifecycleOwner = _holderLifecycleOwnerLiveData.value
         require(lifecycleOwner != null)
         lifecycleOwner.lifecycleRegistry.handleLifecycleEvent(event)
+    }
+
+    /**
+     * 切换到下一个页面或者熄灭屏幕不会触发RecycleView 事件，需要手动监听Activity 或者Fragment 的生命周期
+     */
+    inner class BindLifecycleObserver : DefaultLifecycleObserver {
+
+        override fun onStart(owner: LifecycleOwner) {
+            super.onStart(owner)
+            moveStateToStart(false)
+        }
+
+        override fun onStop(owner: LifecycleOwner) {
+            super.onStop(owner)
+            moveStateToStop()
+        }
+
+        override fun onResume(owner: LifecycleOwner) {
+            super.onResume(owner)
+            moveStateToResume()
+        }
+
+        override fun onPause(owner: LifecycleOwner) {
+            super.onPause(owner)
+            moveStateToPause()
+        }
+    }
+
+    inner class BindLifecycleOwner : LifecycleOwner {
+        val lifecycleRegistry = LifecycleRegistry(this)
+        override val lifecycle: Lifecycle = lifecycleRegistry
     }
 }
 
@@ -175,12 +251,12 @@ open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(priv
 
     override fun onViewAttachedToWindow(holder: VH) {
         super.onViewAttachedToWindow(holder)
-        holder.moveStateToResume()
+        holder.moveStateToStart()
     }
 
     override fun onViewDetachedFromWindow(holder: VH) {
         super.onViewDetachedFromWindow(holder)
-        holder.moveStateToPause()
+        holder.moveStateToStop()
     }
 
     override fun onViewRecycled(holder: VH) {

@@ -1,6 +1,5 @@
 package com.storyteller_f.slim_ktx
 
-
 /**
  * 添加intent，除了第一行
  */
@@ -47,4 +46,3 @@ fun String.no() = CodeBlock(this, 0)
  * 添加指定的intent
  */
 fun String.yes(i: Int = 1) = CodeBlock(this, i)
-

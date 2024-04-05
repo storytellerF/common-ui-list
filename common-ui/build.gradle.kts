@@ -16,9 +16,6 @@ plugins {
 }
 
 android {
-    defaultConfig {
-        minSdk = 21
-    }
 
     buildFeatures {
         dataBinding = true

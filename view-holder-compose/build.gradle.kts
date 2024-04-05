@@ -8,11 +8,6 @@ plugins {
 }
 
 android {
-
-    defaultConfig {
-        minSdk = 21
-    }
-
     namespace = "com.storyteller_f.view_holder_compose"
 }
 baseLibrary()

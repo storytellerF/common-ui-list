@@ -82,9 +82,6 @@ fun Project.baseAppDependency() {
 
         "ksp"("androidx.room:room-compiler:${Versions.ROOM}")
 
-        "implementation"("org.jetbrains.kotlinx:kotlinx-coroutines-android:${Versions.COROUTINES}")
-        "implementation"("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.COROUTINES}")
-
         "debugImplementation"("com.squareup.leakcanary:leakcanary-android:${Versions.LEAK_CANARY}")
         "implementation"("androidx.multidex:multidex:${Versions.MULTI_DEX}")
     }
@@ -105,6 +102,11 @@ fun DependencyHandlerScope.networkDependency() {
 fun DependencyHandlerScope.navigationDependency() {
     "implementation"("androidx.navigation:navigation-fragment-ktx:${Versions.NAV}")
     "implementation"("androidx.navigation:navigation-ui-ktx:${Versions.NAV}")
+}
+
+fun DependencyHandlerScope.coroutineDependency() {
+    "implementation"("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.COROUTINES}")
+    "implementation"("org.jetbrains.kotlinx:kotlinx-coroutines-android:${Versions.COROUTINES}")
 }
 
 fun DependencyHandlerScope.unitTestDependency() {
