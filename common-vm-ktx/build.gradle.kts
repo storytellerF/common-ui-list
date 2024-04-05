@@ -9,9 +9,6 @@ plugins {
 }
 
 android {
-    defaultConfig {
-        minSdk = 21
-    }
     namespace = "com.storyteller_f.common_vm_ktx"
 }
 baseLibrary()

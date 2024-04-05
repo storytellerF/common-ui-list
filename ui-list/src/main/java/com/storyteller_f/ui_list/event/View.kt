@@ -1,5 +1,7 @@
 package com.storyteller_f.ui_list.event
 
+import android.app.Activity
+import android.content.ContextWrapper
 import android.view.LayoutInflater
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
@@ -68,17 +70,36 @@ inline fun <reified T> View.findFragmentOrNull(): T? {
     } catch (_: Exception) {
         null
     }
-    while (fragment != null) {
-        if (fragment is T) {
-            return fragment
+    while (true) {
+        when (fragment) {
+            null -> return null
+            is T -> return fragment
+            else -> fragment = fragment.parentFragment
         }
-        fragment = fragment.parentFragment
     }
-    return null
 }
 
-inline fun <reified T> doWhenIs(any: Any, block: (T) -> Unit) {
-    if (any is T) {
-        block(any as T)
+inline fun <reified T> Any.doWhen(block: (T) -> Unit) {
+    if (this is T) {
+        block(this as T)
+    }
+}
+
+fun View.findActivityOrNull(): Activity? {
+    var context = context
+    while (true) {
+        when (context) {
+            !is Activity -> {
+                if (context is ContextWrapper) {
+                    context = context.baseContext
+                } else {
+                    return null
+                }
+            }
+
+            else -> {
+                return context
+            }
+        }
     }
 }

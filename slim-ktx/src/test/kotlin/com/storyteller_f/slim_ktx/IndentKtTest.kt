@@ -12,7 +12,6 @@ class IndentKtTest {
         assertTrue("test\nhello".indentStartAt(0).startsWith(" "))
     }
 
-
     @Test
     fun testReplaceCode() {
         assertEquals("hello", "$1".replaceCode("hello".no()))

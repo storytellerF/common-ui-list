@@ -61,6 +61,9 @@ fun Project.setupGeneric() {
     }
 }
 
+/**
+ * 需要kapt 插件
+ */
 fun Project.setupDataBinding() {
     loadPlugin("kotlin-kapt")
     androidApp {
@@ -90,7 +93,7 @@ fun Project.loadPlugin(id: String) {
 }
 
 /**
- * 增加
+ * 默认最新SDK 为DEFAULT_MIN_SDK = 21
  */
 fun Project.baseApp() {
     androidApp {
@@ -169,6 +172,9 @@ private fun Project.loadBao() {
 
 }
 
+/**
+ * 默认最小SDK 为DEFAULT_MIN_SDK = 21
+ */
 fun Project.baseLibrary(enableMultiDex: Boolean = false) {
     androidLibrary {
         compileSdk = Versions.COMPILE_SDK

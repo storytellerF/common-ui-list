@@ -13,9 +13,6 @@ plugins {
 }
 
 android {
-    defaultConfig {
-        minSdk = 21
-    }
     kotlinOptions {
         freeCompilerArgs = listOf("-Xcontext-receivers")
     }
