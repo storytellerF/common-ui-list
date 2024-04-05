@@ -96,7 +96,7 @@ fun Project.baseApp() {
     androidApp {
         compileSdk = Versions.COMPILE_SDK
         defaultConfig {
-            minSdk = 21
+            minSdk = Versions.DEFAULT_MIN_SDK
             versionCode = 1
             versionName = "1.0"
             targetSdk = Versions.TARGET_SDK
@@ -174,6 +174,7 @@ fun Project.baseLibrary(enableMultiDex: Boolean = false) {
         compileSdk = Versions.COMPILE_SDK
 
         defaultConfig {
+            minSdk = Versions.DEFAULT_MIN_SDK
             targetSdk = Versions.TARGET_SDK
             testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
             consumerProguardFiles("consumer-rules.pro")

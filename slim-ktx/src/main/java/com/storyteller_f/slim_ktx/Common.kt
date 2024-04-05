@@ -18,3 +18,11 @@ inline fun <reified T : Any> T.propertiesSame(any: Any?, vararg properties: T.()
         false
     }
 }
+
+inline fun and(block1: () -> Boolean, block2: () -> Boolean): Boolean {
+    return block1() && block2()
+}
+
+inline fun or(block1: () -> Boolean, block2: () -> Boolean): Boolean {
+    return block1() || block2()
+}

@@ -1,14 +1,13 @@
 package com.storyteller_f.slim_ktx
 
-import kotlin.reflect.safeCast
 
 /**
  * 添加intent，除了第一行
  */
-fun String.indentRest(indent: String = "    "): String =
+fun String.indentStartAt(startIndex: Int = 1, indent: String = "    "): String =
     lineSequence().mapIndexed { index, element ->
         when {
-            index == 0 -> element
+            index < startIndex -> element
             element.isNotBlank() -> indent + element
             element.length < indent.length -> indent
             else -> element
@@ -33,7 +32,7 @@ class CodeBlock(private val content: String, private val indent: Int) {
     fun indentRest(): String {
         var result = content
         repeat(indent) {
-            result = result.indentRest()
+            result = result.indentStartAt()
         }
         return result
     }
@@ -49,4 +48,3 @@ fun String.no() = CodeBlock(this, 0)
  */
 fun String.yes(i: Int = 1) = CodeBlock(this, i)
 
-inline fun <reified T : Any> T.cast(a: Any) = this::class.safeCast(a)

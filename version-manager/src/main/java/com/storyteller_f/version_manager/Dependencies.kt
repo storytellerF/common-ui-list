@@ -6,6 +6,9 @@ import org.gradle.api.Project
 import org.gradle.kotlin.dsl.DependencyHandlerScope
 import org.gradle.kotlin.dsl.dependencies
 
+/**
+ * 手动调用constraintCommonUIListVersion 是必须的
+ */
 fun Project.implModule(moduleName: String) {
     dependencies {
         val module = findProject(moduleName)
@@ -18,6 +21,9 @@ fun Project.implModule(moduleName: String) {
 
 }
 
+/**
+ * 手动调用constraintCommonUIListVersion 是必须的
+ */
 fun Project.androidTestImplModule(moduleName: String) {
     dependencies {
         val module = findProject(moduleName)
@@ -30,6 +36,9 @@ fun Project.androidTestImplModule(moduleName: String) {
 
 }
 
+/**
+ * 手动调用constraintCommonUIListVersion 是必须的
+ */
 fun Project.apiModule(moduleName: String) {
     dependencies {
         val module = findProject(moduleName)
@@ -42,18 +51,9 @@ fun Project.apiModule(moduleName: String) {
 
 }
 
-fun Project.kaptModule(moduleName: String) {
-    dependencies {
-        val module = findProject(moduleName)
-        if (module != null) {
-            "kapt"(module)
-        } else {
-            "kapt"("${Versions.JITPACK_RELEASE_GROUP}$moduleName")
-        }
-    }
-
-}
-
+/**
+ * 手动调用constraintCommonUIListVersion 是必须的
+ */
 fun Project.kspModule(moduleName: String) {
     dependencies {
         val module = findProject(moduleName)
