@@ -6,6 +6,7 @@ object Versions {
     const val KSP = "1.9.21-1.0.15"
     const val COMPILE_SDK = 34
     const val TARGET_SDK = 34
+    const val DEFAULT_MIN_SDK = 21
     const val APPCOMPAT = "1.6.1"
     const val CORE = "1.12.0"
     const val RECYCLERVIEW = "1.3.2"
