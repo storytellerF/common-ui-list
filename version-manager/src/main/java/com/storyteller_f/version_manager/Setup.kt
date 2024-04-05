@@ -2,9 +2,13 @@
 
 package com.storyteller_f.version_manager
 
+import androidx.navigation.safeargs.gradle.ArgumentsGenerationTask
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
+import com.android.build.gradle.internal.tasks.databinding.DataBindingGenBaseClassesTask
+import com.android.build.gradle.tasks.AidlCompile
+import com.android.build.gradle.tasks.GenerateBuildConfig
 import org.gradle.api.Action
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
@@ -12,6 +16,7 @@ import org.gradle.api.plugins.ExtensionAware
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmOptions
+import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.util.Locale
 
@@ -321,15 +326,15 @@ fun Project.redirectKaptOutputToKsp() {
                 val aidl = "compile${variantName}Aidl"
 
                 val kspTask = project.tasks.findByName(ksp)
-                        as? org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool<*>
+                        as? AbstractKotlinCompileTool<*>
                 val viewBindingTask = project.tasks.findByName(viewBinding)
-                        as? com.android.build.gradle.internal.tasks.databinding.DataBindingGenBaseClassesTask
+                        as? DataBindingGenBaseClassesTask
                 val buildConfigTask = project.tasks.findByName(buildConfig)
-                        as? com.android.build.gradle.tasks.GenerateBuildConfig
+                        as? GenerateBuildConfig
                 val aidlTask = project.tasks.findByName(aidl)
-                        as? com.android.build.gradle.tasks.AidlCompile
+                        as? AidlCompile
                 val safeArgsTask = project.tasks.findByName(safeArgs)
-                        as? androidx.navigation.safeargs.gradle.ArgumentsGenerationTask
+                        as? ArgumentsGenerationTask
 
                 kspTask?.run {
                     viewBindingTask?.let { setSource(it.sourceOutFolder) }
