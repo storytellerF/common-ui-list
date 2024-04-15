@@ -92,10 +92,10 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
         val clickEventCount = clickEvents.count()
         val longClickEventCount = longClickEvents.count()
 
-        logger.logging("ui-list round $count $viewHolderCount $clickEventCount $longClickEventCount")
-        logger.logging("ui-list round $count holder ${viewHolderMap[true]?.size} ${viewHolderMap[false]?.size}")
-        logger.logging("ui-list round $count click: ${clickEventMap[true]?.size} ${clickEventMap[false]?.size}")
-        logger.logging("ui-list round $count long ${longClickEventMap[true]?.size} ${longClickEventMap[false]?.size}")
+        logger.warn("ui-list round $count vh:$viewHolderCount click:$clickEventCount long-click:$longClickEventCount")
+        logger.warn("ui-list round $count holder ${viewHolderMap[true]?.size} ${viewHolderMap[false]?.size}")
+        logger.warn("ui-list round $count click: ${clickEventMap[true]?.size} ${clickEventMap[false]?.size}")
+        logger.warn("ui-list round $count long ${longClickEventMap[true]?.size} ${longClickEventMap[false]?.size}")
         val invalidate =
             viewHolderMap[false].orEmpty() + clickEventMap[false].orEmpty() + longClickEventMap[false].orEmpty()
         invalidate.forEach {
@@ -154,13 +154,6 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
             itemHolderFullName to viewName
         }) {
             it as KSFunctionDeclaration
-            val group = if (isLong) {
-                it.getAnnotationsByType(
-                    BindLongClickEvent::class
-                ).first().group
-            } else {
-                it.getAnnotationsByType(BindClickEvent::class).first().group
-            }
             val parent = it.parent as KSClassDeclaration
             val identity = parent.identity()
             val parameterList = argumentList(it)
@@ -169,8 +162,7 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
                 identity.fullName,
                 it.simpleName.asString(),
                 parameterList,
-                group,
-                it as KSAnnotated
+                it
             )
         }
     }

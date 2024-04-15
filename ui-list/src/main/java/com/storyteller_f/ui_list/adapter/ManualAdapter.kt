@@ -9,10 +9,9 @@ import com.storyteller_f.ui_list.core.DefaultAdapter
 import com.storyteller_f.ui_list.core.DefaultAdapter.Companion.common_diff_util
 
 @Suppress("UNCHECKED_CAST")
-class ManualAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(
-    group: String? = null
-) : ListAdapter<IH, VH>(common_diff_util as DiffUtil.ItemCallback<IH>) {
-    private val proxy = DefaultAdapter<IH, VH>(group).apply {
+class ManualAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>> :
+    ListAdapter<IH, VH>(common_diff_util as DiffUtil.ItemCallback<IH>) {
+    private val proxy = DefaultAdapter<IH, VH>().apply {
         target = this@ManualAdapter
     }
 

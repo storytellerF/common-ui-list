@@ -4,7 +4,6 @@ import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSFile
-import com.storyteller_f.slim_ktx.dup
 import com.storyteller_f.slim_ktx.no
 import com.storyteller_f.slim_ktx.replaceCode
 import com.storyteller_f.slim_ktx.trimAndReplaceCode
@@ -32,7 +31,8 @@ class KotlinGenerator(
         it.itemHolderFullName
     }
     private val mapPair = zoom.extractEventMap(allItemHolderName)
-    private val dependencyFiles = getDependencyFiles(entries, allItemHolderName, mapPair.first, mapPair.second)
+    private val dependencyFiles =
+        getDependencyFiles(entries, allItemHolderName, mapPair.first, mapPair.second)
     private val allImports = allImports(entries, mapPair.first, mapPair.second)
     private val affectInfo = getAffectFileInfo(packageName, dependencyFiles)
     override fun buildAddFunction(entry: List<Entry<KSAnnotated>>): String {
@@ -180,17 +180,24 @@ class KotlinGenerator(
         clickEventMap: Map<ViewName, List<Event<KSAnnotated>>>,
         longClickEventMap: Map<ViewName, List<Event<KSAnnotated>>>,
     ): String {
-        val viewHolderBuilderContent = entry.viewHolders.map {
-            val viewHolderContent = if (it.value.bindingName.endsWith(
+        val viewHolderBuilderContent = entry.viewHolders.map { viewHolder ->
+            if ((clickEventMap + longClickEventMap).filter {
+                    it.value.size > 1
+                }.onEach {
+                    logger.error("${entry.itemHolderFullName}针对${it.key} 设置了多个点击事件")
+                }.isNotEmpty()) {
+                throw Exception("具体错误查看日志")
+            }
+            val viewHolderContent = if (viewHolder.value.bindingName.endsWith(
                     "Binding"
                 )
             ) {
-                buildViewHolder(it.value, clickEventMap, longClickEventMap)
+                buildViewHolder(viewHolder.value, clickEventMap, longClickEventMap)
             } else {
-                buildComposeViewHolder(it.value, clickEventMap, longClickEventMap)
+                buildComposeViewHolder(viewHolder.value, clickEventMap, longClickEventMap)
             }
             """
-            if (type.equals("${it.key}")) {
+            if (type.equals("${viewHolder.key}")) {
                 $1
             }//type if end
             """.trimIndent().replaceCode(viewHolderContent.yes())
@@ -230,15 +237,6 @@ class KotlinGenerator(
 
     private fun buildComposeClickListener(event: Map<ViewName, List<Event<KSAnnotated>>>) =
         event.map {
-            if (it.value.map { event1 ->
-                    event1.group
-                }.dup()) {
-                throw Exception("dup group ${
-                    it.value.map { event1 ->
-                        "${event1.receiver}#${event1.functionName} ${event1.group}"
-                    }
-                }")
-            }
             val clickBlock = it.value.joinToString("\n") { e ->
                 produceClickBlockForCompose(e)
             }
@@ -253,12 +251,10 @@ class KotlinGenerator(
         val parameterList = e.parameterList
         return if (e.receiver.contains("Activity")) {
             """
-            if("${e.group}".equals(viewHolder.grouped)) 
                 (context as? ${e.receiver})?.${e.functionName}($parameterList)
             """.trimIndent()
         } else {
             """
-            if("${e.group}".equals(viewHolder.grouped)) 
                 v.findFragmentOrNull<${e.receiver}>()?.${e.functionName}($parameterList)
             """.trimIndent()
         }
@@ -306,13 +302,11 @@ class KotlinGenerator(
             val parameterList = event.parameterList
             if (event.receiver.contains("Activity")) {
                 """
-                    if("${event.group}" == viewHolder.grouped) 
-                        (context as? ${event.receiver})?.${event.functionName}($parameterList)
+                    (context as? ${event.receiver})?.${event.functionName}($parameterList)
                 """.trimIndent()
             } else {
                 """
-                    if("${event.group}" == viewHolder.grouped)
-                        v.findFragmentOrNull<${event.receiver}>()?.${event.functionName}($parameterList)
+                    v.findFragmentOrNull<${event.receiver}>()?.${event.functionName}($parameterList)
                 """.trimIndent()
             }
         }

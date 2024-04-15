@@ -79,11 +79,6 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View) :
 
     private var _itemHolder: IH? = null
 
-    /**
-     * 所属的group
-     */
-    lateinit var grouped: String
-
     // 需要保证当前已经绑定过数据了
     val itemHolder get() = _itemHolder!!
 
@@ -209,7 +204,7 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View) :
 abstract class BindingViewHolder<IH : DataItemHolder>(binding: ViewBinding) :
     AbstractViewHolder<IH>(binding.root)
 
-open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(private val group: String? = null) :
+open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>> :
     RecyclerView.Adapter<VH>() {
     lateinit var target: RecyclerView.Adapter<VH>
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
@@ -220,9 +215,7 @@ open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(priv
         } else {
             list[viewType](parent, "")
         }
-        return (viewHolder as VH).apply {
-            grouped = group ?: "default"
-        }
+        return viewHolder as VH
     }
 
     override fun onBindViewHolder(holder: VH, position: Int) {
