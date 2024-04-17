@@ -143,15 +143,15 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
         isLong: Boolean,
     ): Map<String, Map<String, List<Event<KSAnnotated>>>> {
         return clickEvents.nestedGroupBy({
-            val (itemHolderFullName, _) = getItemHolderDetail(it)
-            val viewName = if (isLong) {
-                it.getAnnotationsByType(
+            if (isLong) {
+                getItemHolderIdentityInLongClickEvent(it).fullName to it.getAnnotationsByType(
                     BindLongClickEvent::class
                 ).first().viewName
             } else {
-                it.getAnnotationsByType(BindClickEvent::class).first().viewName
+                getItemHolderIdentityInClickEvent(it).fullName to it.getAnnotationsByType(
+                    BindClickEvent::class
+                ).first().viewName
             }
-            itemHolderFullName to viewName
         }) {
             it as KSFunctionDeclaration
             val parent = it.parent as KSClassDeclaration
@@ -184,8 +184,7 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
     }
 
     private fun KSDeclaration.identity(): Identity {
-        val name = simpleName.asString()
-        return Identity("${packageName.asString()}.$name", name)
+        return Identity(qualifiedName!!.asString(), simpleName.asString())
     }
 
     /**
@@ -196,7 +195,7 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
         return viewHolders.map { viewHolder ->
             viewHolder as KSClassDeclaration
             val type = viewHolder.getAnnotationsByType(BindItemHolder::class).first().type
-            val (itemHolderFullName, itemHolderName) = getItemHolderDetail(viewHolder)
+            val (itemHolderFullName, itemHolderName) = getItemHolderIdentity(viewHolder)
             val (bindingName, bindingFullName) = getBindingDetail(viewHolder)
             val (viewHolderFullName, viewHolderName) = viewHolder.identity()
             Entry(
@@ -215,21 +214,63 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
         }
     }
 
-    private fun getItemHolderDetail(viewHolder: KSAnnotated): Pair<String, String> {
-        val ksType = viewHolder.annotations.first().arguments.first().value as KSType
+    private fun getItemHolderIdentity(viewHolder: KSAnnotated): Identity {
+        val bindItemHolderList = viewHolder.annotations.filter {
+            it.shortName.asString() == BindItemHolder::class.simpleName
+        }.toList()
+        if (bindItemHolderList.size > 1) {
+            val viewHolderDefinition = (viewHolder as KSClassDeclaration).qualifiedName?.asString()
+            logger.error("$viewHolderDefinition 绑定了多个ItemHolder", viewHolder)
+            throw Exception("ViewHolder 不可以绑定多个ItemHolder")
+        }
+        val ksType = bindItemHolderList.first().arguments.first().value as KSType
         val declaration = ksType.declaration as KSClassDeclaration
         assert(
             declaration.isAnnotationPresentOrParent(ItemHolder::class)
-        ) { "ItemHolder[${declaration.qualifiedName?.asString()}] 需要添加@ItemHolder 注解" }
+        ) {
+            "[${declaration.qualifiedName?.asString()}] 需要添加@ItemHolder 注解"
+        }
         val isDataClass = declaration.modifiers.contains(Modifier.DATA)
         val hasOverride = declaration.getDeclaredFunctions().any {
             val asString = it.simpleName.asString()
             asString == "equals" && it.findOverridee() != null || asString == "areContentsTheSame"
         }
         assert(isDataClass || hasOverride) {
-            "ItemHolder[${declaration.qualifiedName?.asString()}] 需要添加data 修饰符或者重载equals/areContentsTheSame"
+            "[${declaration.qualifiedName?.asString()}] 需要添加data 修饰符或者重载equals/areContentsTheSame"
         }
-        return declaration.qualifiedName.let { it!!.asString() to it.getShortName() }
+        return declaration.identity()
+    }
+
+    private fun getItemHolderIdentityInClickEvent(methodDeclaration: KSAnnotated): Identity {
+        val eventName = BindClickEvent::class.simpleName
+        val annotations = methodDeclaration.annotations.filter {
+            it.shortName.asString() == eventName
+        }.toList()
+        if (annotations.size > 1) {
+            logger.error(
+                "${methodDeclaration::class} 绑定了多个$eventName",
+                methodDeclaration
+            )
+            throw Exception("方法不可以绑定多个$eventName")
+        }
+        val first = annotations.first().arguments.first().value as KSType
+        return first.declaration.identity()
+    }
+
+    private fun getItemHolderIdentityInLongClickEvent(methodDeclaration: KSAnnotated): Identity {
+        val eventName = BindLongClickEvent::class.simpleName
+        val annotations = methodDeclaration.annotations.filter {
+            it.shortName.asString() == eventName
+        }.toList()
+        if (annotations.size > 1) {
+            logger.error(
+                "${methodDeclaration::class} 绑定了多个$eventName",
+                methodDeclaration
+            )
+            throw Exception("方法不可以绑定多个$eventName")
+        }
+        val first = annotations.first().arguments.first().value as KSType
+        return first.declaration.identity()
     }
 
     @OptIn(KspExperimental::class)
