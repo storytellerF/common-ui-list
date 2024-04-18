@@ -51,8 +51,8 @@ class EDComposeView(
     }
 }
 
-abstract class ComposeViewHolder<IH : DataItemHolder>(val edComposeView: EDComposeView) :
-    AbstractViewHolder<IH>(edComposeView.composeView) {
+abstract class ComposeViewHolder<IH : DataItemHolder>(val edComposeView: EDComposeView, key: String = "") :
+    AbstractViewHolder<IH>(edComposeView.composeView, key = key) {
     init {
         edComposeView.composeView.setViewCompositionStrategy(
             ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed

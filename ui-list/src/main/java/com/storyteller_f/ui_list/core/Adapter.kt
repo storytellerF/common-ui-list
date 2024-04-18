@@ -1,5 +1,3 @@
-@file:Suppress("UNCHECKED_CAST")
-
 package com.storyteller_f.ui_list.core
 
 import android.content.Context
@@ -23,64 +21,73 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
+import com.storyteller_f.slim_ktx.IndexManager
 import com.storyteller_f.ui_list.event.findActivityOrNull
 import com.storyteller_f.ui_list.event.findFragmentOrNull
+import kotlin.reflect.KClass
 
-typealias BuildViewHolderFunction = (ViewGroup, String) -> AbstractViewHolder<out DataItemHolder>
+typealias BuildViewHolderFunction2 = (ViewGroup, String) -> AbstractViewHolder<out DataItemHolder>
+typealias BuildViewHolderFunction3 = (ViewGroup, String, String) -> AbstractViewHolder<out DataItemHolder>
 
-data class VariantBuildViewHolderFunction(val variant: String, val functionPosition: Int)
+data class ViewHolderKey(
+    val itemHolderClass: KClass<out DataItemHolder>,
+    val type: String,
+    val key: String
+)
 
-/**
- * 不可以手动直接修改
- */
-val list = mutableListOf<BuildViewHolderFunction>()
-
-/**
- * 不直接存储BuildViewHolderFunction，而是存储BuildViewHolderFunction 的索引
- */
-val secondList = mutableListOf<VariantBuildViewHolderFunction>()
+class BuildBatch(val b2: BuildViewHolderFunction2? = null, val b3: BuildViewHolderFunction3? = null)
 
 /**
- * value 存储指向list 中元素的索引。且作为viewType
+ * 外部只能通过holders 修改
  */
-val registerCenter = mutableMapOf<Class<out DataItemHolder>, Int>()
+internal val registerCenter = mutableMapOf<KClass<out DataItemHolder>, BuildBatch>()
 
-/**
- * value 作为viewType，为了确认指定的viewType 是存储在secondRegisterCenter 中，增加了偏移，偏移值是list.size
- */
-val secondRegisterCenter = mutableMapOf<SecondRegisterKey, Int>()
-
-data class SecondRegisterKey(val clazz: Class<out DataItemHolder>, val variant: String)
-
-fun holders(vararg blocks: (Int) -> Int) {
-    blocks.fold(0) { acc, block ->
-        acc + block(acc)
+fun holders(vararg blocks: (MutableMap<KClass<out DataItemHolder>, BuildBatch>) -> Unit) {
+    blocks.forEach {
+        it(registerCenter)
     }
 }
 
-abstract class DataItemHolder(val variant: String = "") {
+/**
+ * @param type 和注册ViewHolder 的时候的type 保持一致
+ * @param key 会在ViewHolder 初始化的时候传入，以达到ItemHolder 和ViewHolder 绑定的作用
+ */
+abstract class DataItemHolder(val type: String = "", val key: String = "") {
 
     /**
      * 可以直接进行强制类型转换，无需判断
      */
     abstract fun areItemsTheSame(other: DataItemHolder): Boolean
+
+    /**
+     * 具有默认实现。只要子类使用data 标识符或者继承equals 即可。
+     */
     open fun areContentsTheSame(other: DataItemHolder): Boolean = this == other
 }
 
-abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View) :
+abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: String = "") :
     RecyclerView.ViewHolder(itemView) {
     val context: Context = itemView.context
 
     private val _holderLifecycleOwnerLiveData = MutableLiveData<BindLifecycleOwner?>()
     val holderLifecycleLiveData: LiveData<BindLifecycleOwner?> by ::_holderLifecycleOwnerLiveData
 
+    @Suppress("MemberVisibilityCanBePrivate")
     val holderLifecycleOwner: LifecycleOwner
         get() = _holderLifecycleOwnerLiveData.value!!
 
     private var _itemHolder: IH? = null
 
-    // 需要保证当前已经绑定过数据了
+    /**
+     * 需要保证当前已经绑定过数据了
+     * 在[holderLifecycleOwner] 生命周期内或者onBind 中使用都是安全的
+     */
     val itemHolder get() = _itemHolder!!
+
+    /**
+     * 在事件处理中使用这个更加合适
+     */
+    val itemHolderOrNull get() = itemHolder
 
     private var _observer: LifecycleObserver? = null
 
@@ -97,6 +104,7 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View) :
     fun getDimen(@DimenRes id: Int) = context.resources.getDimension(id)
 
     fun getString(@StringRes id: Int) = context.resources.getString(id)
+
     internal fun attachItemHolder(itemHolder: IH) {
         _itemHolder = itemHolder
     }
@@ -201,32 +209,39 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View) :
     }
 }
 
-abstract class BindingViewHolder<IH : DataItemHolder>(binding: ViewBinding) :
-    AbstractViewHolder<IH>(binding.root)
+abstract class BindingViewHolder<IH : DataItemHolder>(binding: ViewBinding, key: String = "") :
+    AbstractViewHolder<IH>(binding.root, key = key)
 
-open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>> :
+open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(
+    private val localCenter: Map<KClass<out DataItemHolder>, BuildBatch>? = null
+) :
     RecyclerView.Adapter<VH>() {
     lateinit var target: RecyclerView.Adapter<VH>
+
+    private val indexManager = IndexManager<ViewHolderKey>()
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
-        val size = list.size
-        val viewHolder = if (viewType >= size) {
-            val (variant, functionPosition) = secondList[viewType - size]
-            list[functionPosition](parent, variant)
-        } else {
-            list[viewType](parent, "")
-        }
+        val key = indexManager.getKey(viewType)
+        val any = localCenter?.get(key.itemHolderClass) ?: registerCenter[key.itemHolderClass]
+        val viewHolder =
+            any?.b2?.let { it(parent, key.type) } ?: any?.b3?.let { it(parent, key.type, key.key) }
+        @Suppress("UNCHECKED_CAST")
         return viewHolder as VH
     }
 
     override fun onBindViewHolder(holder: VH, position: Int) {
-        val itemHolder = getItemAbstract(position) as IH
+        val itemHolder = getItemAbstract(position) ?: return
         holder.attachItemHolder(itemHolder)
         holder.moveStateToCreate()
         holder.onBind(itemHolder)
     }
 
+    /**
+     * PagingAdapter 存在返回null 的可能性
+     */
     protected open fun getItemAbstract(position: Int): IH? {
         return if (target is ListAdapter<*, *>) {
+            @Suppress("UNCHECKED_CAST")
             (target as ListAdapter<IH, VH>).currentList[position] as IH
         } else {
             throw NotImplementedError("${target::class.java.canonicalName}无法获取对应item holder")
@@ -237,9 +252,7 @@ open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>> :
 
     override fun getItemViewType(position: Int): Int {
         val item = getItemAbstract(position) ?: return super.getItemViewType(position)
-        val ihClass = item::class.java
-        return getType(ihClass, item)
-            ?: throw Exception("${ihClass.canonicalName} not found.registerCenter count: ${registerCenter.size}")
+        return indexManager.getIndex(item.viewHolderKey)
     }
 
     override fun onViewAttachedToWindow(holder: VH) {
@@ -258,25 +271,9 @@ open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>> :
         holder.detachItemHolder()
     }
 
-    private fun getType(ihClass: Class<out IH>, item: IH): Int? {
-        val functionPosition = registerCenter[ihClass] ?: return null
-        return if (item.variant.isNotEmpty()) {
-            val secondRegisterKey = SecondRegisterKey(ihClass, item.variant)
-            secondRegisterCenter.getOrPut(secondRegisterKey) {
-                secondList.add(
-                    VariantBuildViewHolderFunction(
-                        secondRegisterKey.variant,
-                        functionPosition
-                    )
-                )
-                (secondList.size - 1) + list.size
-            }
-        } else {
-            functionPosition
-        }
-    }
-
     companion object {
+        private val DataItemHolder.viewHolderKey get() = ViewHolderKey(this::class, type, key)
+
         val common_diff_util = object : DiffUtil.ItemCallback<DataItemHolder>() {
             override fun areItemsTheSame(
                 oldItem: DataItemHolder,
@@ -284,7 +281,7 @@ open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>> :
             ): Boolean {
                 return when {
                     oldItem === newItem -> true
-                    oldItem.javaClass == newItem.javaClass && oldItem.variant == newItem.variant -> {
+                    oldItem.viewHolderKey == newItem.viewHolderKey -> {
                         oldItem.areItemsTheSame(newItem)
                     }
 

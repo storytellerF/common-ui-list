@@ -14,7 +14,6 @@ import com.storyteller_f.ui_list_annotation_common.EventEntry
 import com.storyteller_f.ui_list_annotation_common.EventMap
 import com.storyteller_f.ui_list_annotation_common.Holder
 import com.storyteller_f.ui_list_annotation_common.ItemHolderFullName
-import com.storyteller_f.ui_list_annotation_common.JavaGenerator
 import com.storyteller_f.ui_list_annotation_common.UIListHolderZoom
 import com.storyteller_f.ui_list_annotation_common.UiAdapterGenerator
 import com.storyteller_f.ui_list_annotation_common.ViewName
@@ -36,21 +35,18 @@ class KotlinGenerator(
     private val allImports = allImports(entries, mapPair.first, mapPair.second)
     private val affectInfo = getAffectFileInfo(packageName, dependencyFiles)
     override fun buildAddFunction(entry: List<Entry<KSAnnotated>>): String {
-        var index = 0
         val addFunctions = entry.joinToString("\n") {
-            buildRegisterBlock(it, index++)
+            buildRegisterBlock(it)
         }
         return """
-            fun add(offset: Int): Int {
+            fun registerAll(map: MutableMap<KClass<out DataItemHolder>, BuildBatch>) {
                 $1
-                return $index;
             }
             """.trimAndReplaceCode(addFunctions.yes())
     }
 
-    private fun buildRegisterBlock(it: Entry<KSAnnotated>, index: Int) = """
-                registerCenter.put(${it.itemHolderName}::class.java, $index + offset);
-                list.add(::buildFor${it.itemHolderName});
+    private fun buildRegisterBlock(it: Entry<KSAnnotated>) = """
+                register${it.itemHolderName}(map)
     """.trimIndent()
 
     private fun getAffectFileInfo(
@@ -148,14 +144,15 @@ class KotlinGenerator(
                 "import $it"
             })
             writer.writeLine()
-            writer.writeLine("object ${JavaGenerator.CLASS_NAME} {")
             writer.writeLine(
                 buildViewHolders(
                     entries,
                     mapPair.first,
                     mapPair.second
-                ).prependIndent()
+                )
             )
+            // registerAll 为了能够使用:: 语法必须放到一个类中
+            writer.writeLine("object $CLASS_NAME {")
             writer.writeLine(buildAddFunction(entries).prependIndent())
             writer.writeLine("}\n")
         }
@@ -180,6 +177,33 @@ class KotlinGenerator(
         clickEventMap: Map<ViewName, List<Event<KSAnnotated>>>,
         longClickEventMap: Map<ViewName, List<Event<KSAnnotated>>>,
     ): String {
+        val viewHolderBuilderContent = buildViewHolderContent(entry, clickEventMap, longClickEventMap)
+        val itemHolderExtraParameter = if (entry.viewHolders.any {
+                it.value.constructorExtraParams.isNotEmpty()
+            }) {
+            ", key: String"
+        } else {
+            ""
+        }
+        return """
+                @Suppress("UNUSED_ANONYMOUS_PARAMETER")
+                fun build${entry.itemHolderName}(parent: ViewGroup, type: String$itemHolderExtraParameter): AbstractViewHolder<*> {
+                    $1
+                    throw Exception("unrecognized type:[${'$'}type]")
+                }
+                
+                fun register${entry.itemHolderName}(map: MutableMap<KClass<out DataItemHolder>, BuildBatch>) {
+                    map.put(${entry.itemHolderName}::class, BuildBatch(${if (itemHolderExtraParameter.isEmpty()) "b2 =" else "b3 ="} ::build${entry.itemHolderName}));
+                }
+                
+        """.trimIndent().replaceCode(viewHolderBuilderContent.yes())
+    }
+
+    private fun buildViewHolderContent(
+        entry: Entry<KSAnnotated>,
+        clickEventMap: Map<ViewName, List<Event<KSAnnotated>>>,
+        longClickEventMap: Map<ViewName, List<Event<KSAnnotated>>>
+    ): String {
         val viewHolderBuilderContent = entry.viewHolders.map { viewHolder ->
             if ((clickEventMap + longClickEventMap).filter {
                     it.value.size > 1
@@ -197,19 +221,12 @@ class KotlinGenerator(
                 buildComposeViewHolder(viewHolder.value, clickEventMap, longClickEventMap)
             }
             """
-            if (type.equals("${viewHolder.key}")) {
-                $1
-            }//type if end
+                if (type.equals("${viewHolder.key}")) {
+                    $1
+                }//type if end
             """.trimIndent().replaceCode(viewHolderContent.yes())
         }.joinToString("\n")
-        return """
-                @Suppress("UNUSED_ANONYMOUS_PARAMETER")
-                fun buildFor${entry.itemHolderName}(view: ViewGroup, type: String): AbstractViewHolder<*> {
-                    $1
-                    throw Exception("unrecognized type:[${'$'}type]")
-                }
-                
-        """.trimIndent().replaceCode(viewHolderBuilderContent.yes())
+        return viewHolderBuilderContent
     }
 
     private fun buildComposeViewHolder(
@@ -218,14 +235,14 @@ class KotlinGenerator(
         longClickEventMap: Map<ViewName, List<Event<KSAnnotated>>>,
     ): String {
         return """
-            val context = view.context
-            val composeView = EDComposeView(context)
-            val viewHolder = ${it.viewHolderName}(composeView)
+            val context = parent.context
+            val view = EDComposeView(context)
+            val viewHolder = ${it.viewHolderName}(view)
             @Suppress("UNUSED_VARIABLE") val v = viewHolder.itemView
-            composeView.clickListener = { s ->
+            view.clickListener = { s ->
                 $1
             }
-            composeView.longClickListener = { s ->
+            view.longClickListener = { s ->
                 $2
             }
             return viewHolder
@@ -266,11 +283,11 @@ class KotlinGenerator(
         eventMapLongClick: Map<String, List<Event<KSAnnotated>>>,
     ): String {
         return """
-            val context = view.context
-            val inflate = ${entry.bindingName}.inflate(LayoutInflater.from(context), view, false)
+            val context = parent.context
+            val binding = ${entry.bindingName}.inflate(LayoutInflater.from(context), parent, false)
             
-            val viewHolder = ${entry.viewHolderName}(inflate)
-            $1       
+            val viewHolder = ${entry.viewHolderName}(binding${entry.constructorExtraParams})
+            $1
             return viewHolder
             """.trimAndReplaceCode(buildInvokeClickEvent(eventMapClick, eventMapLongClick).no())
     }
@@ -285,13 +302,13 @@ class KotlinGenerator(
     }
 
     private fun produceClickListener(it: Map.Entry<String, List<Event<KSAnnotated>>>) = """
-            inflate.${it.key}.setOnClickListener { v ->
+            binding.${it.key}.setOnClickListener { v ->
                 $1
             }
         """.trimAndReplaceCode(buildInvokeClickEvent(it.value).yes())
 
     private fun produceLongClickListener(it: Map.Entry<String, List<Event<KSAnnotated>>>) = """
-            inflate.${it.key}.setOnLongClickListener { v ->
+            binding.${it.key}.setOnLongClickListener { v ->
                 $1
                 return true;
             }

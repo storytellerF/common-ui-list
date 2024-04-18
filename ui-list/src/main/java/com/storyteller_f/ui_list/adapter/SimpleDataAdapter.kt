@@ -4,21 +4,25 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import com.storyteller_f.ui_list.core.AbstractViewHolder
+import com.storyteller_f.ui_list.core.BuildBatch
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.core.DefaultAdapter
 import com.storyteller_f.ui_list.core.DefaultAdapter.Companion.common_diff_util
 import com.storyteller_f.ui_list.source.SimpleDataViewModel
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.reflect.KClass
 
 /**
  * 支持排序，需要搭配SimpleDataViewModel和SimpleDataRepository
  */
 @Suppress("UNCHECKED_CAST")
-class SimpleDataAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>> :
+class SimpleDataAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(
+    localCenter: Map<KClass<out DataItemHolder>, BuildBatch>? = null
+) :
     ListAdapter<IH, VH>(common_diff_util as DiffUtil.ItemCallback<IH>) {
 
     private var fatData: SimpleDataViewModel.FatData<*, IH, *>? = null
-    private val proxy = DefaultAdapter<IH, VH>().apply {
+    private val proxy = DefaultAdapter<IH, VH>(localCenter).apply {
         target = this@SimpleDataAdapter
     }
     private val skipNext = AtomicBoolean(false)

@@ -5,8 +5,11 @@ class Holder<T>(
     val bindingFullName: String,
     val viewHolderName: String,
     val viewHolderFullName: String,
+    parameterCount: Int,
     val origin: T
-)
+) {
+    val constructorExtraParams = if (parameterCount == 2) ", key" else ""
+}
 
 class Entry<T>(
     val itemHolderName: String,
