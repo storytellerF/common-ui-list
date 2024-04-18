@@ -1,5 +1,6 @@
 package com.storyteller_f.common_ui_list_structure.holders
 
+import android.annotation.SuppressLint
 import android.view.View
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.annotation_defination.ItemHolder
@@ -11,7 +12,7 @@ import com.storyteller_f.ui_list.core.BindingViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
 
 @ItemHolder("repo")
-data class RepoItemHolder(val repo: Repo) : DataItemHolder() {
+data class RepoItemHolder(val repo: Repo) : DataItemHolder(key = " from common-ui-list") {
     override fun areItemsTheSame(other: DataItemHolder): Boolean {
         return propertiesSame(other, {
             repo.id
@@ -22,10 +23,11 @@ data class RepoItemHolder(val repo: Repo) : DataItemHolder() {
 }
 
 @BindItemHolder(RepoItemHolder::class)
-class RepoViewHolder(private val binding: RepoViewItemBinding) :
-    BindingViewHolder<RepoItemHolder>(binding) {
+class RepoViewHolder(private val binding: RepoViewItemBinding, key: String) :
+    BindingViewHolder<RepoItemHolder>(binding, key) {
+    @SuppressLint("SetTextI18n")
     override fun bindData(itemHolder: RepoItemHolder) {
-        binding.repoName.text = itemHolder.repo.name
+        binding.repoName.text = itemHolder.repo.name + key
         // if the description is missing, hide the TextView
         var descriptionVisibility = View.GONE
         if (itemHolder.repo.description != null) {

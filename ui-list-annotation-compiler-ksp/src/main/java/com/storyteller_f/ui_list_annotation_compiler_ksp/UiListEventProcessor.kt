@@ -25,8 +25,8 @@ import com.storyteller_f.annotation_defination.ItemHolder
 import com.storyteller_f.ui_list_annotation_common.Entry
 import com.storyteller_f.ui_list_annotation_common.Event
 import com.storyteller_f.ui_list_annotation_common.Holder
-import com.storyteller_f.ui_list_annotation_common.JavaGenerator.Companion.CLASS_NAME
 import com.storyteller_f.ui_list_annotation_common.UIListHolderZoom
+import com.storyteller_f.ui_list_annotation_common.UiAdapterGenerator.Companion.CLASS_NAME
 import com.storyteller_f.ui_list_annotation_common.nestedGroupBy
 import java.io.BufferedWriter
 import java.io.OutputStreamWriter
@@ -207,6 +207,7 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
                         bindingFullName,
                         viewHolderName,
                         viewHolderFullName,
+                        viewHolder.primaryConstructor?.parameters?.size ?: 1,
                         viewHolder as KSAnnotated
                     )
                 ),

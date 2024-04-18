@@ -4,17 +4,21 @@ import android.view.ViewGroup
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import com.storyteller_f.ui_list.core.AbstractViewHolder
+import com.storyteller_f.ui_list.core.BuildBatch
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.core.DefaultAdapter
 import com.storyteller_f.ui_list.core.DefaultAdapter.Companion.common_diff_util
+import kotlin.reflect.KClass
 
 @Suppress("UNCHECKED_CAST")
-open class SimpleSourceAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>> :
+open class SimpleSourceAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(
+    localCenter: Map<KClass<out DataItemHolder>, BuildBatch>? = null
+) :
     PagingDataAdapter<IH, VH>(
         common_diff_util as DiffUtil.ItemCallback<IH>
     ) {
-    private val proxy = object : DefaultAdapter<IH, VH>() {
-        override fun getItemAbstract(position: Int) = getItem(position)
+    private val proxy = object : DefaultAdapter<IH, VH>(localCenter) {
+        override fun getItemAbstract(position: Int): IH? = getItem(position)
     }.apply {
         target = this@SimpleSourceAdapter
     }
