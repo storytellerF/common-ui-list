@@ -1,9 +1,9 @@
 package com.storyteller_f.version_manager
 
 object Versions {
-//    const val KOTLIN = "1.8.21"
-//    const val AGP = "8.2.2"
-    const val KSP = "1.9.21-1.0.15"
+//    const val KOTLIN = "1.9.21"
+//    const val AGP = "8.3.2"
+    const val KSP = "1.9.22-1.0.17"
     const val COMPILE_SDK = 34
     const val TARGET_SDK = 34
     const val DEFAULT_MIN_SDK = 21
@@ -27,7 +27,7 @@ object Versions {
     const val NAV = "2.7.7"
     const val WORK = "2.7.1"
     const val LEAK_CANARY = "2.9.1"
-    const val DATA_BINDING_COMPILER = "8.2.2"
+    const val DATA_BINDING_COMPILER = "8.3.2"
     const val JUNIT = "4.13.2"
     const val TEST_JUNIT = "1.1.3"
     const val TEST_ESPRESSO = "3.4.0"

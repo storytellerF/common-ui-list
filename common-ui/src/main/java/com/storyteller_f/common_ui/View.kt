@@ -1,10 +1,12 @@
 package com.storyteller_f.common_ui
 
 import android.content.Context
+import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
+import androidx.annotation.RequiresApi
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
@@ -38,6 +40,7 @@ inline fun View.updateMargins(block: ViewGroup.MarginLayoutParams.() -> Unit) {
     updateLayoutParams(block)
 }
 
+@RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
 fun View.updateMargin(rect: Direction) {
     updateMargins {
         marginStart = rect.start

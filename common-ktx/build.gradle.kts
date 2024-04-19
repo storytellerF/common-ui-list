@@ -9,14 +9,7 @@ plugins {
     id("common-publish")
 }
 
-android {
-
-    defaultConfig {
-        minSdk = 16
-    }
-    namespace = "com.storyteller_f.common_ktx"
-}
-baseLibrary(true)
+baseLibrary(true, minSdkInt = 16, namespaceString = "com.storyteller_f.common_ktx")
 
 dependencies {
     commonAppDependency()

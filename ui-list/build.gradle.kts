@@ -18,10 +18,9 @@ android {
     buildFeatures {
         viewBinding = true
     }
-    namespace = "com.storyteller_f.ui_list"
 }
 
-baseLibrary()
+baseLibrary(enableMultiDex = true, minSdkInt = 19, namespaceString = "com.storyteller_f.ui_list")
 
 dependencies {
     implModule(":common-ktx")

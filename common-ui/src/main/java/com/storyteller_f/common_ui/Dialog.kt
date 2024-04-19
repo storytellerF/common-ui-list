@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.databinding.ViewDataBinding
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
@@ -30,7 +29,6 @@ abstract class SimpleDialogFragment<T : ViewBinding>(
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val bindingLocal = viewBindingFactory(layoutInflater)
         _binding = bindingLocal
-        (bindingLocal as? ViewDataBinding)?.lifecycleOwner = viewLifecycleOwner
         onBindViewEvent(binding)
         return bindingLocal.root
     }
@@ -44,7 +42,6 @@ abstract class SimpleDialogFragment<T : ViewBinding>(
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        (binding as? ViewDataBinding)?.lifecycleOwner = viewLifecycleOwner
     }
 }
 

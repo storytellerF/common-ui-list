@@ -7,7 +7,7 @@ import org.gradle.kotlin.dsl.DependencyHandlerScope
 import org.gradle.kotlin.dsl.dependencies
 
 /**
- * 手动调用constraintCommonUIListVersion 是必须的
+ * 手动调用[constraintCommonUIListVersion] 是必须的
  */
 fun Project.implModule(moduleName: String) {
     dependencies {
@@ -22,7 +22,7 @@ fun Project.implModule(moduleName: String) {
 }
 
 /**
- * 手动调用constraintCommonUIListVersion 是必须的
+ * 手动调用[constraintCommonUIListVersion] 是必须的
  */
 fun Project.androidTestImplModule(moduleName: String) {
     dependencies {
@@ -37,7 +37,7 @@ fun Project.androidTestImplModule(moduleName: String) {
 }
 
 /**
- * 手动调用constraintCommonUIListVersion 是必须的
+ * 手动调用[constraintCommonUIListVersion] 是必须的
  */
 fun Project.apiModule(moduleName: String) {
     dependencies {
@@ -52,7 +52,7 @@ fun Project.apiModule(moduleName: String) {
 }
 
 /**
- * 手动调用constraintCommonUIListVersion 是必须的
+ * 手动调用[constraintCommonUIListVersion] 是必须的
  */
 fun Project.kspModule(moduleName: String) {
     dependencies {
@@ -66,7 +66,11 @@ fun Project.kspModule(moduleName: String) {
 
 }
 
+/**
+ * 默认加载ksp 插件
+ */
 fun Project.baseAppDependency() {
+    loadPlugin("com.google.devtools.ksp")
     implModule(":slim-ktx")
     implModule(":common-ktx")
     implModule(":compat-ktx")
@@ -113,13 +117,6 @@ fun DependencyHandlerScope.unitTestDependency() {
     "testImplementation"("junit:junit:${Versions.JUNIT}")
     "androidTestImplementation"("androidx.test.ext:junit:${Versions.TEST_JUNIT}")
     "androidTestImplementation"("androidx.test.espresso:espresso-core:${Versions.TEST_ESPRESSO}")
-}
-
-/**
- * 需要kapt 插件
- */
-fun DependencyHandlerScope.dataBindingDependency() {
-    "kapt"("androidx.databinding:databinding-compiler-common:${Versions.DATA_BINDING_COMPILER}")
 }
 
 fun Project.workerDependency() {
