@@ -1,6 +1,5 @@
 import com.storyteller_f.version_manager.Versions
 import com.storyteller_f.version_manager.baseLibrary
-import com.storyteller_f.version_manager.commonAppDependency
 import com.storyteller_f.version_manager.implModule
 import com.storyteller_f.version_manager.setupExtFunc
 import com.storyteller_f.version_manager.unitTestDependency
@@ -16,16 +15,15 @@ android {
     kotlinOptions {
         freeCompilerArgs = listOf("-Xcontext-receivers")
     }
-    namespace = "com.storyteller_f.common_pr"
 }
-baseLibrary()
+baseLibrary(minSdkInt = 21, namespaceString = "com.storyteller_f.common_pr")
+
 setupExtFunc()
 dependencies {
     implModule(":ext-func-definition")
     implModule(":common-ktx")
     implModule(":common-vm-ktx")
     implModule(":common-ui")
-    commonAppDependency()
     unitTestDependency()
     // https://mvnrepository.com/artifact/androidx.navigation/navigation-common-ktx
     implementation("androidx.navigation:navigation-common-ktx:${Versions.NAV}")

@@ -7,13 +7,9 @@ plugins {
     id("common-publish")
 }
 
-android {
-    namespace = "com.storyteller_f.view_holder_compose"
-}
-baseLibrary()
+baseLibrary(minSdkInt = 21, namespaceString = "com.storyteller_f.view_holder_compose")
 
 dependencies {
-
     unitTestDependency()
     api("androidx.compose.ui:ui:${Versions.COMPOSE_UI}")
 

@@ -8,10 +8,7 @@ plugins {
     id("common-publish")
 }
 
-android {
-    namespace = "com.storyteller_f.common_vm_ktx"
-}
-baseLibrary()
+baseLibrary(minSdkInt = 19, namespaceString = "com.storyteller_f.common_vm_ktx")
 setupExtFunc()
 dependencies {
     implModule(":ext-func-definition")

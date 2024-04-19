@@ -10,20 +10,12 @@ import com.storyteller_f.version_manager.unitTestDependency
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
-    id("kotlin-kapt")
     id("com.storyteller_f.version_manager")
     id("common-publish")
 }
 
-android {
+baseLibrary(minSdkInt = 21, namespaceString = "com.storyteller_f.common_ui")
 
-    buildFeatures {
-        dataBinding = true
-    }
-
-    namespace = "com.storyteller_f.common_ui"
-}
-baseLibrary()
 setupCompose(true)
 setupExtFunc()
 dependencies {

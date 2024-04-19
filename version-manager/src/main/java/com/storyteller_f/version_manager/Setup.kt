@@ -66,22 +66,6 @@ fun Project.setupGeneric() {
     }
 }
 
-/**
- * 需要kapt 插件
- */
-fun Project.setupDataBinding() {
-    loadPlugin("kotlin-kapt")
-    androidApp {
-        buildFeatures {
-            viewBinding = true
-            dataBinding = true
-        }
-    }
-    dependencies {
-        dataBindingDependency()
-    }
-}
-
 fun Project.setupPreviewFeature() {
     androidApp {
         kotlinOptionsApp {
@@ -98,15 +82,19 @@ fun Project.loadPlugin(id: String) {
 }
 
 /**
- * 默认最新SDK 为DEFAULT_MIN_SDK = 21
+ * 默认最小SDK 为[Versions.DEFAULT_MIN_SDK]，如果需要重新定制需要在baseApp 之后指定，否则会被覆盖
+ * 注意副作用：
+ *  1. 读取[com.android.build.gradle.internal.dsl.DefaultConfig.applicationId]
+ *  2. 在debug 中复写[com.android.build.api.dsl.ApplicationVariantDimension.applicationIdSuffix]
  */
-fun Project.baseApp() {
+fun Project.baseApp(minSdkInt: Int? = null, namespaceString: String? = null) {
     androidApp {
         compileSdk = Versions.COMPILE_SDK
         defaultConfig {
-            minSdk = Versions.DEFAULT_MIN_SDK
-            versionCode = 1
-            versionName = "1.0"
+            namespaceString?.let {
+                namespace = it
+            }
+            minSdk = minSdkInt ?: Versions.DEFAULT_MIN_SDK
             targetSdk = Versions.TARGET_SDK
             testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         }
@@ -178,14 +166,21 @@ private fun Project.loadBao() {
 }
 
 /**
- * 默认最小SDK 为DEFAULT_MIN_SDK = 21
+ * 默认最小SDK 为[Versions.DEFAULT_MIN_SDK]，如果需要重新定制需要在baseLibrary 之后指定，否则会被覆盖
  */
-fun Project.baseLibrary(enableMultiDex: Boolean = false) {
+fun Project.baseLibrary(
+    enableMultiDex: Boolean = false,
+    minSdkInt: Int? = null,
+    namespaceString: String? = null
+) {
     androidLibrary {
         compileSdk = Versions.COMPILE_SDK
 
         defaultConfig {
-            minSdk = Versions.DEFAULT_MIN_SDK
+            namespaceString?.let {
+                namespace = it
+            }
+            minSdk = minSdkInt ?: Versions.DEFAULT_MIN_SDK
             targetSdk = Versions.TARGET_SDK
             testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
             consumerProguardFiles("consumer-rules.pro")

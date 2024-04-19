@@ -1,12 +1,18 @@
 package com.storyteller_f.common_ui
 
 import android.content.Context
+import android.os.Build
 import android.util.AttributeSet
 import android.view.View
 import android.widget.FrameLayout
 import androidx.annotation.IntDef
-import androidx.core.view.*
-import androidx.databinding.BindingAdapter
+import androidx.annotation.RequiresApi
+import androidx.core.view.ViewCompat
+import androidx.core.view.marginBottom
+import androidx.core.view.marginEnd
+import androidx.core.view.marginStart
+import androidx.core.view.marginTop
+import androidx.core.view.updatePadding
 
 /**
  * 增加额外操作，暂停开发
@@ -16,6 +22,7 @@ class InsetLayout @JvmOverloads constructor(
     attributeSet: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : FrameLayout(context, attributeSet, defStyleAttr) {
+    @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
         // 保存view 原始padding margin
@@ -24,21 +31,15 @@ class InsetLayout @JvmOverloads constructor(
 }
 
 object InsetBlockDirection {
-    const val top = 1 shl 2
-    const val start = 1 shl 3
-    const val end = 1 shl 4
-    const val bottom = 1 shl 5
+    const val TOP = 1 shl 2
+    const val START = 1 shl 3
+    const val END = 1 shl 4
+    const val BOTTOM = 1 shl 5
 }
 
 class InsetBlock(val padding: Direction, val margin: Direction)
 
-@BindingAdapter(
-    "status_padding",
-    "status_margin",
-    "navigator_padding",
-    "navigator_margin",
-    requireAll = false
-)
+@RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
 fun View.inset(
     @InsetBlockFlag statusPadding: Int = 0,
     @InsetBlockFlag statusMargin: Int = 0,
@@ -61,28 +62,29 @@ fun View.inset(
 
 fun Int.insetBlock(v: Int) =
     Direction(
-        if (this and InsetBlockDirection.start == InsetBlockDirection.start) {
+        if (this and InsetBlockDirection.START == InsetBlockDirection.START) {
             v
         } else {
             0
         },
-        if (this and InsetBlockDirection.top == InsetBlockDirection.top) {
+        if (this and InsetBlockDirection.TOP == InsetBlockDirection.TOP) {
             v
         } else {
             0
         },
-        if (this and InsetBlockDirection.end == InsetBlockDirection.end) {
+        if (this and InsetBlockDirection.END == InsetBlockDirection.END) {
             v
         } else {
             0
         },
-        if (this and InsetBlockDirection.bottom == InsetBlockDirection.bottom) {
+        if (this and InsetBlockDirection.BOTTOM == InsetBlockDirection.BOTTOM) {
             v
         } else {
             0
         }
     )
 
+@RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
 fun View.updatePadding(block: Direction) {
     val isRtl = layoutDirection == View.LAYOUT_DIRECTION_RTL
     updatePadding(
@@ -97,6 +99,7 @@ fun <T : Any> getOrCreate(retrieve: () -> T?, produce: () -> T): T {
     return retrieve() ?: produce()
 }
 
+@RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
 fun View.getInsetBlock() =
     getOrCreate(
         { getTag(R.id.inset_block) as? InsetBlock },
@@ -125,6 +128,6 @@ class Direction(val start: Int, val top: Int, val end: Int, val bottom: Int) {
 
 @IntDef(
     flag = true,
-    value = [InsetBlockDirection.top, InsetBlockDirection.start, InsetBlockDirection.end, InsetBlockDirection.bottom]
+    value = [InsetBlockDirection.TOP, InsetBlockDirection.START, InsetBlockDirection.END, InsetBlockDirection.BOTTOM]
 )
 internal annotation class InsetBlockFlag

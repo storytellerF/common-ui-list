@@ -1,3 +1,4 @@
+import com.storyteller_f.version_manager.Versions
 import com.storyteller_f.version_manager.implModule
 
 plugins {
@@ -15,5 +16,5 @@ java {
 dependencies {
     implModule(":composite-definition")
 
-    implementation("com.google.devtools.ksp:symbol-processing-api:1.9.20-1.0.14")
+    implementation("com.google.devtools.ksp:symbol-processing-api:${Versions.KSP}")
 }

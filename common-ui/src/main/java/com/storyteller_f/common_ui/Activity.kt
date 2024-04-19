@@ -1,6 +1,7 @@
 package com.storyteller_f.common_ui
 
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,7 +12,6 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.updatePadding
-import androidx.databinding.ViewDataBinding
 import androidx.viewbinding.ViewBinding
 
 abstract class CommonActivity : AppCompatActivity(), Registry {
@@ -33,7 +33,6 @@ abstract class SimpleActivity<T : ViewBinding>(
         val bindingLocal = viewBindingFactory(layoutInflater)
         setContentView(bindingLocal.root)
         _binding = bindingLocal
-        (binding as? ViewDataBinding)?.lifecycleOwner = this
         onBindViewEvent(binding)
     }
 
@@ -46,16 +45,22 @@ abstract class SimpleActivity<T : ViewBinding>(
 
 fun ComponentActivity.supportNavigatorBarImmersive(view: View) {
     WindowCompat.setDecorFitsSystemWindows(window, false)
-    window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+    }
     WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightNavigationBars = !isNightMode
     WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = !isNightMode
     /**
      * 如果提供一个透明色，在低版本中会自动添加一个颜色
      */
-    window.navigationBarColor = Color.parseColor("#01000000")
-    view.setOnApplyWindowInsetsListener { v, insets ->
-        val top = WindowInsetsCompat.toWindowInsetsCompat(insets, v).getInsets(WindowInsetsCompat.Type.statusBars())
-        v.updatePadding(top = top.top)
-        insets
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        window.navigationBarColor = Color.parseColor("#01000000")
+    }
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
+        view.setOnApplyWindowInsetsListener { v, insets ->
+            val top = WindowInsetsCompat.toWindowInsetsCompat(insets, v).getInsets(WindowInsetsCompat.Type.statusBars())
+            v.updatePadding(top = top.top)
+            insets
+        }
     }
 }

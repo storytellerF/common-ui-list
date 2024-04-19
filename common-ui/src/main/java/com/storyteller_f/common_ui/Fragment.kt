@@ -8,7 +8,6 @@ import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.compose.ui.platform.ComposeView
-import androidx.databinding.ViewDataBinding
 import androidx.fragment.app.Fragment
 import androidx.viewbinding.ViewBinding
 
@@ -34,7 +33,6 @@ abstract class SimpleFragment<T : ViewBinding>(
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val bindingLocal = viewBindingInflateFactory(layoutInflater)
         _binding = bindingLocal
-        (binding as? ViewDataBinding)?.lifecycleOwner = viewLifecycleOwner
         onBindViewEvent(binding)
         return bindingLocal.root
     }
