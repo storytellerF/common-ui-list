@@ -10,19 +10,13 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     dependencies {
-        val navVersion = "2.7.7"
-        classpath("androidx.navigation:navigation-safe-args-gradle-plugin:$navVersion")
+        classpath(cul.safeArgs.plugin.lib)
     }
 }
 plugins {
-    val androidVersion = "8.3.2"
-    val kotlinVersion = "1.9.23"
-    val kspVersion = "1.9.23-1.0.20"
-    id("com.android.application") version androidVersion apply false
-    id("com.android.library") version androidVersion apply false
-    id("org.jetbrains.kotlin.android") version kotlinVersion apply false
-    id("org.jetbrains.kotlin.jvm") version kotlinVersion apply false
-    id("com.google.devtools.ksp") version kspVersion apply false
+    alias(cul.plugins.android) apply false
+    alias(cul.plugins.kotlin) apply false
+    alias(cul.plugins.ksp) apply false
     id("io.gitlab.arturbosch.detekt") version "1.23.1"
     id("org.jetbrains.kotlinx.kover") version "0.7.4"
     id("com.starter.easylauncher") version ("6.2.0") apply false
