@@ -10,7 +10,7 @@
 //build
 sh gradlew build
 //publish
-sh gradlew -Pgroup=com.github.storytellerF.common-ui-list clean -xtest -xlint assemble publishToMavenLocal :version-manager:publishToMavenLocal
+sh gradlew -Pgroup=com.storyteller_f.common-ui-list clean -xtest -xlint assemble publishToMavenLocal :version-manager:publishToMavenLocal
 //也可以选择和jitpack 使用相同的group。
 //-Pgroup=com.github.storytellerF.common-ui-list -Pversion=version
 ```
@@ -41,3 +41,7 @@ baseApp()
 ```
 
 具体可以参照[GiantExplorer](https://github.com/storytellerF/GiantExplorer) 和[Ping](https://github.com/storytellerF/Ping)
+
+## 兼容性
+
+[兼容性](gradle/cul.versions.toml)

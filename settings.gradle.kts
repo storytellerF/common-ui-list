@@ -16,11 +16,11 @@ pluginManagement {
 }
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
-//    versionCatalogs {
-//        create("libs") {
-//            from(files("../easylauncher-gradle-plugin/gradle/libs.versions.toml"))
-//        }
-//    }
+    versionCatalogs {
+        create("cul") {
+            from(files("./gradle/cul.versions.toml"))
+        }
+    }
     repositories {
         google()
         mavenCentral()

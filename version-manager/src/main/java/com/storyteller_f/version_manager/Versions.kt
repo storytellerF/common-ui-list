@@ -20,10 +20,10 @@ object Versions {
     const val RETROFIT = "2.9.0"
     const val OKHTTP_LOGGING_INTERCEPTOR = "5.0.0-alpha.6"
     const val COROUTINES = "1.8.0"
-    const val COMPOSE_COMPILER = "1.5.12"
+    const val COMPOSE_COMPILER = BuildConfig.COMMON_COMPILER_VERSION
 //    const val COMPOSE = "1.4.0"
-    const val COMPOSE_UI = "1.6.6"
-    const val COMPOSE_MATERIAL = "1.6.6"
+    const val COMPOSE_UI = BuildConfig.COMMON_UI_VERSION
+    const val COMPOSE_MATERIAL = BuildConfig.COMMON_MATERIAL_VERSION
     const val NAV = "2.7.7"
     const val WORK = "2.7.1"
     const val LEAK_CANARY = "2.9.1"
