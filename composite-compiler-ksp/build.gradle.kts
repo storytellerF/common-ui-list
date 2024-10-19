@@ -16,5 +16,5 @@ java {
 dependencies {
     implModule(":composite-definition")
 
-    implementation("com.google.devtools.ksp:symbol-processing-api:${Versions.KSP}")
+    implementation(libs.symbol.processing.api)
 }

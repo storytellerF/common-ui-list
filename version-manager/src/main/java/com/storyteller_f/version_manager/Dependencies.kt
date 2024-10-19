@@ -84,61 +84,61 @@ fun Project.baseAppDependency() {
     dependencies {
         commonAppDependency()
 
-        "ksp"("androidx.room:room-compiler:${Versions.ROOM}")
+        "ksp"(BuildConfig.`library room-compiler`)
 
-        "debugImplementation"("com.squareup.leakcanary:leakcanary-android:${Versions.LEAK_CANARY}")
-        "implementation"("androidx.multidex:multidex:${Versions.MULTI_DEX}")
+        "debugImplementation"(BuildConfig.`library leak-canary`)
+        "implementation"(BuildConfig.`library multi-dex`)
     }
 
 }
 
 fun DependencyHandlerScope.composeDependency() {
-    "implementation"("androidx.compose.material:material:${Versions.COMPOSE_MATERIAL}")
-    "implementation"("androidx.compose.ui:ui-tooling:${Versions.COMPOSE_UI}")
+    "implementation"(BuildConfig.`library compos-material`)
+    "implementation"(BuildConfig.`library compose-ui-tooling`)
 }
 
 fun DependencyHandlerScope.networkDependency() {
-    "implementation"("com.squareup.retrofit2:retrofit:${Versions.RETROFIT}")
-    "implementation"("com.squareup.retrofit2:retrofit-mock:${Versions.RETROFIT}")
-    "implementation"("com.squareup.okhttp3:logging-interceptor:${Versions.OKHTTP_LOGGING_INTERCEPTOR}")
+    "implementation"(BuildConfig.`library retrofit`)
+    "implementation"(BuildConfig.`library retrofit-mock`)
+    "implementation"(BuildConfig.`library log-receptor`)
 }
 
 fun DependencyHandlerScope.navigationDependency() {
-    "implementation"("androidx.navigation:navigation-fragment-ktx:${Versions.NAV}")
-    "implementation"("androidx.navigation:navigation-ui-ktx:${Versions.NAV}")
+    "implementation"(BuildConfig.`library navigation-fragment-ktx`)
+    "implementation"(BuildConfig.`library nav-ui-ktx`)
 }
 
 fun DependencyHandlerScope.coroutineDependency() {
-    "implementation"("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.COROUTINES}")
-    "implementation"("org.jetbrains.kotlinx:kotlinx-coroutines-android:${Versions.COROUTINES}")
+    "implementation"(BuildConfig.`library coroutines`)
+    "implementation"(BuildConfig.`library coroutines-android`)
 }
 
 fun DependencyHandlerScope.unitTestDependency() {
-    "testImplementation"("junit:junit:${Versions.JUNIT}")
-    "androidTestImplementation"("androidx.test.ext:junit:${Versions.TEST_JUNIT}")
-    "androidTestImplementation"("androidx.test.espresso:espresso-core:${Versions.TEST_ESPRESSO}")
+    "testImplementation"(BuildConfig.`library junit`)
+    "androidTestImplementation"(BuildConfig.`library android-junit`)
+    "androidTestImplementation"(BuildConfig.`library android-espresso`)
 }
 
 fun Project.workerDependency() {
     dependencies {
-        "implementation"("androidx.work:work-runtime-ktx:${Versions.WORK}")
-        "androidTestImplementation"("androidx.work:work-testing:${Versions.WORK}")
-        "implementation"("androidx.work:work-multiprocess:${Versions.WORK}")
+        "implementation"(BuildConfig.`library work-runtime`)
+        "androidTestImplementation"(BuildConfig.`library work-test`)
+        "implementation"(BuildConfig.`library work-multiprocess`)
     }
 
 }
 
 fun DependencyHandlerScope.commonAppDependency() {
-    "implementation"("androidx.core:core-ktx:${Versions.CORE}")
-    "implementation"("androidx.appcompat:appcompat:${Versions.APPCOMPAT}")
-    "implementation"("com.google.android.material:material:${Versions.MATERIAL}")
+    "implementation"(BuildConfig.`library core`)
+    "implementation"(BuildConfig.`library appcompat`)
+    "implementation"(BuildConfig.`library material`)
 
-    "implementation"("androidx.fragment:fragment-ktx:${Versions.FRAGMENT_KTX}")
-    "implementation"("androidx.activity:activity-ktx:${Versions.ACTIVITY_KTX}")
+    "implementation"(BuildConfig.`library fragment-ktx`)
+    "implementation"(BuildConfig.`library activity-ktx`)
 }
 
 fun DependencyHandlerScope.commonLibraryDependency() {
-    "implementation"("androidx.core:core-ktx:${Versions.CORE}")
-    "implementation"("androidx.appcompat:appcompat:${Versions.APPCOMPAT}")
-    "implementation"("com.google.android.material:material:${Versions.MATERIAL}")
+    "implementation"(BuildConfig.`library core`)
+    "implementation"(BuildConfig.`library appcompat`)
+    "implementation"(BuildConfig.`library material`)
 }

@@ -44,4 +44,4 @@ baseApp()
 
 ## 兼容性
 
-[兼容性](gradle/cul.versions.toml)
+[兼容性](gradle/libs.versions.toml)

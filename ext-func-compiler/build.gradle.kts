@@ -12,5 +12,5 @@ pureKotlinLanguageLevel()
 dependencies {
     implModule(":slim-ktx")
     apiModule(":ext-func-definition")
-    implementation("com.google.devtools.ksp:symbol-processing-api:${Versions.KSP}")
+    implementation(libs.symbol.processing.api)
 }

@@ -34,7 +34,7 @@ fun Project.setupCompose(isLibrary: Boolean = false, supportUiList: Boolean = tr
                 compose = true
             }
             composeOptions {
-                kotlinCompilerExtensionVersion = Versions.COMPOSE_COMPILER
+                kotlinCompilerExtensionVersion = BuildConfig.`version compose_compiler`
             }
         }
     } else
@@ -43,7 +43,7 @@ fun Project.setupCompose(isLibrary: Boolean = false, supportUiList: Boolean = tr
                 compose = true
             }
             composeOptions {
-                kotlinCompilerExtensionVersion = Versions.COMPOSE_COMPILER
+                kotlinCompilerExtensionVersion = BuildConfig.`version compose_compiler`
             }
         }
     dependencies {

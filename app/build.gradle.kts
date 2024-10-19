@@ -5,6 +5,7 @@ import com.storyteller_f.version_manager.setupGeneric
 import com.storyteller_f.version_manager.setupPreviewFeature
 
 plugins {
+    alias(libs.plugins.compose)
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("kotlin-android")
@@ -33,7 +34,7 @@ kapt {
 
 dependencies {
     networkDependency()
-    implementation("com.squareup.retrofit2:converter-gson:${Versions.RETROFIT}")
+    implementation(libs.converter.gson)
 }
 baseApp(namespaceString = "com.storyteller_f.common_ui_list_structure")
 setupGeneric()

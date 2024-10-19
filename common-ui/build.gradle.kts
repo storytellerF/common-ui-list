@@ -12,6 +12,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.storyteller_f.version_manager")
     id("common-publish")
+    alias(libs.plugins.compose)
 }
 
 baseLibrary(minSdkInt = 21, namespaceString = "com.storyteller_f.common_ui")
@@ -24,8 +25,8 @@ dependencies {
     implModule(":slim-ktx")
     implModule(":compat-ktx")
     implModule(":common-vm-ktx")
-    implementation("androidx.navigation:navigation-runtime-ktx:${Versions.NAVIGATION}")
-    implementation("androidx.databinding:viewbinding:${Versions.DATA_BINDING_COMPILER}")
+    implementation(libs.navigation.runtime.ktx)
+    implementation(libs.viewbinding)
 
     commonAppDependency()
     unitTestDependency()
