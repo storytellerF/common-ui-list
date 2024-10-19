@@ -12,8 +12,8 @@ baseLibrary(minSdkInt = 19, namespaceString = "com.storyteller_f.common_vm_ktx")
 setupExtFunc()
 dependencies {
     implModule(":ext-func-definition")
-    implementation("androidx.appcompat:appcompat:${Versions.APPCOMPAT}")
+    implementation(libs.appcompat)
     unitTestDependency()
 
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:${Versions.LIFECYCLE}")
+    implementation(libs.lifecycle.viewmodel.ktx)
 }

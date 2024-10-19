@@ -11,7 +11,7 @@ baseLibrary(minSdkInt = 21, namespaceString = "com.storyteller_f.view_holder_com
 
 dependencies {
     unitTestDependency()
-    api("androidx.compose.ui:ui:${Versions.COMPOSE_UI}")
+    api(libs.ui)
 
     implModule(":ui-list")
 }

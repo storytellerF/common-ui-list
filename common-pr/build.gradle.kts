@@ -26,6 +26,6 @@ dependencies {
     implModule(":common-ui")
     unitTestDependency()
     // https://mvnrepository.com/artifact/androidx.navigation/navigation-common-ktx
-    implementation("androidx.navigation:navigation-common-ktx:${Versions.NAV}")
-    implementation("androidx.navigation:navigation-fragment-ktx:${Versions.NAV}")
+    implementation(libs.navigation.common.ktx)
+    implementation(libs.navigation.fragment.ktx)
 }

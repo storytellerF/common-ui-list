@@ -1,7 +1,6 @@
 @file:Suppress("UnstableApiUsage")
 
 pluginManagement {
-    val smlFolder: String by settings
     includeBuild("version-manager")
     includeBuild("common-publish")
 //    includeBuild("../easylauncher-gradle-plugin")
@@ -16,11 +15,6 @@ pluginManagement {
 }
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
-    versionCatalogs {
-        create("cul") {
-            from(files("./gradle/cul.versions.toml"))
-        }
-    }
     repositories {
         google()
         mavenCentral()

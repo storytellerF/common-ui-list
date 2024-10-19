@@ -10,14 +10,15 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     dependencies {
-        classpath(cul.safeArgs.plugin.lib)
+        classpath(libs.safeArgs.plugin.lib)
     }
 }
 plugins {
-    alias(cul.plugins.android) apply false
-    alias(cul.plugins.kotlin) apply false
-    alias(cul.plugins.ksp) apply false
-    id("io.gitlab.arturbosch.detekt") version "1.23.1"
+    alias(libs.plugins.android) apply false
+    alias(libs.plugins.kotlin) apply false
+    alias(libs.plugins.ksp) apply false
+    alias(libs.plugins.compose) apply false
+    id("io.gitlab.arturbosch.detekt") version "1.23.7"
     id("org.jetbrains.kotlinx.kover") version "0.7.4"
     id("com.starter.easylauncher") version ("6.2.0") apply false
 }
@@ -156,9 +157,8 @@ fun Project.setupDeprecationCheck(deprecationCheckModules: List<String>) {
     subprojects {
         if (deprecationCheckModules.contains(name)) {
             tasks.withType<KotlinCompile> {
-                kotlinOptions {
-                    freeCompilerArgs =
-                        freeCompilerArgs + listOf("-Xlint:deprecation", "-Xlint:unchecked")
+                compilerOptions {
+                    freeCompilerArgs.addAll(listOf("-Xlint:deprecation", "-Xlint:unchecked"))
                 }
             }
             tasks.withType<JavaCompile> {

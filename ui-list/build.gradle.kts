@@ -1,4 +1,4 @@
-import com.storyteller_f.version_manager.Versions
+import com.storyteller_f.version_manager.Libraries
 import com.storyteller_f.version_manager.apiModule
 import com.storyteller_f.version_manager.baseLibrary
 import com.storyteller_f.version_manager.commonAppDependency
@@ -30,26 +30,26 @@ dependencies {
 
     //components
     commonAppDependency()
-    implementation("androidx.recyclerview:recyclerview:${Versions.RECYCLERVIEW}")
-    implementation("androidx.swiperefreshlayout:swiperefreshlayout:${Versions.SWIPE_REFRESH}")
+    implementation(Libraries.RECYCLERVIEW)
+    implementation(Libraries.SWIPE_REFRESH)
 
     //coroutines
     coroutineDependency()
 
     // lifecycle & view model
-    api("androidx.lifecycle:lifecycle-runtime-ktx:${Versions.LIFECYCLE}")
-    api("androidx.lifecycle:lifecycle-viewmodel-ktx:${Versions.LIFECYCLE}")
-    api("androidx.lifecycle:lifecycle-livedata-ktx:${Versions.LIFECYCLE}")
-    api("androidx.lifecycle:lifecycle-viewmodel-savedstate:${Versions.LIFECYCLE}")
+    api(libs.lifecycle.runtime.ktx)
+    api(libs.lifecycle.viewmodel.ktx)
+    api(libs.lifecycle.livedata.ktx)
+    api(libs.lifecycle.viewmodel.savedstate)
     apiModule(":common-vm-ktx")
 
     // room
-    api("androidx.room:room-runtime:${Versions.ROOM}")
-    api("androidx.room:room-ktx:${Versions.ROOM}")
-    api("androidx.room:room-paging:${Versions.ROOM}")
+    api(libs.room.runtime)
+    api(libs.room.ktx)
+    api(libs.room.paging)
 
-    api("androidx.paging:paging-runtime-ktx:${Versions.PAGING}")
+    api(libs.paging.runtime.ktx)
 
     // retrofit & okhttp
-    implementation("com.squareup.retrofit2:converter-gson:${Versions.RETROFIT}")
+    implementation(libs.converter.gson)
 }
