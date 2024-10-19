@@ -20,7 +20,7 @@ android {
     }
 }
 
-baseLibrary(enableMultiDex = true, minSdkInt = 19, namespaceString = "com.storyteller_f.ui_list")
+baseLibrary(enableMultiDex = true, namespaceString = "com.storyteller_f.ui_list")
 
 dependencies {
     implModule(":common-ktx")

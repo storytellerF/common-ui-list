@@ -7,7 +7,7 @@ plugins {
     id("common-publish")
 }
 
-baseLibrary(minSdkInt = 21, namespaceString = "com.storyteller_f.view_holder_compose")
+baseLibrary(namespaceString = "com.storyteller_f.view_holder_compose")
 
 dependencies {
     unitTestDependency()
