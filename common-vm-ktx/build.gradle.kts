@@ -8,7 +8,7 @@ plugins {
     id("common-publish")
 }
 
-baseLibrary(minSdkInt = 19, namespaceString = "com.storyteller_f.common_vm_ktx")
+baseLibrary(namespaceString = "com.storyteller_f.common_vm_ktx")
 setupExtFunc()
 dependencies {
     implModule(":ext-func-definition")

@@ -15,7 +15,7 @@ plugins {
     alias(libs.plugins.compose)
 }
 
-baseLibrary(minSdkInt = 21, namespaceString = "com.storyteller_f.common_ui")
+baseLibrary(namespaceString = "com.storyteller_f.common_ui")
 
 setupCompose(true)
 setupExtFunc()

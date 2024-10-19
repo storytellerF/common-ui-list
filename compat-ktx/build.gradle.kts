@@ -9,7 +9,7 @@ plugins {
     id("common-publish")
 }
 
-baseLibrary(true, minSdkInt = 16, namespaceString = "com.storyteller_f.compat_ktx")
+baseLibrary(enableMultiDex = true, namespaceString = "com.storyteller_f.compat_ktx")
 
 dependencies {
     commonAppDependency()

@@ -16,7 +16,7 @@ android {
         freeCompilerArgs = listOf("-Xcontext-receivers")
     }
 }
-baseLibrary(minSdkInt = 21, namespaceString = "com.storyteller_f.common_pr")
+baseLibrary(namespaceString = "com.storyteller_f.common_pr")
 
 setupExtFunc()
 dependencies {
