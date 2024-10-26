@@ -1,6 +1,7 @@
 [versions]
 android = "8.7.1"
 converterGson = "2.9.0"
+detektVersion = "1.23.7"
 junit = "4.13.2"
 kotlin = "2.0.21"
 ksp = "2.0.21-1.0.25"
@@ -9,10 +10,12 @@ navigationRuntimeKtx = "2.8.3"
 pagingRuntimeKtx = "3.3.2"
 roomRuntime = "2.6.1"
 safeArgs = "2.8.3"
+kover = "0.7.4"
+easylauncher = "6.2.0"
 compose_compiler = "1.5.15"
 compose_ui = "1.7.3"
-compose_material = "1.7.3"
-compose_plugin = "2.0.20"
+compose_material = "1.7.4"
+compose_plugin = "2.0.21"
 material = "1.12.0"
 appcompat = "1.7.0"
 core = "1.13.1"
@@ -35,6 +38,9 @@ android-espresso = "3.6.1"
 [libraries]
 android-plugin-lib = { module = "com.android.tools.build:gradle", version.ref = "android" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
+detekt-rules-libraries = { module = "io.gitlab.arturbosch.detekt:detekt-rules-libraries", version.ref = "detektVersion" }
+detekt-formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detektVersion" }
+detekt-rules-ruleauthors = { module = "io.gitlab.arturbosch.detekt:detekt-rules-ruleauthors", version.ref = "detektVersion" }
 junit = { module = "junit:junit", version.ref = "junit" }
 kotlin-plugin-lib = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 lifecycle-livedata-ktx = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "lifecycleRuntimeKtx" }
@@ -81,3 +87,6 @@ android = { id = "com.android.application", version.ref = "android" }
 kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "compose_plugin" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detektVersion" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
+easylauncher = { id = "com.starter.easylauncher", version.ref = "easylauncher" }

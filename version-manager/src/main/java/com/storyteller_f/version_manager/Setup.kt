@@ -14,10 +14,14 @@ import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.api.plugins.ExtensionAware
 import org.gradle.kotlin.dsl.dependencies
+import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmOptions
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.io.File
+import java.io.FileOutputStream
+import java.util.Base64
 import java.util.Locale
 
 fun Project.setupExtFunc() {
@@ -88,6 +92,12 @@ fun Project.loadPlugin(id: String) {
  *  2. 在debug 中复写[com.android.build.api.dsl.ApplicationVariantDimension.applicationIdSuffix]
  */
 fun Project.baseApp(minSdkInt: Int? = null, namespaceString: String? = null) {
+    val signPath: String? = System.getenv("storyteller_f_sign_path")
+    val signKey: String? = System.getenv("storyteller_f_sign_key")
+    val signAlias: String? = System.getenv("storyteller_f_sign_alias")
+    val signStorePassword: String? = System.getenv("storyteller_f_sign_store_password")
+    val signKeyPassword: String? = System.getenv("storyteller_f_sign_key_password")
+    val generatedJksFile = layout.buildDirectory.file("signing/signing_key.jks").get().asFile
     androidApp {
         compileSdk = Versions.COMPILE_SDK
         defaultConfig {
@@ -99,16 +109,19 @@ fun Project.baseApp(minSdkInt: Int? = null, namespaceString: String? = null) {
             testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         }
         signingConfigs {
-            val path = System.getenv("storyteller_f_sign_path")
-            val alias = System.getenv("storyteller_f_sign_alias")
-            val storePassword = System.getenv("storyteller_f_sign_store_password")
-            val keyPassword = System.getenv("storyteller_f_sign_key_password")
-            if (path != null && alias != null && storePassword != null && keyPassword != null) {
+            val signStorePath = if (signPath != null) {
+                File(signPath)
+            } else if (signKey != null) {
+                generatedJksFile
+            } else {
+                null
+            }
+            if (signStorePath != null && signAlias != null && signStorePassword != null && signKeyPassword != null) {
                 create("release") {
-                    keyAlias = alias
-                    this.keyPassword = keyPassword
-                    storeFile = file(path)
-                    this.storePassword = storePassword
+                    keyAlias = signAlias
+                    keyPassword = signKeyPassword
+                    storeFile = signStorePath
+                    storePassword = signStorePassword
                 }
             }
         }
@@ -133,7 +146,7 @@ fun Project.baseApp(minSdkInt: Int? = null, namespaceString: String? = null) {
                     signingConfig = releaseSignConfig
             }
         }
-        val javaVersion = JavaVersion.VERSION_17
+        val javaVersion = JavaVersion.VERSION_21
         compileOptions {
             sourceCompatibility = javaVersion
             targetCompatibility = javaVersion
@@ -149,6 +162,44 @@ fun Project.baseApp(minSdkInt: Int? = null, namespaceString: String? = null) {
         }
     }
 
+
+    val decodeBase64ToStoreFileTask = tasks.register("decodeBase64ToStoreFile") {
+        group = "signing"
+        doLast {
+            if (signKey != null) {
+                // 定义输出文件路径 (如密钥存储文件)
+                val outputFile = generatedJksFile
+
+                outputFile.parentFile?.let {
+                    if (!it.exists()) {
+                        if (!it.mkdirs()) {
+                            throw Exception("mkdirs falied: $it")
+                        }
+                    }
+                }
+                if (!outputFile.exists()) {
+                    if (!outputFile.createNewFile()) {
+                        throw Exception("create failed: $outputFile")
+                    }
+                }
+                // 将 Base64 解码为字节
+                val decodedBytes = Base64.getDecoder().decode(signKey)
+
+                // 将解码后的字节写入文件
+                FileOutputStream(outputFile).use { it.write(decodedBytes) }
+
+                println("Base64 decoded and written to: $outputFile")
+            } else {
+                println("skip decodeBase64ToStoreFile")
+            }
+
+        }
+
+    }
+
+    afterEvaluate {
+        tasks["packageRelease"]?.dependsOn(decodeBase64ToStoreFileTask)
+    }
     loadBao()
     baseAppDependency()
     redirectKaptOutputToKsp()
@@ -200,7 +251,7 @@ fun Project.baseLibrary(
                 )
             }
         }
-        val javaVersion = JavaVersion.VERSION_17
+        val javaVersion = JavaVersion.VERSION_21
         compileOptions {
             sourceCompatibility = javaVersion
             targetCompatibility = javaVersion
@@ -249,7 +300,7 @@ fun <T> List<T>.plusIfNotExists(element: T): List<T> {
 }
 
 fun Project.pureKotlinLanguageLevel() {
-    val javaVersion = JavaVersion.VERSION_17
+    val javaVersion = JavaVersion.VERSION_21
     java {
         sourceCompatibility = javaVersion
         targetCompatibility = javaVersion
