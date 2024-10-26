@@ -18,9 +18,9 @@ plugins {
     alias(libs.plugins.kotlin) apply false
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.compose) apply false
-    id("io.gitlab.arturbosch.detekt") version "1.23.7"
-    id("org.jetbrains.kotlinx.kover") version "0.7.4"
-    id("com.starter.easylauncher") version ("6.2.0") apply false
+    alias(libs.plugins.detekt)
+    alias(libs.plugins.kover)
+    alias(libs.plugins.easylauncher) apply false
 }
 tasks.withType<Test> {
     testLogging {
@@ -77,11 +77,9 @@ fun Project.setupDetekt() {
             baseline = file("$rootDir/config/detekt/baseline.xml")
         }
         dependencies {
-            val detektVersion = "1.23.1"
-
-            detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:$detektVersion")
-            detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules-libraries:$detektVersion")
-            detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules-ruleauthors:$detektVersion")
+            detektPlugins(rootProject.libs.detekt.formatting)
+            detektPlugins(rootProject.libs.detekt.rules.libraries)
+            detektPlugins(rootProject.libs.detekt.rules.ruleauthors)
         }
         tasks.withType<Detekt>().configureEach {
             jvmTarget = "1.8"

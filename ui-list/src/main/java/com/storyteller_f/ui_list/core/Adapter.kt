@@ -1,6 +1,7 @@
 package com.storyteller_f.ui_list.core
 
 import android.content.Context
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.ComponentActivity
@@ -25,6 +26,8 @@ import com.storyteller_f.slim_ktx.IndexManager
 import com.storyteller_f.ui_list.event.findActivityOrNull
 import com.storyteller_f.ui_list.event.findFragmentOrNull
 import kotlin.reflect.KClass
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 typealias BuildViewHolderFunction2 = (ViewGroup, String) -> AbstractViewHolder<out DataItemHolder>
 typealias BuildViewHolderFunction3 = (ViewGroup, String, String) -> AbstractViewHolder<out DataItemHolder>
@@ -67,6 +70,8 @@ abstract class DataItemHolder(val type: String = "", val key: String = "") {
 
 abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: String = "") :
     RecyclerView.ViewHolder(itemView) {
+    @OptIn(ExperimentalUuidApi::class)
+    private val label = Uuid.random().toHexString()
     val context: Context = itemView.context
 
     private val _holderLifecycleOwnerLiveData = MutableLiveData<BindLifecycleOwner?>()
@@ -116,14 +121,20 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: 
     /**
      * onViewAttachedToWindow 被触发或者外部生命周期onStart 触发
      */
-    internal fun moveStateToStart(resetObserverIfNeed: Boolean = true) {
+    internal fun moveStateToStart(isHolderEvent: Boolean = true) {
+        Log.d(
+            TAG,
+            "$label moveStateToStart() called with: " +
+                "isHolderEvent = $isHolderEvent " +
+                "observer exists = ${_observer != null}"
+        )
         moveToState(Lifecycle.Event.ON_START)
         // 开始监听外部LifecycleOwner
         val owner: LifecycleOwner? = itemView.findFragmentOrNull<Fragment>()
             ?: itemView.findActivityOrNull() as? ComponentActivity
         requireNotNull(owner)
         // 确保外部生命周期引起变化时，不会导致再次注册observer，仅在onViewAttachedToWindow 中才会注册
-        if (_observer == null || resetObserverIfNeed) {
+        if (_observer == null || isHolderEvent) {
             _observer?.let {
                 owner.lifecycle.removeObserver(it)
             }
@@ -137,11 +148,26 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: 
      * onViewDetachedFromWindow 被触发或者外部生命周期触发onStop
      *
      * onViewDetachedFromWindow 会通过onViewAttachedToWindow 恢复
-     * 外部生命周期会通过再次变成onStart 恢复。如果外部生命周期来自Fragment，监听Fragment 本身而不是viewLifecycleOwner
-     * 确保在Fragment 恢复的时候可以获得onStart 事件
-     * 两者都使用moveStateToStart 恢复状态
+     * 外部生命周期onStop会通过再次变成onStart 恢复。
+     * 对于外部生命周期，如果来自Fragment，监听Fragment 本身而不是viewLifecycleOwner
+     * 来确保在Fragment 恢复的时候可以获得onStart 事件
+     * 上述两者都使用moveStateToStart 恢复状态
      */
-    internal fun moveStateToStop() {
+    internal fun moveStateToStop(isHolderEvent: Boolean) {
+        Log.d(
+            TAG,
+            "$label moveStateToStop() called with: " +
+                "isHolderEvent = $isHolderEvent"
+        )
+        val lifecycleOwner = _holderLifecycleOwnerLiveData.value
+        if (lifecycleOwner == null) {
+            Log.i(
+                TAG,
+                "moveStateToPause: $label stop failed, " +
+                    "because this already be destroyed or not yet created"
+            )
+            return
+        }
         moveToState(Lifecycle.Event.ON_STOP)
         // 不会关闭监听LifecycleOwner，为了能够获得onStart 的回调
     }
@@ -150,31 +176,79 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: 
      * 完全通过外部生命周期确定
      */
     internal fun moveStateToResume() {
+        Log.d(TAG, "$label moveStateToResume() called")
         moveToState(Lifecycle.Event.ON_RESUME)
     }
 
     /**
      * 完全通过外部生命周期确定
+     *
+     * 存在ViewHolder 先被清理，然后才接受到外部的pause 事件的情况
      */
-    internal fun moveStateToPause() {
+    internal fun moveStateToPause(isHolderEvent: Boolean) {
+        Log.d(
+            TAG,
+            "$label moveStateToPause() called with: " +
+                "isHolderEvent = $isHolderEvent"
+        )
+        val lifecycleOwner = _holderLifecycleOwnerLiveData.value
+        if (lifecycleOwner == null) {
+            Log.i(
+                TAG,
+                "moveStateToPause: $label pause failed, " +
+                    "because this already be destroyed or not yet created"
+            )
+            return
+        }
         moveToState(Lifecycle.Event.ON_PAUSE)
     }
 
-    internal fun moveStateToCreate() {
-        assert(_holderLifecycleOwnerLiveData.value == null)
-        _holderLifecycleOwnerLiveData.value = BindLifecycleOwner()
+    internal fun moveStateToCreate(isHolderEvent: Boolean) {
+        Log.d(
+            TAG,
+            "$label moveStateToCreate() called with: " +
+                "isHolderEvent = $isHolderEvent"
+        )
+        assert(_holderLifecycleOwnerLiveData.value == null) {
+            "$label create multi-times"
+        }
+        bindLifecycleOwner()
         moveToState(Lifecycle.Event.ON_CREATE)
     }
 
-    internal fun moveStateToDestroy() {
+    internal fun moveStateToDestroy(isHolderEvent: Boolean) {
+        Log.d(
+            TAG,
+            "$label moveStateToDestroy() called with: " +
+                "isHolderEvent = $isHolderEvent"
+        )
+        val lifecycleOwner = _holderLifecycleOwnerLiveData.value
+        if (lifecycleOwner == null) {
+            Log.i(
+                TAG,
+                "moveStateToPause: $label destroy failed, " +
+                    "because this already be destroyed or not yet created"
+            )
+            return
+        }
         moveToState(Lifecycle.Event.ON_DESTROY)
-        _holderLifecycleOwnerLiveData.value = null
+        unbindLifecycleOwner()
     }
 
     private fun moveToState(event: Lifecycle.Event) {
         val lifecycleOwner = _holderLifecycleOwnerLiveData.value
-        require(lifecycleOwner != null)
+        require(lifecycleOwner != null) {
+            "$label lifecycleOwner is null"
+        }
         lifecycleOwner.lifecycleRegistry.handleLifecycleEvent(event)
+    }
+
+    private fun bindLifecycleOwner() {
+        _holderLifecycleOwnerLiveData.value = BindLifecycleOwner()
+    }
+
+    private fun unbindLifecycleOwner() {
+        _holderLifecycleOwnerLiveData.value = null
     }
 
     /**
@@ -189,7 +263,7 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: 
 
         override fun onStop(owner: LifecycleOwner) {
             super.onStop(owner)
-            moveStateToStop()
+            moveStateToStop(false)
         }
 
         override fun onResume(owner: LifecycleOwner) {
@@ -199,13 +273,17 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: 
 
         override fun onPause(owner: LifecycleOwner) {
             super.onPause(owner)
-            moveStateToPause()
+            moveStateToPause(false)
         }
     }
 
     inner class BindLifecycleOwner : LifecycleOwner {
         val lifecycleRegistry = LifecycleRegistry(this)
         override val lifecycle: Lifecycle = lifecycleRegistry
+    }
+
+    companion object {
+        private const val TAG = "Adapter"
     }
 }
 
@@ -232,7 +310,7 @@ open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(
     override fun onBindViewHolder(holder: VH, position: Int) {
         val itemHolder = getItemAbstract(position) ?: return
         holder.attachItemHolder(itemHolder)
-        holder.moveStateToCreate()
+        holder.moveStateToCreate(true)
         holder.onBind(itemHolder)
     }
 
@@ -262,12 +340,12 @@ open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(
 
     override fun onViewDetachedFromWindow(holder: VH) {
         super.onViewDetachedFromWindow(holder)
-        holder.moveStateToStop()
+        holder.moveStateToStop(true)
     }
 
     override fun onViewRecycled(holder: VH) {
         super.onViewRecycled(holder)
-        holder.moveStateToDestroy()
+        holder.moveStateToDestroy(true)
         holder.detachItemHolder()
     }
 
