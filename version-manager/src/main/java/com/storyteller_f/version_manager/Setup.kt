@@ -85,6 +85,10 @@ fun Project.loadPlugin(id: String) {
     if (!plugins.hasPlugin(id)) plugins.apply(id)
 }
 
+fun getenv(key: String) : String? {
+    return System.getenv(key) ?: System.getenv(key.uppercase())
+}
+
 /**
  * 默认最小SDK 为[Versions.DEFAULT_MIN_SDK]，如果需要重新定制需要在baseApp 之后指定，否则会被覆盖
  * 注意副作用：
@@ -92,11 +96,11 @@ fun Project.loadPlugin(id: String) {
  *  2. 在debug 中复写[com.android.build.api.dsl.ApplicationVariantDimension.applicationIdSuffix]
  */
 fun Project.baseApp(minSdkInt: Int? = null, namespaceString: String? = null) {
-    val signPath: String? = System.getenv("storyteller_f_sign_path")
-    val signKey: String? = System.getenv("storyteller_f_sign_key")
-    val signAlias: String? = System.getenv("storyteller_f_sign_alias")
-    val signStorePassword: String? = System.getenv("storyteller_f_sign_store_password")
-    val signKeyPassword: String? = System.getenv("storyteller_f_sign_key_password")
+    val signPath: String? = getenv("storyteller_f_sign_path")
+    val signKey: String? = getenv("storyteller_f_sign_key")
+    val signAlias: String? = getenv("storyteller_f_sign_alias")
+    val signStorePassword: String? = getenv("storyteller_f_sign_store_password")
+    val signKeyPassword: String? = getenv("storyteller_f_sign_key_password")
     val generatedJksFile = layout.buildDirectory.file("signing/signing_key.jks").get().asFile
     androidApp {
         compileSdk = Versions.COMPILE_SDK
@@ -171,7 +175,7 @@ fun Project.baseApp(minSdkInt: Int? = null, namespaceString: String? = null) {
                 outputFile.parentFile?.let {
                     if (!it.exists()) {
                         if (!it.mkdirs()) {
-                            throw Exception("mkdirs falied: $it")
+                            throw Exception("mkdirs failed: $it")
                         }
                     }
                 }
