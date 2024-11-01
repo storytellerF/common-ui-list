@@ -6,9 +6,9 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
+    env:
+      SECRETS_CONTEXT: ${{ toJson(secrets) }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -65,7 +65,7 @@ jobs:
         run: bash gradlew koverXmlReport
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
