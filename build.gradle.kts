@@ -55,6 +55,14 @@ setupKover(
         "ui-list-annotation-common",
         "ui-list-annotation-compiler-ksp",
         "ui-list-annotation-definition",
+    ), listOf(
+        "ui-list-annotation-common",
+        "ui-list-annotation-compiler-ksp",
+        "ext-func-definition",
+        "ext-func-compiler",
+        "composite-definition",
+        "composite-compiler-ksp",
+        "app"
     )
 )
 
@@ -106,48 +114,52 @@ fun Project.setupDetekt() {
 fun Project.setupKover(
     mainModule: String,
     androidLibModules: List<String>,
-    jvmLibModules: List<String>
+    jvmLibModules: List<String>,
+    excludeModules: List<String>,
 ) {
     subprojects {
-        apply(plugin = "org.jetbrains.kotlinx.kover")
-        if (androidLibModules.contains(name)) {
-            apply(plugin = "com.android.library")
+        if (!excludeModules.contains(name)) {
+            apply(plugin = "org.jetbrains.kotlinx.kover")
+            if (androidLibModules.contains(name)) {
+                apply(plugin = "com.android.library")
+            }
+
+            dependencies {
+                if (name == mainModule) {
+                    val action = { it: String ->
+                        kover(project(":$it"))
+                        Unit
+                    }
+                    androidLibModules.forEach(action)
+                    jvmLibModules.forEach(action)
+                }
+                if (androidLibModules.contains(name)) {
+                    val robolectricVersion = "4.11.1"
+                    "testImplementation"("org.robolectric:robolectric:$robolectricVersion")
+                }
+            }
+            koverReport {
+                if (androidLibModules.contains(name)) {
+                    defaults {
+                        mergeWith("release")
+                    }
+                }
+                // filters for all report types of all build variants
+                filters {
+                    excludes {
+                        classes(
+                            "*Fragment",
+                            "*Fragment\$*",
+                            "*Activity",
+                            "*Activity\$*",
+                            "*.databinding.*",
+                            "*.BuildConfig"
+                        )
+                    }
+                }
+            }
         }
 
-        dependencies {
-            if (name == mainModule) {
-                val action = { it: String ->
-                    kover(project(":$it"))
-                    Unit
-                }
-                androidLibModules.forEach(action)
-                jvmLibModules.forEach(action)
-            }
-            if (androidLibModules.contains(name)) {
-                val robolectricVersion = "4.11.1"
-                "testImplementation"("org.robolectric:robolectric:$robolectricVersion")
-            }
-        }
-        koverReport {
-            if (androidLibModules.contains(name)) {
-                defaults {
-                    mergeWith("release")
-                }
-            }
-            // filters for all report types of all build variants
-            filters {
-                excludes {
-                    classes(
-                        "*Fragment",
-                        "*Fragment\$*",
-                        "*Activity",
-                        "*Activity\$*",
-                        "*.databinding.*",
-                        "*.BuildConfig"
-                    )
-                }
-            }
-        }
     }
 }
 
