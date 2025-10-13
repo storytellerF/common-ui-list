@@ -17,6 +17,6 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("com.storyteller_f.common_ui_list_structure.debug", appContext.packageName)
+        assertEquals("com.storyteller_f.common_ui_list_sample.debug", appContext.packageName)
     }
 }
