@@ -2,15 +2,10 @@ package com.storyteller_f.common_ui
 
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.View
-import android.view.WindowManager
 import androidx.activity.ComponentActivity
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.graphics.toColorInt
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.core.view.updatePadding
 import androidx.viewbinding.ViewBinding
 
 abstract class CommonActivity : AppCompatActivity(), Registry {
@@ -42,18 +37,7 @@ abstract class SimpleActivity<T : ViewBinding>(
     }
 }
 
-fun ComponentActivity.supportNavigatorBarImmersive(view: View) {
-    WindowCompat.setDecorFitsSystemWindows(window, false)
-    window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-    WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightNavigationBars = !isNightMode
-    WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = !isNightMode
-    /**
-     * 如果提供一个透明色，在低版本中会自动添加一个颜色
-     */
-    window.navigationBarColor = "#01000000".toColorInt()
-    view.setOnApplyWindowInsetsListener { v, insets ->
-        val top = WindowInsetsCompat.toWindowInsetsCompat(insets, v).getInsets(WindowInsetsCompat.Type.statusBars())
-        v.updatePadding(top = top.top)
-        insets
-    }
+fun ComponentActivity.supportNavigatorBarImmersive() {
+    enableEdgeToEdge()
+    WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightNavigationBars = false
 }

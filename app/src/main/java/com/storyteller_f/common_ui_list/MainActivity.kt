@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,7 +20,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.updatePadding
 import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.RecyclerView
@@ -31,6 +29,7 @@ import com.storyteller_f.common_ui.navigator
 import com.storyteller_f.common_ui.owner
 import com.storyteller_f.common_ui.repeatOnViewResumed
 import com.storyteller_f.common_ui.status
+import com.storyteller_f.common_ui.supportNavigatorBarImmersive
 import com.storyteller_f.common_ui.updateMargins
 import com.storyteller_f.common_ui_list.api.requireReposService
 import com.storyteller_f.common_ui_list.databinding.ActivityMainBinding
@@ -132,9 +131,7 @@ class MainActivity : AppCompatActivity() {
             },
             selectedItemHolder
         )
-        enableEdgeToEdge()
-        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightNavigationBars = false
-//        supportNavigatorBarImmersive(binding.root)
+        supportNavigatorBarImmersive()
         repeatOnViewResumed {
             viewModel.content.collectLatest {
                 adapter.submitData(it)
