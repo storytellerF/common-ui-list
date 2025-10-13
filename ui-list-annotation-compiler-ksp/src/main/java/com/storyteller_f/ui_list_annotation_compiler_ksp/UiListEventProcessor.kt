@@ -52,7 +52,8 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
         val longClickEvents =
             resolver.getSymbolsWithAnnotation(BindLongClickEvent::class.java.canonicalName)
 
-        if (checkRound(viewHolders, clickEvents, longClickEvents)) return emptyList()
+        val round = checkRound(viewHolders, clickEvents, longClickEvents) ?: return emptyList()
+        if (round.isNotEmpty()) return round
 
         process(viewHolders, clickEvents, longClickEvents)
 
@@ -78,7 +79,7 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
         viewHolders: Sequence<KSAnnotated>,
         clickEvents: Sequence<KSAnnotated>,
         longClickEvents: Sequence<KSAnnotated>
-    ): Boolean {
+    ): List<KSAnnotated>? {
         val viewHolderMap = viewHolders.groupBy {
             it.validate()
         }
@@ -93,7 +94,7 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
         val longClickEventCount = longClickEvents.count()
 
         logger.warn("ui-list round $count vh:$viewHolderCount click:$clickEventCount long-click:$longClickEventCount")
-        logger.warn("ui-list round $count holder ${viewHolderMap[true]?.size} ${viewHolderMap[false]?.size}")
+        logger.warn("ui-list round $count vh ${viewHolderMap[true]?.size} ${viewHolderMap[false]?.size}")
         logger.warn("ui-list round $count click: ${clickEventMap[true]?.size} ${clickEventMap[false]?.size}")
         logger.warn("ui-list round $count long ${longClickEventMap[true]?.size} ${longClickEventMap[false]?.size}")
         val invalidate =
@@ -103,9 +104,9 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
         }
         if (viewHolderCount == 0 && clickEventCount == 0 && longClickEventCount == 0) {
             logger.warn("ui-list round $count exit")
-            return true
+            return null
         }
-        return false
+        return emptyList()
     }
 
     private fun writeFile(

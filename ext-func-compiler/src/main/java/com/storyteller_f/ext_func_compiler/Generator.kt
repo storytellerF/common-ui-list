@@ -18,19 +18,19 @@ internal fun generatePropertyV3(name: String) = """
 
 internal fun generatePropertyV4(name: String, annotation: ExtFuncFlat): String {
     return """
-    ${if (annotation.isContextReceiver) "context(Context)" else ""}
+    ${if (annotation.isContextReceiver) "context(ctx: Context)" else ""}
     val Int.$name
     get() = toFloat().$name
     
-    ${if (annotation.isContextReceiver) "context(View)" else ""}
+    ${if (annotation.isContextReceiver) "context(v: View)" else ""}
     val Int.${name}1
-    get() = context.run {
+    get() = v.context.run {
         toFloat().$name
     }
     
-    ${if (annotation.isContextReceiver) "context(Fragment)" else ""}
+    ${if (annotation.isContextReceiver) "context(f: Fragment)" else ""}
     val Int.${name}2
-    get() = requireContext().run {
+    get() = f.requireContext().run {
         toFloat().$name
     }
     """.trimIndent()

@@ -1,4 +1,4 @@
-package com.storyteller_f.common_ui_list_structure.test_navigation
+package com.storyteller_f.common_ui_list.test_navigation
 
 import android.os.Bundle
 import androidx.navigation.findNavController
@@ -9,9 +9,9 @@ import com.google.android.material.snackbar.Snackbar
 import com.storyteller_f.common_pr.response
 import com.storyteller_f.common_ui.CommonActivity
 import com.storyteller_f.common_ui.request
-import com.storyteller_f.common_ui_list_structure.R
-import com.storyteller_f.common_ui_list_structure.databinding.ActivityTestNavigationResultBinding
-import com.storyteller_f.common_ui_list_structure.dialog.TestDialog2
+import com.storyteller_f.common_ui_list.R
+import com.storyteller_f.common_ui_list.databinding.ActivityTestNavigationResultBinding
+import com.storyteller_f.common_ui_list.dialog.TestDialog2
 import com.storyteller_f.ui_list.event.viewBinding
 
 class TestNavigationResultActivity : CommonActivity() {

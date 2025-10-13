@@ -2,27 +2,22 @@
 
 package com.storyteller_f.version_manager
 
-import androidx.navigation.safeargs.gradle.ArgumentsGenerationTask
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
-import com.android.build.gradle.internal.tasks.databinding.DataBindingGenBaseClassesTask
-import com.android.build.gradle.tasks.AidlCompile
-import com.android.build.gradle.tasks.GenerateBuildConfig
 import org.gradle.api.Action
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.api.plugins.ExtensionAware
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.get
-import org.gradle.kotlin.dsl.withType
-import org.jetbrains.kotlin.gradle.dsl.KotlinJvmOptions
-import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompilerOptions
 import java.io.File
 import java.io.FileOutputStream
-import java.util.Base64
-import java.util.Locale
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 fun Project.setupExtFunc() {
     loadPlugin("com.google.devtools.ksp")
@@ -71,9 +66,9 @@ fun Project.setupGeneric() {
 }
 
 fun Project.setupPreviewFeature() {
-    androidApp {
-        kotlinOptionsApp {
-            addArgs("-Xcontext-receivers")
+    androidKotlin {
+        compilerOptions {
+            freeCompilerArgs.addAll(listOf("-Xcontext-parameters"))
         }
     }
     dependencies {
@@ -85,7 +80,7 @@ fun Project.loadPlugin(id: String) {
     if (!plugins.hasPlugin(id)) plugins.apply(id)
 }
 
-fun getenv(key: String) : String? {
+fun getenv(key: String): String? {
     return System.getenv(key) ?: System.getenv(key.uppercase())
 }
 
@@ -95,6 +90,7 @@ fun getenv(key: String) : String? {
  *  1. 读取[com.android.build.gradle.internal.dsl.DefaultConfig.applicationId]
  *  2. 在debug 中复写[com.android.build.api.dsl.ApplicationVariantDimension.applicationIdSuffix]
  */
+@OptIn(ExperimentalEncodingApi::class)
 fun Project.baseApp(minSdkInt: Int? = null, namespaceString: String? = null) {
     val signPath: String? = getenv("storyteller_f_sign_path")
     val signKey: String? = getenv("storyteller_f_sign_key")
@@ -102,6 +98,7 @@ fun Project.baseApp(minSdkInt: Int? = null, namespaceString: String? = null) {
     val signStorePassword: String? = getenv("storyteller_f_sign_store_password")
     val signKeyPassword: String? = getenv("storyteller_f_sign_key_password")
     val generatedJksFile = layout.buildDirectory.file("signing/signing_key.jks").get().asFile
+    val javaVersion = JavaVersion.VERSION_21
     androidApp {
         compileSdk = Versions.COMPILE_SDK
         defaultConfig {
@@ -148,19 +145,20 @@ fun Project.baseApp(minSdkInt: Int? = null, namespaceString: String? = null) {
                     signingConfig = releaseSignConfig
             }
         }
-        val javaVersion = JavaVersion.VERSION_21
         compileOptions {
             sourceCompatibility = javaVersion
             targetCompatibility = javaVersion
         }
-
-        kotlinOptionsApp {
-            jvmTarget = javaVersion.toString()
-            addArgs("-opt-in=kotlin.RequiresOptIn")
-        }
         dependenciesInfo {
             includeInBundle = false
             includeInApk = false
+        }
+    }
+
+    androidKotlin {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.fromTarget(javaVersion.toString()))
+            optIn.add("kotlin.RequiresOptIn")
         }
     }
 
@@ -185,7 +183,7 @@ fun Project.baseApp(minSdkInt: Int? = null, namespaceString: String? = null) {
                     }
                 }
                 // 将 Base64 解码为字节
-                val decodedBytes = Base64.getDecoder().decode(signKey)
+                val decodedBytes = Base64.decode(signKey, 0, signKey.length)
 
                 // 将解码后的字节写入文件
                 FileOutputStream(outputFile).use { it.write(decodedBytes) }
@@ -204,7 +202,6 @@ fun Project.baseApp(minSdkInt: Int? = null, namespaceString: String? = null) {
     }
     loadBao()
     baseAppDependency()
-    redirectKaptOutputToKsp()
 }
 
 private fun Project.loadBao() {
@@ -226,6 +223,7 @@ fun Project.baseLibrary(
     minSdkInt: Int? = null,
     namespaceString: String? = null
 ) {
+    val javaVersion = JavaVersion.VERSION_21
     androidLibrary {
         compileSdk = Versions.COMPILE_SDK
 
@@ -253,20 +251,20 @@ fun Project.baseLibrary(
                 )
             }
         }
-        val javaVersion = JavaVersion.VERSION_21
         compileOptions {
             sourceCompatibility = javaVersion
             targetCompatibility = javaVersion
         }
-        kotlinOptionsLibrary {
-            jvmTarget = javaVersion.toString()
-            addArgs("-opt-in=kotlin.RequiresOptIn")
-        }
-
         publishing {
             singleVariant("release") {
                 withSourcesJar()
             }
+        }
+    }
+    androidKotlin {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.fromTarget(javaVersion.toString()))
+            optIn.add("kotlin.RequiresOptIn")
         }
     }
 }
@@ -277,29 +275,23 @@ internal fun Project.androidLibrary(configure: Action<LibraryExtension>): Unit =
 internal fun Project.androidApp(configure: Action<BaseAppModuleExtension>): Unit =
     (this as ExtensionAware).extensions.configure("android", configure)
 
-internal fun BaseAppModuleExtension.kotlinOptionsApp(configure: Action<KotlinJvmOptions>): Unit =
-    (this as ExtensionAware).extensions.configure("kotlinOptions", configure)
-
-internal fun LibraryExtension.kotlinOptionsLibrary(configure: Action<KotlinJvmOptions>): Unit =
-    (this as ExtensionAware).extensions.configure("kotlinOptions", configure)
-
 internal fun Project.java(configure: Action<org.gradle.api.plugins.JavaPluginExtension>): Unit =
     (this as ExtensionAware).extensions.configure("java", configure)
 
 fun Project.androidComponents(configure: Action<ApplicationAndroidComponentsExtension>): Unit =
     (this as ExtensionAware).extensions.configure("androidComponents", configure)
 
-fun KotlinJvmOptions.addArgs(arg: String) {
-    freeCompilerArgs = freeCompilerArgs.plusIfNotExists(arg)
+fun Project.androidKotlin(configure: Action<KotlinAndroidProjectExtension>): Unit =
+    (this as ExtensionAware).extensions.configure("kotlin", configure)
+
+fun KotlinJvmCompilerOptions.addArgs(arg: String) {
+    freeCompilerArgs.addAll(listOf(arg))
 }
 
-fun <T> List<T>.plusIfNotExists(element: T): List<T> {
-    if (contains(element)) return this
-    val result = ArrayList<T>(size + 1)
-    result.addAll(this)
-    result.add(element)
-    return result
+fun Project.pureKotlin(configure: Action<org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension>) {
+    (this as ExtensionAware).extensions.configure("kotlin", configure)
 }
+
 
 fun Project.pureKotlinLanguageLevel() {
     val javaVersion = JavaVersion.VERSION_21
@@ -307,9 +299,11 @@ fun Project.pureKotlinLanguageLevel() {
         sourceCompatibility = javaVersion
         targetCompatibility = javaVersion
     }
-    tasks.withType<KotlinCompile>().configureEach {
-        kotlinOptions.jvmTarget = javaVersion.toString()
-        kotlinOptions.freeCompilerArgs += "-opt-in=kotlin.RequiresOptIn"
+    pureKotlin {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.fromTarget(javaVersion.toString()))
+            optIn.add("kotlin.RequiresOptIn")
+        }
     }
 }
 
@@ -347,50 +341,4 @@ fun Project.constraintCommonUIListVersion(
         }
     }
 
-}
-
-/*
-* AGP tasks do not get properly wired to the KSP task at the moment.
-* As a result, KSP sees `error.NonExistentClass` instead of generated types.
-*
-* https://github.com/google/dagger/issues/4049
-* https://github.com/google/dagger/issues/4051
-* https://github.com/google/dagger/issues/4061
-* https://github.com/google/dagger/issues/4158
-*/
-fun Project.redirectKaptOutputToKsp() {
-    androidComponents {
-        onVariants(selector().all()) { variant ->
-            afterEvaluate {
-                val variantName = variant.name.replaceFirstChar {
-                    if (it.isLowerCase()) it.titlecase(
-                        Locale.getDefault()
-                    ) else it.toString()
-                }
-                val ksp = "ksp${variantName}Kotlin"
-                val viewBinding = "dataBindingGenBaseClasses$variantName"
-                val buildConfig = "generate${variantName}BuildConfig"
-                val safeArgs = "generateSafeArgs$variantName"
-                val aidl = "compile${variantName}Aidl"
-
-                val kspTask = project.tasks.findByName(ksp)
-                        as? AbstractKotlinCompileTool<*>
-                val viewBindingTask = project.tasks.findByName(viewBinding)
-                        as? DataBindingGenBaseClassesTask
-                val buildConfigTask = project.tasks.findByName(buildConfig)
-                        as? GenerateBuildConfig
-                val aidlTask = project.tasks.findByName(aidl)
-                        as? AidlCompile
-                val safeArgsTask = project.tasks.findByName(safeArgs)
-                        as? ArgumentsGenerationTask
-
-                kspTask?.run {
-                    viewBindingTask?.let { setSource(it.sourceOutFolder) }
-                    buildConfigTask?.let { setSource(it.sourceOutputDir) }
-                    aidlTask?.let { setSource(it.sourceOutputDir) }
-                    safeArgsTask?.let { setSource(it.outputDir) }
-                }
-            }
-        }
-    }
 }

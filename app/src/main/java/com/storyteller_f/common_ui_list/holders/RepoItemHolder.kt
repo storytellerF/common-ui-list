@@ -1,12 +1,12 @@
-package com.storyteller_f.common_ui_list_structure.holders
+package com.storyteller_f.common_ui_list.holders
 
 import android.annotation.SuppressLint
 import android.view.View
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.annotation_defination.ItemHolder
-import com.storyteller_f.common_ui_list_structure.R
-import com.storyteller_f.common_ui_list_structure.databinding.RepoViewItemBinding
-import com.storyteller_f.common_ui_list_structure.model.Repo
+import com.storyteller_f.common_ui_list.R
+import com.storyteller_f.common_ui_list.databinding.RepoViewItemBinding
+import com.storyteller_f.common_ui_list.model.Repo
 import com.storyteller_f.slim_ktx.propertiesSame
 import com.storyteller_f.ui_list.core.BindingViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder

@@ -1,10 +1,10 @@
-package com.storyteller_f.common_ui_list_structure.dialog
+package com.storyteller_f.common_ui_list.dialog
 
 import android.os.Parcelable
 import com.storyteller_f.common_ui.SimpleDialogFragment
 import com.storyteller_f.common_ui.setFragmentResult
 import com.storyteller_f.common_ui.setOnClick
-import com.storyteller_f.common_ui_list_structure.databinding.DialogTestBinding
+import com.storyteller_f.common_ui_list.databinding.DialogTestBinding
 import kotlinx.parcelize.Parcelize
 
 class NavigationDialog : SimpleDialogFragment<DialogTestBinding>(DialogTestBinding::inflate) {

@@ -1,4 +1,3 @@
-import com.storyteller_f.version_manager.Versions
 import com.storyteller_f.version_manager.apiModule
 import com.storyteller_f.version_manager.baseLibrary
 import com.storyteller_f.version_manager.commonAppDependency

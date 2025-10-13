@@ -1,10 +1,10 @@
-package com.storyteller_f.common_ui_list_structure.test_model
+package com.storyteller_f.common_ui_list.test_model
 
 import android.widget.TextView
 import com.storyteller_f.common_ui.RegularFragment
-import com.storyteller_f.common_ui_list_structure.api.requireReposService
-import com.storyteller_f.common_ui_list_structure.databinding.FragmentTestDetailBinding
-import com.storyteller_f.common_ui_list_structure.db.requireRepoDatabase
+import com.storyteller_f.common_ui_list.api.requireReposService
+import com.storyteller_f.common_ui_list.databinding.FragmentTestDetailBinding
+import com.storyteller_f.common_ui_list.db.requireRepoDatabase
 import com.storyteller_f.ui_list.source.DetailProducer
 import com.storyteller_f.ui_list.source.detail
 

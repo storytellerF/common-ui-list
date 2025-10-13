@@ -1,4 +1,4 @@
-package com.storyteller_f.common_ui_list_structure
+package com.storyteller_f.common_ui_list
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry

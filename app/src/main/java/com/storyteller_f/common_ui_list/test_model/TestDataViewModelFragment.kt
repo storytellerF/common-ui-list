@@ -1,14 +1,14 @@
-package com.storyteller_f.common_ui_list_structure.test_model
+package com.storyteller_f.common_ui_list.test_model
 
 import android.os.Bundle
 import android.view.View
 import com.storyteller_f.common_ui.CommonFragment
 import com.storyteller_f.common_ui.repeatOnViewResumed
-import com.storyteller_f.common_ui_list_structure.R
-import com.storyteller_f.common_ui_list_structure.api.requireReposService
-import com.storyteller_f.common_ui_list_structure.databinding.FragmentTestDataBinding
-import com.storyteller_f.common_ui_list_structure.holders.RepoItemHolder
-import com.storyteller_f.common_ui_list_structure.holders.RepoViewHolder
+import com.storyteller_f.common_ui_list.R
+import com.storyteller_f.common_ui_list.api.requireReposService
+import com.storyteller_f.common_ui_list.databinding.FragmentTestDataBinding
+import com.storyteller_f.common_ui_list.holders.RepoItemHolder
+import com.storyteller_f.common_ui_list.holders.RepoViewHolder
 import com.storyteller_f.ext_func_definition.ExtFuncFlat
 import com.storyteller_f.ext_func_definition.ExtFuncFlatType
 import com.storyteller_f.ui_list.adapter.SimpleDataAdapter

@@ -1,4 +1,4 @@
-package com.storyteller_f.common_ui_list_structure
+package com.storyteller_f.common_ui_list
 
 import android.content.Intent
 import android.graphics.Canvas
@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.updatePadding
 import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.RecyclerView
@@ -29,16 +31,15 @@ import com.storyteller_f.common_ui.navigator
 import com.storyteller_f.common_ui.owner
 import com.storyteller_f.common_ui.repeatOnViewResumed
 import com.storyteller_f.common_ui.status
-import com.storyteller_f.common_ui.supportNavigatorBarImmersive
 import com.storyteller_f.common_ui.updateMargins
-import com.storyteller_f.common_ui_list_structure.api.requireReposService
-import com.storyteller_f.common_ui_list_structure.databinding.ActivityMainBinding
-import com.storyteller_f.common_ui_list_structure.db.composite.RepoComposite
-import com.storyteller_f.common_ui_list_structure.db.requireRepoDatabase
-import com.storyteller_f.common_ui_list_structure.holders.RepoItemHolder
-import com.storyteller_f.common_ui_list_structure.holders.seprator.SeparatorItemHolder
-import com.storyteller_f.common_ui_list_structure.test_model.TestViewModelActivity
-import com.storyteller_f.common_ui_list_structure.test_navigation.TestNavigationResultActivity
+import com.storyteller_f.common_ui_list.api.requireReposService
+import com.storyteller_f.common_ui_list.databinding.ActivityMainBinding
+import com.storyteller_f.common_ui_list.db.composite.RepoComposite
+import com.storyteller_f.common_ui_list.db.requireRepoDatabase
+import com.storyteller_f.common_ui_list.holders.RepoItemHolder
+import com.storyteller_f.common_ui_list.holders.seprator.SeparatorItemHolder
+import com.storyteller_f.common_ui_list.test_model.TestViewModelActivity
+import com.storyteller_f.common_ui_list.test_navigation.TestNavigationResultActivity
 import com.storyteller_f.common_vm_ktx.update
 import com.storyteller_f.slim_ktx.toggle
 import com.storyteller_f.ui_list.core.AbstractViewHolder
@@ -131,7 +132,9 @@ class MainActivity : AppCompatActivity() {
             },
             selectedItemHolder
         )
-        supportNavigatorBarImmersive(binding.root)
+        enableEdgeToEdge()
+        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightNavigationBars = false
+//        supportNavigatorBarImmersive(binding.root)
         repeatOnViewResumed {
             viewModel.content.collectLatest {
                 adapter.submitData(it)

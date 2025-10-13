@@ -1,4 +1,4 @@
-package com.storyteller_f.common_ui_list_structure.test_navigation
+package com.storyteller_f.common_ui_list.test_navigation
 
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -8,10 +8,10 @@ import com.storyteller_f.common_pr.response
 import com.storyteller_f.common_ui.SimpleFragment
 import com.storyteller_f.common_ui.request
 import com.storyteller_f.common_ui.setOnClick
-import com.storyteller_f.common_ui_list_structure.R
-import com.storyteller_f.common_ui_list_structure.databinding.FragmentNavigationInvokeBinding
-import com.storyteller_f.common_ui_list_structure.dialog.NavigationDialog
-import com.storyteller_f.common_ui_list_structure.dialog.TestDialog2
+import com.storyteller_f.common_ui_list.R
+import com.storyteller_f.common_ui_list.databinding.FragmentNavigationInvokeBinding
+import com.storyteller_f.common_ui_list.dialog.NavigationDialog
+import com.storyteller_f.common_ui_list.dialog.TestDialog2
 
 /**
  * A simple [Fragment] subclass as the default destination in the navigation.

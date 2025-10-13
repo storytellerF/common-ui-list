@@ -138,23 +138,13 @@ fun Project.setupKover(
                     "testImplementation"("org.robolectric:robolectric:$robolectricVersion")
                 }
             }
-            koverReport {
-                if (androidLibModules.contains(name)) {
-                    defaults {
-                        mergeWith("release")
-                    }
-                }
-                // filters for all report types of all build variants
-                filters {
-                    excludes {
-                        classes(
-                            "*Fragment",
-                            "*Fragment\$*",
-                            "*Activity",
-                            "*Activity\$*",
-                            "*.databinding.*",
-                            "*.BuildConfig"
-                        )
+            kover {
+                reports {
+                    // filters for all report types of all build variants
+                    filters {
+                        excludes {
+                            androidGeneratedClasses()
+                        }
                     }
                 }
             }

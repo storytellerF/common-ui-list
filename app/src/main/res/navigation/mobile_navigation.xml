@@ -7,19 +7,19 @@
 
     <fragment
         android:id="@+id/navigation_home"
-        android:name="com.storyteller_f.common_ui_list_structure.test_model.TestDataViewModelFragmentImpl"
+        android:name="com.storyteller_f.common_ui_list.test_model.TestDataViewModelFragmentImpl"
         android:label="@string/title_home"
         tools:layout="@layout/fragment_test_data" />
 
     <fragment
         android:id="@+id/navigation_dashboard"
-        android:name="com.storyteller_f.common_ui_list_structure.test_model.TestToolBarFragment"
+        android:name="com.storyteller_f.common_ui_list.test_model.TestToolBarFragment"
         android:label="@string/title_dashboard"
         tools:layout="@layout/fragment_test_toolbar" />
 
     <fragment
         android:id="@+id/navigation_notifications"
-        android:name="com.storyteller_f.common_ui_list_structure.test_model.TestDetailViewModelFragment"
+        android:name="com.storyteller_f.common_ui_list.test_model.TestDetailViewModelFragment"
         android:label="@string/title_notifications"
         tools:layout="@layout/fragment_test_detail" />
 </navigation>
