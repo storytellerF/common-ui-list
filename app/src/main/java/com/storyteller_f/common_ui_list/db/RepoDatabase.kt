@@ -1,10 +1,10 @@
-package com.storyteller_f.common_ui_list_structure.db
+package com.storyteller_f.common_ui_list.db
 
 import android.content.Context
 import androidx.paging.PagingSource
 import androidx.room.*
-import com.storyteller_f.common_ui_list_structure.model.Repo
-import com.storyteller_f.common_ui_list_structure.model.RepoRemoteKey
+import com.storyteller_f.common_ui_list.model.Repo
+import com.storyteller_f.common_ui_list.model.RepoRemoteKey
 import com.storyteller_f.composite_defination.Composite
 import com.storyteller_f.ext_func_definition.ExtFuncFlat
 import com.storyteller_f.ext_func_definition.ExtFuncFlatType
@@ -73,7 +73,7 @@ abstract class RepoDatabase : RoomDatabase() {
                 RepoDatabase::class.java,
                 "repo.db"
             )
-                .fallbackToDestructiveMigration()
+                .fallbackToDestructiveMigration(false)
                 .build()
     }
 }

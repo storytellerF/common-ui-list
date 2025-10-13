@@ -1,4 +1,4 @@
-package com.storyteller_f.common_ui_list_structure.holders.seprator
+package com.storyteller_f.common_ui_list.holders.seprator
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.annotation_defination.ItemHolder
-import com.storyteller_f.common_ui_list_structure.R
+import com.storyteller_f.common_ui_list.R
 import com.storyteller_f.slim_ktx.propertiesSame
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.view_holder_compose.ComposeViewHolder

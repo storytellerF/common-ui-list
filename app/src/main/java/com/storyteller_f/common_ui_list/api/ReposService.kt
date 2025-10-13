@@ -1,9 +1,9 @@
-package com.storyteller_f.common_ui_list_structure.api
+package com.storyteller_f.common_ui_list.api
 
 import android.app.Activity
 import androidx.fragment.app.Fragment
-import com.storyteller_f.common_ui_list_structure.model.Repo
-import com.storyteller_f.common_ui_list_structure.model.RepoRemoteKey
+import com.storyteller_f.common_ui_list.model.Repo
+import com.storyteller_f.common_ui_list.model.RepoRemoteKey
 import com.storyteller_f.ui_list.data.CommonResponse
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor

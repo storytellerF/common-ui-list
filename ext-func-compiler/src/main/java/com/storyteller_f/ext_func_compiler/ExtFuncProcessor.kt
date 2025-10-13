@@ -116,8 +116,6 @@ class ExtFuncProcessor(private val codeGenerator: CodeGenerator, private val log
 
                     ExtFuncFlatType.V7 -> setOf<String>() to generateForV7()
                     ExtFuncFlatType.V8 -> setOf<String>() to generateForV8(it, logger)
-
-                    else -> setOf<String>() to ""
                 }
             }
             val imports = beAnnotated.toSet() + contents.map { it.first }.fold(setOf()) { t, t1 ->

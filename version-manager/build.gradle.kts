@@ -2,7 +2,7 @@ plugins {
     id("java-gradle-plugin")
     `kotlin-dsl`
     `maven-publish`
-    id("com.github.gmazzo.buildconfig") version "5.4.0"
+    id("com.github.gmazzo.buildconfig") version "5.7.0"
 }
 
 val env: MutableMap<String, String> = System.getenv()

@@ -1,11 +1,11 @@
-package com.storyteller_f.common_ui_list_structure.test_navigation
+package com.storyteller_f.common_ui_list.test_navigation
 
 import android.os.Parcelable
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.storyteller_f.common_ui.SimpleFragment
 import com.storyteller_f.common_ui.setFragmentResult
-import com.storyteller_f.common_ui_list_structure.databinding.FragmentNavigationResultBinding
+import com.storyteller_f.common_ui_list.databinding.FragmentNavigationResultBinding
 import kotlinx.parcelize.Parcelize
 
 /**

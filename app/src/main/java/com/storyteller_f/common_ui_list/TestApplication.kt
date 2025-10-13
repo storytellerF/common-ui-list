@@ -1,4 +1,4 @@
-package com.storyteller_f.common_ui_list_structure
+package com.storyteller_f.common_ui_list
 
 import androidx.multidex.MultiDexApplication
 import com.google.android.material.color.DynamicColors
@@ -9,8 +9,8 @@ class TestApplication : MultiDexApplication() {
         super.onCreate()
         DynamicColors.applyToActivitiesIfAvailable(this)
         holders(
-            com.storyteller_f.common_ui_list_structure.holders.seprator.ui_list.HolderBuilder::registerAll,
-            com.storyteller_f.common_ui_list_structure.holders.ui_list.HolderBuilder::registerAll,
+            com.storyteller_f.common_ui_list.holders.seprator.ui_list.HolderBuilder::registerAll,
+            com.storyteller_f.common_ui_list.holders.ui_list.HolderBuilder::registerAll,
         )
     }
 }

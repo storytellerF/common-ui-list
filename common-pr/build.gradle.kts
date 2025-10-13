@@ -1,4 +1,3 @@
-import com.storyteller_f.version_manager.Versions
 import com.storyteller_f.version_manager.baseLibrary
 import com.storyteller_f.version_manager.implModule
 import com.storyteller_f.version_manager.setupExtFunc
@@ -11,9 +10,9 @@ plugins {
     id("common-publish")
 }
 
-android {
-    kotlinOptions {
-        freeCompilerArgs = listOf("-Xcontext-receivers")
+kotlin {
+    compilerOptions {
+        freeCompilerArgs = listOf("-Xcontext-parameters")
     }
 }
 baseLibrary(namespaceString = "com.storyteller_f.common_pr")
@@ -25,7 +24,6 @@ dependencies {
     implModule(":common-vm-ktx")
     implModule(":common-ui")
     unitTestDependency()
-    // https://mvnrepository.com/artifact/androidx.navigation/navigation-common-ktx
     implementation(libs.navigation.common.ktx)
     implementation(libs.navigation.fragment.ktx)
 }

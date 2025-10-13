@@ -1,4 +1,4 @@
-package com.storyteller_f.common_ui_list_structure.model
+package com.storyteller_f.common_ui_list.model
 
 import androidx.annotation.Keep
 import androidx.room.Entity

@@ -17,7 +17,7 @@ plugins {
 
 android {
     defaultConfig {
-        applicationId = "com.storyteller_f.common_ui_list_structure"
+        applicationId = "com.storyteller_f.common_ui_list_sample"
         versionCode = 1
         versionName = "1.0"
     }
@@ -35,6 +35,6 @@ dependencies {
     networkDependency()
     implementation(libs.converter.gson)
 }
-baseApp(namespaceString = "com.storyteller_f.common_ui_list_structure")
+baseApp(namespaceString = "com.storyteller_f.common_ui_list")
 setupGeneric()
 setupPreviewFeature()

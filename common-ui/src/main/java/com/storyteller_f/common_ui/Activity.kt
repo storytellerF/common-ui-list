@@ -1,13 +1,12 @@
 package com.storyteller_f.common_ui
 
-import android.graphics.Color
-import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.graphics.toColorInt
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -45,22 +44,16 @@ abstract class SimpleActivity<T : ViewBinding>(
 
 fun ComponentActivity.supportNavigatorBarImmersive(view: View) {
     WindowCompat.setDecorFitsSystemWindows(window, false)
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-    }
+    window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
     WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightNavigationBars = !isNightMode
     WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = !isNightMode
     /**
      * 如果提供一个透明色，在低版本中会自动添加一个颜色
      */
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-        window.navigationBarColor = Color.parseColor("#01000000")
-    }
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
-        view.setOnApplyWindowInsetsListener { v, insets ->
-            val top = WindowInsetsCompat.toWindowInsetsCompat(insets, v).getInsets(WindowInsetsCompat.Type.statusBars())
-            v.updatePadding(top = top.top)
-            insets
-        }
+    window.navigationBarColor = "#01000000".toColorInt()
+    view.setOnApplyWindowInsetsListener { v, insets ->
+        val top = WindowInsetsCompat.toWindowInsetsCompat(insets, v).getInsets(WindowInsetsCompat.Type.statusBars())
+        v.updatePadding(top = top.top)
+        insets
     }
 }

@@ -1,3 +1,5 @@
+@file:Suppress("detekt.formatting")
+
 package com.storyteller_f.common_pr
 
 import android.os.Parcelable
@@ -11,42 +13,42 @@ import com.storyteller_f.common_ui.Registry
 import com.storyteller_f.common_ui.observeResponse
 import com.storyteller_f.common_ui.request
 
-context (FragmentRequest)
+context (fr: FragmentRequest)
 fun <T : Parcelable, F> F.response(
     result: Class<T>,
     action: F.(T) -> Unit
 ) where F : Fragment, F : Registry {
-    observeResponse(this@FragmentRequest, result, action)
+    observeResponse(fr, result, action)
 }
 
-context (FragmentRequest)
+context (fr: FragmentRequest)
 fun <T : Parcelable, A> A.response(
     result: Class<T>,
     action: A.(T) -> Unit
 ) where A : FragmentActivity, A : Registry {
-    observeResponse(this@FragmentRequest, result, action)
+    observeResponse(fr, result, action)
 }
 
-context (F)
+context (f: F)
 fun <T : Parcelable, F> FragmentRequest.response(
     result: Class<T>,
     action: F.(T) -> Unit
 ) where F : Fragment, F : Registry {
-    observeResponse(this@FragmentRequest, result, action)
+    f.observeResponse(this, result, action)
 }
 
-context (A)
+context (a: A)
 fun <T : Parcelable, A> FragmentRequest.response(
     result: Class<T>,
     action: A.(T) -> Unit
 ) where A : FragmentActivity, A : Registry {
-    observeResponse(this@FragmentRequest, result, action)
+    a.observeResponse(this, result, action)
 }
 
-context (F)
+context (f: F)
 fun <F> NavDirections.request() where F : Fragment, F : Registry =
-    findNavController().request(this)
+    f.findNavController().request(this)
 
-context (A)
+context (a: A)
 fun <A> NavDirections.request(viewId: Int) where A : FragmentActivity, A : Registry =
-    findNavController(viewId).request(this)
+    a.findNavController(viewId).request(this)

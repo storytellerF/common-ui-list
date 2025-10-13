@@ -1,4 +1,4 @@
-package com.storyteller_f.common_ui_list_structure.test_model
+package com.storyteller_f.common_ui_list.test_model
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,7 +13,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.storyteller_f.common_ui.RegularFragment
 import com.storyteller_f.common_ui.toolbarCompose
-import com.storyteller_f.common_ui_list_structure.databinding.FragmentTestToolbarBinding
+import com.storyteller_f.common_ui_list.databinding.FragmentTestToolbarBinding
 
 class TestToolBarFragment : RegularFragment<FragmentTestToolbarBinding>(FragmentTestToolbarBinding::inflate) {
 
