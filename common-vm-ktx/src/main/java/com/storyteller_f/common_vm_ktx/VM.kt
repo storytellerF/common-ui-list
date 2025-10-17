@@ -9,7 +9,6 @@ package com.storyteller_f.common_vm_ktx
 import androidx.activity.ComponentActivity
 import androidx.annotation.MainThread
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.AbstractSavedStateViewModelFactory
 import androidx.lifecycle.HasDefaultViewModelProviderFactory
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
@@ -17,15 +16,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.MutableCreationExtras
-import androidx.savedstate.SavedStateRegistryOwner
 import com.storyteller_f.ext_func_definition.ExtFuncFlat
 import com.storyteller_f.ext_func_definition.ExtFuncFlatType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlin.reflect.KClass
+import kotlin.reflect.cast
 
 class ViewModelLazy<VM : ViewModel> @JvmOverloads constructor(
     val viewModelClass: KClass<VM>,
@@ -113,35 +113,30 @@ inline fun <reified VM : ViewModel> keyPrefix(
     lazy.extrasProducer
 )
 
-inline fun <reified VM : ViewModel, T, ARG> T.defaultFactory(
+inline fun <reified VM : ViewModel, ARG> defaultFactory(
     crossinline arg: () -> ARG,
     crossinline vmProducer: (ARG) -> VM,
-    noinline ownerProducer: () -> SavedStateRegistryOwner = { this },
-): () -> ViewModelProvider.Factory where T : SavedStateRegistryOwner, T : ViewModelStoreOwner = {
-    object : AbstractSavedStateViewModelFactory(ownerProducer(), null) {
-        override fun <T : ViewModel> create(
-            key: String,
-            modelClass: Class<T>,
-            handle: SavedStateHandle
-        ): T = modelClass.cast(vmProducer(arg()))!!
+): () -> ViewModelProvider.Factory = {
+    object : ViewModelProvider.Factory {
+        override fun <T : ViewModel> create(modelClass: KClass<T>, extras: CreationExtras): T {
+            return modelClass.cast(vmProducer(arg()))
+        }
     }
 }
 
-inline fun <reified VM : ViewModel, T, ARG> T.stateDefaultFactory(
+inline fun <reified VM : ViewModel, ARG> stateDefaultFactory(
     crossinline arg: () -> ARG,
     crossinline vmProducer: (SavedStateHandle, ARG) -> VM,
-    noinline ownerProducer: () -> SavedStateRegistryOwner = { this },
-): () -> ViewModelProvider.Factory where T : SavedStateRegistryOwner, T : ViewModelStoreOwner = {
-    object : AbstractSavedStateViewModelFactory(ownerProducer(), null) {
-        override fun <T : ViewModel> create(
-            key: String,
-            modelClass: Class<T>,
-            handle: SavedStateHandle
-        ): T = modelClass.cast(vmProducer(handle, arg()))!!
+): () -> ViewModelProvider.Factory = {
+    object : ViewModelProvider.Factory {
+        override fun <T : ViewModel> create(modelClass: KClass<T>, extras: CreationExtras): T {
+            val handle = extras.createSavedStateHandle()
+            return modelClass.cast(vmProducer(handle, arg()))
+        }
     }
 }
 
-class VMScope(val storeProducer: () -> ViewModelStore, val ownerProducer: () -> SavedStateRegistryOwner)
+class VMScope(val storeProducer: () -> ViewModelStore, val ownerProducer: () -> HasDefaultViewModelProviderFactory)
 
 inline val Fragment.selfScope get() = VMScope({
     viewModelStore
@@ -172,19 +167,23 @@ inline val Fragment.activityScope get() = VMScope({
 inline fun <reified VM : ViewModel, T, ARG> T.vm(
     crossinline arg: () -> ARG,
     noinline storeProducer: () -> ViewModelStore = { viewModelStore },
-    noinline ownerProducer: () -> SavedStateRegistryOwner = { this },
+    noinline ownerProducer: () -> HasDefaultViewModelProviderFactory = { this },
     crossinline vmProducer: (ARG) -> VM,
-) where T : ViewModelStoreOwner, T : SavedStateRegistryOwner =
-    ViewModelLazy(VM::class, storeProducer, defaultFactory(arg, vmProducer, ownerProducer))
+) where T : HasDefaultViewModelProviderFactory, T : ViewModelStoreOwner =
+    ViewModelLazy(VM::class, storeProducer, defaultFactory(arg, vmProducer)) {
+        ownerProducer().defaultViewModelCreationExtras
+    }
 
 @ExtFuncFlat(type = ExtFuncFlatType.V5)
 inline fun <reified VM : ViewModel, T, ARG> T.svm(
     crossinline arg: () -> ARG,
     noinline storeProducer: () -> ViewModelStore = { viewModelStore },
-    noinline ownerProducer: () -> SavedStateRegistryOwner = { this },
+    noinline ownerProducer: () -> HasDefaultViewModelProviderFactory = { this },
     crossinline vmProducer: (SavedStateHandle, ARG) -> VM,
-) where T : SavedStateRegistryOwner, T : ViewModelStoreOwner =
-    ViewModelLazy(VM::class, storeProducer, stateDefaultFactory(arg, vmProducer, ownerProducer))
+) where T : HasDefaultViewModelProviderFactory, T : ViewModelStoreOwner =
+    ViewModelLazy(VM::class, storeProducer, stateDefaultFactory(arg, vmProducer)) {
+        ownerProducer().defaultViewModelCreationExtras
+    }
 
 class GenericValueModel<T> : ViewModel() {
     val data = MutableLiveData<T>()

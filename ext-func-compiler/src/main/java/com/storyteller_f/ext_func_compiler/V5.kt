@@ -37,6 +37,6 @@ private fun extendVm(extra: String?, task: ExtFuncProcessor.Task): String {
         @MainThread
         inline fun <reified VM : ViewModel, T, ARG> T.${task.name}(
             $second
-        )  where T : SavedStateRegistryOwner, T : ViewModelStoreOwner = ${task.name}(arg, vmScope.storeProducer, vmScope.ownerProducer, vmProducer)
+        )  where T : HasDefaultViewModelProviderFactory, T : ViewModelStoreOwner = ${task.name}(arg, vmScope.storeProducer, vmScope.ownerProducer, vmProducer)
     """.trimIndent()
 }
