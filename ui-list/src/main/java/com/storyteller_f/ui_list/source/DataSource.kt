@@ -1,6 +1,7 @@
 package com.storyteller_f.ui_list.source
 
 import android.util.Log
+import androidx.lifecycle.HasDefaultViewModelProviderFactory
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelStoreOwner
@@ -9,7 +10,6 @@ import androidx.lifecycle.liveData
 import androidx.lifecycle.map
 import androidx.lifecycle.viewModelScope
 import androidx.paging.LoadState
-import androidx.savedstate.SavedStateRegistryOwner
 import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.core.Datum
@@ -176,7 +176,7 @@ class DataProducer<RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder>(
 
 fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, T> T.data(
     dataContent: DataProducer<RK, D, Holder>,
-) where T : SavedStateRegistryOwner, T : ViewModelStoreOwner = vm({}) {
+) where T : HasDefaultViewModelProviderFactory, T : ViewModelStoreOwner = vm({}) {
     SimpleDataViewModel(
         SimpleDataRepository(
             dataContent.service,
@@ -188,4 +188,4 @@ fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, T> T.data(
 fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, ARG, T> T.data(
     arg: () -> ARG,
     dataContentProducer: (ARG) -> DataProducer<RK, D, Holder>,
-) where T : SavedStateRegistryOwner, T : ViewModelStoreOwner = data(dataContentProducer(arg()))
+) where T : HasDefaultViewModelProviderFactory, T : ViewModelStoreOwner = data(dataContentProducer(arg()))

@@ -1,5 +1,6 @@
 package com.storyteller_f.ui_list.source
 
+import androidx.lifecycle.HasDefaultViewModelProviderFactory
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewModelScope
@@ -12,7 +13,6 @@ import androidx.paging.cachedIn
 import androidx.paging.insertSeparators
 import androidx.paging.map
 import androidx.room.RoomDatabase
-import androidx.savedstate.SavedStateRegistryOwner
 import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.core.Datum
@@ -107,7 +107,7 @@ fun <RK : RemoteKey,
     Composite : CommonRoomDatabase<D, RK, Database>, ARG, T> T.source(
     arg: () -> ARG,
     sourceContentProducer: (ARG) -> SourceProducer<RK, D, Holder, Database, Composite>,
-) where T : SavedStateRegistryOwner, T : ViewModelStoreOwner = vm({}) {
+) where T : HasDefaultViewModelProviderFactory, T : ViewModelStoreOwner = vm({}) {
     val sourceContent = sourceContentProducer(arg())
     SimpleSourceViewModel(
         SimpleSourceRepository(
@@ -126,7 +126,7 @@ fun <RK : RemoteKey,
     Database : RoomDatabase,
     Composite : CommonRoomDatabase<D, RK, Database>, T> T.source(
     sourceContent: SourceProducer<RK, D, Holder, Database, Composite>,
-) where T : SavedStateRegistryOwner, T : ViewModelStoreOwner = vm({}) {
+) where T : HasDefaultViewModelProviderFactory, T : ViewModelStoreOwner = vm({}) {
     SimpleSourceViewModel(
         SimpleSourceRepository(
             sourceContent.service,

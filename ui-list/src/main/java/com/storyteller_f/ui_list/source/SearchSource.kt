@@ -1,6 +1,7 @@
 package com.storyteller_f.ui_list.source
 
 import android.util.Log
+import androidx.lifecycle.HasDefaultViewModelProviderFactory
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
@@ -15,7 +16,6 @@ import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import androidx.paging.cachedIn
 import androidx.paging.map
-import androidx.savedstate.SavedStateRegistryOwner
 import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.core.Model
@@ -133,7 +133,7 @@ class SearchProducer<D : Model, SQ : Any, Holder : DataItemHolder>(
 
 fun <D : Model, SQ : Any, Holder : DataItemHolder, T> T.search(
     searchProducer: SearchProducer<D, SQ, Holder>
-) where T : ViewModelStoreOwner, T : SavedStateRegistryOwner = vm({}) {
+) where T : HasDefaultViewModelProviderFactory, T : ViewModelStoreOwner = vm({}) {
     SimpleSearchViewModel(
         SimpleSearchRepository(searchProducer.service),
         searchProducer.processFactory,
@@ -143,7 +143,7 @@ fun <D : Model, SQ : Any, Holder : DataItemHolder, T> T.search(
 fun <D : Model, SQ : Any, Holder : DataItemHolder, T, ARG> T.search(
     arg: () -> ARG,
     searchContentProducer: (ARG) -> SearchProducer<D, SQ, Holder>
-) where T : ViewModelStoreOwner, T : SavedStateRegistryOwner = vm({}) {
+) where T : HasDefaultViewModelProviderFactory, T : ViewModelStoreOwner = vm({}) {
     val searchProducer = searchContentProducer(arg())
     SimpleSearchViewModel(
         SimpleSearchRepository(searchProducer.service),
