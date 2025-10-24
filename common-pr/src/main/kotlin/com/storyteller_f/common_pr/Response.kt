@@ -12,6 +12,24 @@ import com.storyteller_f.common_ui.FragmentRequest
 import com.storyteller_f.common_ui.Registry
 import com.storyteller_f.common_ui.observeResponse
 import com.storyteller_f.common_ui.request
+import kotlin.reflect.KClass
+
+
+context (f: F)
+fun <T : Parcelable, F> FragmentRequest.response(
+    result: KClass<T>,
+    action: F.(T) -> Unit
+) where F : Fragment, F : Registry {
+    f.observeResponse(this, result, action)
+}
+
+context (a: A)
+fun <T : Parcelable, A> FragmentRequest.response(
+    result: KClass<T>,
+    action: A.(T) -> Unit
+) where A : FragmentActivity, A : Registry {
+    a.observeResponse(this, result, action)
+}
 
 context (f: F)
 fun <T : Parcelable, F> FragmentRequest.response(
