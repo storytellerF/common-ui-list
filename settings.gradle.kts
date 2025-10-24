@@ -1,9 +1,6 @@
 @file:Suppress("UnstableApiUsage")
 
 pluginManagement {
-    includeBuild("version-manager")
-    includeBuild("common-publish")
-//    includeBuild("../easylauncher-gradle-plugin")
     repositories {
         gradlePluginPortal()
         google()
@@ -45,6 +42,6 @@ include(":common-pr")
 include(":slim-ktx")
 include(":compat-ktx")
 
-//val userHome: String? = System.getProperty("user.home")
-//include("sardine-android")
-//project(":sardine-android").projectDir = file("$userHome/AndroidStudioProjects/sardine-android")
+
+includeBuild("bgscripts")
+includeBuild("common-publish")

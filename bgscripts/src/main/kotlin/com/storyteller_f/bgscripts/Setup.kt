@@ -1,6 +1,6 @@
 @file:Suppress("unused", "UnstableApiUsage", "DEPRECATION")
 
-package com.storyteller_f.version_manager
+package com.storyteller_f.bgscripts
 
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import com.android.build.gradle.LibraryExtension
@@ -13,10 +13,6 @@ import org.gradle.kotlin.dsl.dependencies
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompilerOptions
-
-fun Project.loadPlugin(id: String) {
-    if (!plugins.hasPlugin(id)) plugins.apply(id)
-}
 
 fun getenv(key: String): String? {
     return System.getenv(key) ?: System.getenv(key.uppercase())
@@ -41,7 +37,7 @@ fun KotlinJvmCompilerOptions.addArgs(arg: String) {
     freeCompilerArgs.addAll(listOf(arg))
 }
 
-fun Project.pureKotlin(configure: Action<org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension>) {
+fun Project.kotlin(configure: Action<org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension>) {
     (this as ExtensionAware).extensions.configure("kotlin", configure)
 }
 

@@ -1,6 +1,6 @@
-import java.util.Base64
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.io.FileOutputStream
+import java.util.Base64
 
 plugins {
     alias(libs.plugins.compose)
@@ -8,22 +8,11 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("kotlin-android")
     id("kotlin-parcelize")
-    id("com.storyteller_f.version_manager")
+
     id("kotlin-kapt")
     id("com.starter.easylauncher")
     id("com.google.devtools.ksp")
     id("androidx.navigation.safeargs")
-}
-
-android {
-    defaultConfig {
-        applicationId = "com.storyteller_f.common_ui_list_sample"
-        versionCode = 1
-        versionName = "1.0"
-    }
-    buildFeatures {
-        viewBinding = true
-    }
 }
 
 kapt {
@@ -31,12 +20,6 @@ kapt {
     useBuildCache = true
 }
 
-dependencies {
-    implementation(libs.retrofit)
-    implementation(libs.retrofit.mock)
-    implementation(libs.log.receptor)
-    implementation(libs.converter.gson)
-}
 val signPath: String? = getenv("storyteller_f_sign_path")
 val signKey: String? = getenv("storyteller_f_sign_key")
 val signAlias: String? = getenv("storyteller_f_sign_alias")
@@ -46,14 +29,15 @@ val generatedJksFile =
     layout.buildDirectory.file("signing/signing_key.jks").get().asFile
 val javaVersion = JavaVersion.VERSION_21
 android {
-    compileSdk = 36
+    compileSdk = libs.versions.targetSdk.get().toInt()
     defaultConfig {
-        "com.storyteller_f.common_ui_list".let<kotlin.String, kotlin.Unit> {
-            namespace = it
-        }
-        minSdk = null ?: 23
-        targetSdk = 36
+        namespace = "com.storyteller_f.common_ui_list"
+        minSdk = libs.versions.minSdk.get().toInt()
+        targetSdk = libs.versions.targetSdk.get().toInt()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        applicationId = "com.storyteller_f.common_ui_list_sample"
+        versionCode = 1
+        versionName = "1.0"
     }
     signingConfigs {
         val signStorePath = when {
@@ -99,11 +83,19 @@ android {
         includeInBundle = false
         includeInApk = false
     }
+    buildFeatures {
+        viewBinding = true
+        compose = true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
+    }
 }
 kotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.fromTarget(javaVersion.toString()))
         optIn.add("kotlin.RequiresOptIn")
+        freeCompilerArgs.addAll(listOf<kotlin.String>("-Xcontext-parameters"))
     }
 }
 
@@ -147,7 +139,7 @@ afterEvaluate {
 }
 
 dependencies {
-    implementation("com.github.storytellerF.Bao:startup:2.4.0")
+    implementation(libs.startup)
     implementation(project(":slim-ktx"))
     implementation(project(":common-ktx"))
     implementation(project(":compat-ktx"))
@@ -162,21 +154,14 @@ dependencies {
     implementation(libs.material)
     implementation(libs.fragment.ktx)
     implementation(libs.activity.ktx)
-
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.mock)
+    implementation(libs.log.receptor)
+    implementation(libs.converter.gson)
     ksp(libs.room.compiler)
 
-    "debugImplementation"(libs.leak.canary)
+    debugImplementation(libs.leak.canary)
     implementation(libs.multi.dex)
-}
-android {
-    buildFeatures {
-        compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
-    }
-}
-dependencies {
     implementation(libs.compos.material)
     implementation(libs.compose.ui.tooling)
     implementation(project(":view-holder-compose"))
@@ -186,16 +171,7 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.android.junit)
     androidTestImplementation(libs.android.espresso)
-}
-kotlin {
-    compilerOptions {
-        freeCompilerArgs.addAll(listOf<kotlin.String>("-Xcontext-parameters"))
-    }
-}
-dependencies {
-    dependencies {
-        implementation(project(":common-pr"))
-    }
+    implementation(project(":common-pr"))
 }
 
 fun getenv(key: String): String? {
