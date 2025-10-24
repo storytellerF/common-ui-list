@@ -1,5 +1,7 @@
-import com.storyteller_f.version_manager.implModule
-import com.storyteller_f.version_manager.pureKotlinLanguageLevel
+import com.storyteller_f.version_manager.pureKotlin
+import org.gradle.api.JavaVersion
+import org.gradle.kotlin.dsl.dependencies
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id("org.jetbrains.kotlin.jvm")
@@ -7,10 +9,22 @@ plugins {
     id("com.storyteller_f.version_manager")
 }
 
-pureKotlinLanguageLevel()
+val javaVersion = JavaVersion.VERSION_21
+java {
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
+}
+pureKotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.fromTarget(javaVersion.toString()))
+        optIn.add("kotlin.RequiresOptIn")
+    }
+}
 
 dependencies {
-    implModule(":composite-definition")
+    dependencies {
+        implementation(project(":composite-definition"))
+    }
 
     implementation(libs.symbol.processing.api)
 }
