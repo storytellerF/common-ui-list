@@ -8,15 +8,8 @@ plugins {
 }
 
 android {
-    defaultConfig {
-        namespace = "com.storyteller_f.common_ui"
-    }
-
-    publishing {
-        singleVariant("release") {
-            withSourcesJar()
-        }
-    }
+    namespace = "com.storyteller_f.common_ui"
+    
     buildFeatures {
         compose = true
     }

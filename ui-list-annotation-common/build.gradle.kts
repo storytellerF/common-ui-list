@@ -5,7 +5,5 @@ plugins {
 }
 
 dependencies {
-    dependencies {
-        implementation(project(":slim-ktx"))
-    }
+    implementation(project(":slim-ktx"))
 }

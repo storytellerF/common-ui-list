@@ -7,15 +7,8 @@ plugins {
 }
 
 android {
-    defaultConfig {
-        namespace = "com.storyteller_f.common_pr"
-    }
-
-    publishing {
-        singleVariant("release") {
-            withSourcesJar()
-        }
-    }
+    namespace = "com.storyteller_f.common_pr"
+    
 }
 kotlin {
     compilerOptions {

@@ -5,9 +5,7 @@ plugins {
 }
 
 dependencies {
-    dependencies {
-        implementation(project(":composite-definition"))
-    }
+    implementation(project(":composite-definition"))
 
     implementation(libs.symbol.processing.api)
 }

@@ -6,15 +6,8 @@ plugins {
 }
 
 android {
-    defaultConfig {
-        namespace = "com.storyteller_f.view_holder_compose"
-    }
-
-    publishing {
-        singleVariant("release") {
-            withSourcesJar()
-        }
-    }
+    namespace = "com.storyteller_f.view_holder_compose"
+    
 }
 
 dependencies {
