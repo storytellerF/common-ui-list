@@ -74,12 +74,15 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: 
     private val label = Uuid.random().toHexString()
     val context: Context = itemView.context
 
+    /**
+     * 在moveToCreate 中会创建一个BindLifecycleOwner
+     */
     private val _holderLifecycleOwnerLiveData = MutableLiveData<BindLifecycleOwner?>()
     val holderLifecycleLiveData: LiveData<BindLifecycleOwner?> by ::_holderLifecycleOwnerLiveData
 
     @Suppress("MemberVisibilityCanBePrivate")
-    val holderLifecycleOwner: LifecycleOwner
-        get() = _holderLifecycleOwnerLiveData.value!!
+    val holderLifecycleOwner: LifecycleOwner get() = holderLifecycleOwnerOrNull!!
+    val holderLifecycleOwnerOrNull get() = _holderLifecycleOwnerLiveData.value
 
     private var _itemHolder: IH? = null
 
@@ -134,14 +137,17 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: 
             ?: itemView.findActivityOrNull() as? ComponentActivity
         requireNotNull(owner)
         // 确保外部生命周期引起变化时，不会导致再次注册observer，仅在onViewAttachedToWindow 中才会注册
-        if (_observer == null || isHolderEvent) {
-            _observer?.let {
-                owner.lifecycle.removeObserver(it)
-            }
-            val observer = BindLifecycleObserver()
-            owner.lifecycle.addObserver(observer)
-            _observer = observer
+        val oldObserver = _observer
+        if (oldObserver != null && !isHolderEvent) return
+        oldObserver?.let {
+            owner.lifecycle.removeObserver(it)
         }
+        Log.d(
+            TAG,
+            "$label addObserver when oldObserver is null ${oldObserver == null} " +
+                "or isHolderEvent $isHolderEvent"
+        )
+        bindObserver(owner)
     }
 
     /**
@@ -159,7 +165,7 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: 
             "$label moveStateToStop() called with: " +
                 "isHolderEvent = $isHolderEvent"
         )
-        val lifecycleOwner = _holderLifecycleOwnerLiveData.value
+        val lifecycleOwner = holderLifecycleOwnerOrNull
         if (lifecycleOwner == null) {
             Log.i(
                 TAG,
@@ -191,7 +197,7 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: 
             "$label moveStateToPause() called with: " +
                 "isHolderEvent = $isHolderEvent"
         )
-        val lifecycleOwner = _holderLifecycleOwnerLiveData.value
+        val lifecycleOwner = holderLifecycleOwnerOrNull
         if (lifecycleOwner == null) {
             Log.i(
                 TAG,
@@ -209,7 +215,7 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: 
             "$label moveStateToCreate() called with: " +
                 "isHolderEvent = $isHolderEvent"
         )
-        assert(_holderLifecycleOwnerLiveData.value == null) {
+        assert(holderLifecycleOwnerOrNull == null) {
             "$label create multi-times"
         }
         bindLifecycleOwner()
@@ -222,7 +228,7 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: 
             "$label moveStateToDestroy() called with: " +
                 "isHolderEvent = $isHolderEvent"
         )
-        val lifecycleOwner = _holderLifecycleOwnerLiveData.value
+        val lifecycleOwner = holderLifecycleOwnerOrNull
         if (lifecycleOwner == null) {
             Log.i(
                 TAG,
@@ -231,12 +237,13 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: 
             )
             return
         }
+        unBindObserver()
         moveToState(Lifecycle.Event.ON_DESTROY)
         unbindLifecycleOwner()
     }
 
     private fun moveToState(event: Lifecycle.Event) {
-        val lifecycleOwner = _holderLifecycleOwnerLiveData.value
+        val lifecycleOwner = holderLifecycleOwnerOrNull
         require(lifecycleOwner != null) {
             "$label lifecycleOwner is null"
         }
@@ -249,6 +256,16 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: 
 
     private fun unbindLifecycleOwner() {
         _holderLifecycleOwnerLiveData.value = null
+    }
+
+    private fun bindObserver(owner: LifecycleOwner) {
+        val observer = BindLifecycleObserver()
+        owner.lifecycle.addObserver(observer)
+        _observer = observer
+    }
+
+    private fun unBindObserver() {
+        _observer = null
     }
 
     /**
