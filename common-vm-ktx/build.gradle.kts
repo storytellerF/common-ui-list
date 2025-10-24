@@ -7,15 +7,8 @@ plugins {
 }
 
 android {
-    defaultConfig {
-        namespace = "com.storyteller_f.common_vm_ktx"
-    }
-
-    publishing {
-        singleVariant("release") {
-            withSourcesJar()
-        }
-    }
+    namespace = "com.storyteller_f.common_vm_ktx"
+    
 }
 
 dependencies {

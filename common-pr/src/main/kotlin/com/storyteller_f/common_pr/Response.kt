@@ -13,22 +13,6 @@ import com.storyteller_f.common_ui.Registry
 import com.storyteller_f.common_ui.observeResponse
 import com.storyteller_f.common_ui.request
 
-context (fr: FragmentRequest)
-fun <T : Parcelable, F> F.response(
-    result: Class<T>,
-    action: F.(T) -> Unit
-) where F : Fragment, F : Registry {
-    observeResponse(fr, result, action)
-}
-
-context (fr: FragmentRequest)
-fun <T : Parcelable, A> A.response(
-    result: Class<T>,
-    action: A.(T) -> Unit
-) where A : FragmentActivity, A : Registry {
-    observeResponse(fr, result, action)
-}
-
 context (f: F)
 fun <T : Parcelable, F> FragmentRequest.response(
     result: Class<T>,

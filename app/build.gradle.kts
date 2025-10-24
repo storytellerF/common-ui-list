@@ -30,8 +30,8 @@ val generatedJksFile =
 val javaVersion = JavaVersion.VERSION_21
 android {
     compileSdk = libs.versions.targetSdk.get().toInt()
+    namespace = "com.storyteller_f.common_ui_list"
     defaultConfig {
-        namespace = "com.storyteller_f.common_ui_list"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

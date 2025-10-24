@@ -28,6 +28,11 @@ android {
             )
         }
     }
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+        }
+    }
     compileOptions {
         sourceCompatibility = javaVersion
         targetCompatibility = javaVersion

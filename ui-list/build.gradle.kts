@@ -7,20 +7,13 @@ plugins {
 }
 
 android {
-    defaultConfig {
-        namespace = "com.storyteller_f.ui_list"
-    }
-
+    namespace = "com.storyteller_f.ui_list"
     buildTypes {
         debug {
             multiDexEnabled = true
         }
     }
-    publishing {
-        singleVariant("release") {
-            withSourcesJar()
-        }
-    }
+    
     buildFeatures {
         viewBinding = true
     }

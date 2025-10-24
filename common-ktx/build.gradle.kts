@@ -6,20 +6,13 @@ plugins {
 }
 
 android {
-    defaultConfig {
-        namespace = "com.storyteller_f.common_ktx"
-    }
-
+    namespace = "com.storyteller_f.common_ktx"
     buildTypes {
         debug {
             multiDexEnabled = true
         }
     }
-    publishing {
-        singleVariant("release") {
-            withSourcesJar()
-        }
-    }
+    
 }
 
 dependencies {
