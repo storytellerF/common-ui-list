@@ -12,6 +12,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 buildscript {
     dependencies {
         classpath(libs.safeArgs.plugin.lib)
+        classpath(libs.jksify.gradle.plugin)
     }
 }
 plugins {
