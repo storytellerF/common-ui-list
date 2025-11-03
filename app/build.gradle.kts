@@ -1,6 +1,5 @@
+import com.storyteller_f.jksify.getenv
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import java.io.FileOutputStream
-import java.util.Base64
 
 plugins {
     alias(libs.plugins.compose)
@@ -13,6 +12,7 @@ plugins {
     id("com.starter.easylauncher")
     id("com.google.devtools.ksp")
     id("androidx.navigation.safeargs")
+    id("com.storyteller_f.jksify")
 }
 
 kapt {
@@ -20,13 +20,6 @@ kapt {
     useBuildCache = true
 }
 
-val signPath: String? = getenv("storyteller_f_sign_path")
-val signKey: String? = getenv("storyteller_f_sign_key")
-val signAlias: String? = getenv("storyteller_f_sign_alias")
-val signStorePassword: String? = getenv("storyteller_f_sign_store_password")
-val signKeyPassword: String? = getenv("storyteller_f_sign_key_password")
-val generatedJksFile =
-    layout.buildDirectory.file("signing/signing_key.jks").get().asFile
 val javaVersion = JavaVersion.VERSION_21
 android {
     compileSdk = libs.versions.targetSdk.get().toInt()
@@ -40,9 +33,14 @@ android {
         versionName = "1.0"
     }
     signingConfigs {
+        val signPath: String? = getenv("storyteller_f_sign_path")
+        val signKey: String? = getenv("storyteller_f_sign_key")
+        val signAlias: String? = getenv("storyteller_f_sign_alias")
+        val signStorePassword: String? = getenv("storyteller_f_sign_store_password")
+        val signKeyPassword: String? = getenv("storyteller_f_sign_key_password")
         val signStorePath = when {
             signPath != null -> File(signPath)
-            signKey != null -> generatedJksFile
+            signKey != null -> layout.buildDirectory.file("signing/signing_key.jks").get().asFile
             else -> null
         }
         if (signStorePath != null && signAlias != null && signStorePassword != null && signKeyPassword != null) {
@@ -87,55 +85,13 @@ android {
         viewBinding = true
         compose = true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
-    }
 }
 kotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.fromTarget(javaVersion.toString()))
         optIn.add("kotlin.RequiresOptIn")
-        freeCompilerArgs.addAll(listOf<kotlin.String>("-Xcontext-parameters"))
+        freeCompilerArgs.addAll(listOf("-Xcontext-parameters"))
     }
-}
-
-val decodeBase64ToStoreFileTask = tasks.register("decodeBase64ToStoreFile") {
-    group = "signing"
-    val signKey = getenv("storyteller_f_sign_key")
-    val generatedJksFile = layout.buildDirectory.file("signing/signing_key.jks").get().asFile
-
-    inputs.property("signKey", signKey ?: "")
-    outputs.file(generatedJksFile)
-    doLast {
-        if (!signKey.isNullOrBlank()) {
-            // 定义输出文件路径 (如密钥存储文件)
-            val outputFile = generatedJksFile
-
-            outputFile.parentFile!!.let {
-                if (!it.exists() && !it.mkdirs()) {
-                    throw Exception("mkdirs failed: $it")
-                }
-            }
-            if (!outputFile.exists() && !outputFile.createNewFile()) {
-                throw Exception("create failed: $outputFile")
-            }
-            // 将 Base64 解码为字节
-            val decodedBytes = Base64.getDecoder().decode(signKey)
-
-            // 将解码后的字节写入文件
-            FileOutputStream(outputFile).use { it.write(decodedBytes) }
-
-            println("Base64 decoded and written to: $outputFile")
-        } else {
-            println("skip decodeBase64ToStoreFile")
-        }
-
-    }
-
-}
-
-afterEvaluate {
-    tasks["packageRelease"]?.dependsOn(decodeBase64ToStoreFileTask)
 }
 
 dependencies {
@@ -172,8 +128,4 @@ dependencies {
     androidTestImplementation(libs.android.junit)
     androidTestImplementation(libs.android.espresso)
     implementation(project(":common-pr"))
-}
-
-fun getenv(key: String): String? {
-    return System.getenv(key) ?: System.getenv(key.uppercase())
 }

@@ -12,7 +12,7 @@ android {
 }
 kotlin {
     compilerOptions {
-        freeCompilerArgs = listOf("-Xcontext-parameters")
+        freeCompilerArgs.addAll(listOf("-Xcontext-parameters"))
     }
 }
 

@@ -7,7 +7,6 @@ plugins {
 
 android {
     namespace = "com.storyteller_f.view_holder_compose"
-    
 }
 
 dependencies {
