@@ -1,10 +1,10 @@
 package com.storyteller_f.common_ui_list
 
-import androidx.multidex.MultiDexApplication
+import android.app.Application
 import com.google.android.material.color.DynamicColors
 import com.storyteller_f.ui_list.core.holders
 
-class TestApplication : MultiDexApplication() {
+class TestApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         DynamicColors.applyToActivitiesIfAvailable(this)

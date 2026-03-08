@@ -1,7 +1,7 @@
 [versions]
 targetSdk = "36"
 minSdk = "26"
-android = "8.13.2"
+android = "9.1.0"
 converterGson = "3.0.0"
 detektVersion = "1.23.8"
 junit = "4.13.2"
