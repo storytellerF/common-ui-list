@@ -12,7 +12,7 @@ plugins {
     id("com.starter.easylauncher")
     id("com.google.devtools.ksp")
     id("androidx.navigation.safeargs")
-    id("com.storyteller_f.jksify")
+    id("com.storytellerF.jksify")
 }
 
 kapt {
@@ -95,7 +95,7 @@ kotlin {
 }
 
 dependencies {
-    implementation(libs.startup)
+//    implementation(libs.startup)
     implementation(project(":slim-ktx"))
     implementation(project(":common-ktx"))
     implementation(project(":compat-ktx"))

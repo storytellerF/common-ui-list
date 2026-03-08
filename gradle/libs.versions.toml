@@ -33,7 +33,7 @@ log-receptor = "5.3.0"
 coroutines = "1.10.2"
 android-junit = "1.3.0"
 android-espresso = "3.7.0"
-jksify = "43d82c9377"
+jksify = "1.0.0-SNAPSHOT"
 
 [libraries]
 android-plugin-lib = { module = "com.android.tools.build:gradle", version.ref = "android" }
@@ -79,7 +79,7 @@ android-junit = { module = "androidx.test.ext:junit", version.ref = "android-jun
 android-espresso = { module = "androidx.test.espresso:espresso-core", version.ref = "android-espresso" }
 compos-material = { module = "androidx.compose.material:material", version.ref = "compose_material" }
 compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose_material" }
-jksify-gradle-plugin = { module = "com.github.storytellerF.jksify:com.storyteller_f.jksify.gradle.plugin", version.ref = "jksify" }
+jksify-gradle-plugin = { module = "com.storytellerF.jksify:jksify-plugin", version.ref = "jksify" }
 
 [plugins]
 android = { id = "com.android.application", version.ref = "android" }
