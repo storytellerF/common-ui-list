@@ -4,6 +4,18 @@ pluginManagement {
     repositories {
         gradlePluginPortal()
         google()
+        maven {
+            name = "github"
+            url = uri("https://maven.pkg.github.com/storytellerF/jksify")
+            credentials {
+                // 需要配置在~/.gradle/gradle.properties
+                username = providers.gradleProperty("gpr.user").get()
+                password = providers.gradleProperty("gpr.key").get()
+            }
+            mavenContent {
+                includeGroupAndSubgroups("com.storytellerF.jksify")
+            }
+        }
         mavenCentral()
         maven {
             setUrl("https://jitpack.io")
