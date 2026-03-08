@@ -1,4 +1,4 @@
 jdk:
     - openjdk21
 install:
-    - sh publish.sh
+    - sh jitpack-publish.sh
