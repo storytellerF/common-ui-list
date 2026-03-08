@@ -4,21 +4,20 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.compose)
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("kotlin-android")
+
+
     id("kotlin-parcelize")
 
-    id("kotlin-kapt")
     id("com.starter.easylauncher")
     id("com.google.devtools.ksp")
     id("androidx.navigation.safeargs")
     id("com.storytellerF.jksify")
 }
 
-kapt {
+//kapt {
 //    correctErrorTypes = true
-    useBuildCache = true
-}
+//    useBuildCache = true
+//}
 
 val javaVersion = JavaVersion.VERSION_21
 android {
@@ -55,11 +54,11 @@ android {
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
-            resValue(
-                "string",
-                "leak_canary_display_activity_label",
-                defaultConfig.applicationId?.substringAfterLast(".") ?: "Leaks"
-            )
+//            resValue(
+//                "string",
+//                "leak_canary_display_activity_label",
+//                defaultConfig.applicationId?.substringAfterLast(".") ?: "Leaks"
+//            )
         }
         release {
             isMinifyEnabled = true
@@ -117,7 +116,6 @@ dependencies {
     ksp(libs.room.compiler)
 
     debugImplementation(libs.leak.canary)
-    implementation(libs.multi.dex)
     implementation(libs.compos.material)
     implementation(libs.compose.ui.tooling)
     implementation(project(":view-holder-compose"))
