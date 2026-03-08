@@ -1,5 +1,4 @@
 plugins {
-    `java-library`
     `maven-publish`
 }
 
@@ -7,8 +6,10 @@ println("group: $group, version: $version")
 
 publishing {
     publications {
-        register<MavenPublication>("mavenJava") {
-            from(components["java"])
+        register<MavenPublication>("release") {
+            afterEvaluate {
+                from(components["release"])
+            }
         }
     }
     repositories {
@@ -22,9 +23,4 @@ publishing {
             }
         }
     }
-}
-
-java {
-    withJavadocJar()
-    withSourcesJar()
 }

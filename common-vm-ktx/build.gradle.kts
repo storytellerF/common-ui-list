@@ -3,7 +3,7 @@ plugins {
 
     id("com.google.devtools.ksp")
     id("custom-android-library")
-    id("common-publish")
+    id("android-common-publish")
 }
 
 android {
