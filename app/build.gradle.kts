@@ -54,11 +54,6 @@ android {
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
-//            resValue(
-//                "string",
-//                "leak_canary_display_activity_label",
-//                defaultConfig.applicationId?.substringAfterLast(".") ?: "Leaks"
-//            )
         }
         release {
             isMinifyEnabled = true
