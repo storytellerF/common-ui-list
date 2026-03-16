@@ -11,7 +11,7 @@ plugins {
     id("com.starter.easylauncher")
     id("com.google.devtools.ksp")
     id("androidx.navigation.safeargs")
-    id("com.storytellerF.jksify")
+    id("com.storyteller_f.jksify")
 }
 
 //kapt {

@@ -40,7 +40,6 @@ jobs:
           ./gradlew publishAllPublicationsToGitHubPackagesRepository \
             -Pgpr.user="${{ github.actor }}" \
             -Pgpr.key="${{ secrets.GITHUB_TOKEN }}" \
-            -Pversion="$VERSION" \
-            -Pgroup="com.storytellerF.common_ui_list"
+            -Pversion="$VERSION"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

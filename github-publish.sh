@@ -5,6 +5,5 @@ GPR_KEY=$(grep gpr.key local.properties | cut -d'=' -f2)
 echo "GPR_USER: $GPR_USER"
 echo "GPR_KEY: $GPR_KEY"
 export VERSION=1.0.0-SNAPSHOT
-export GROUP=com.storytellerF.common_ui_list
 
-./gradlew publishAllPublicationsToGitHubPackagesRepository -Pgpr.user="$GPR_USER" -Pgpr.key="$GPR_KEY" -Pversion=$VERSION -Pgroup="${GROUP}"
+./gradlew publishAllPublicationsToGitHubPackagesRepository -Pgpr.user="$GPR_USER" -Pgpr.key="$GPR_KEY" -Pversion=$VERSION
