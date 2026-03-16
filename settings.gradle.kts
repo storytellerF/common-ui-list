@@ -13,7 +13,7 @@ pluginManagement {
                 password = providers.gradleProperty("gpr.key").get()
             }
             mavenContent {
-                includeGroupAndSubgroups("com.storytellerF.jksify")
+                includeGroupAndSubgroups("com.storyteller_f.jksify")
             }
         }
         mavenCentral()

@@ -79,7 +79,7 @@ android-junit = { module = "androidx.test.ext:junit", version.ref = "android-jun
 android-espresso = { module = "androidx.test.espresso:espresso-core", version.ref = "android-espresso" }
 compos-material = { module = "androidx.compose.material:material", version.ref = "compose_material" }
 compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose_material" }
-jksify-gradle-plugin = { module = "com.storytellerF.jksify:jksify-plugin", version.ref = "jksify" }
+jksify-gradle-plugin = { module = "com.storyteller_f.jksify:jksify-plugin", version.ref = "jksify" }
 
 [plugins]
 android = { id = "com.android.application", version.ref = "android" }
