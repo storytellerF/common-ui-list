@@ -22,6 +22,8 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.lifecycle.MutableLiveData
+import androidx.paging.insertSeparators
+import androidx.paging.map
 import androidx.recyclerview.widget.RecyclerView
 import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.common_pr.dipToInt
@@ -49,6 +51,7 @@ import com.storyteller_f.ui_list.source.source
 import com.storyteller_f.ui_list.ui.ListWithState
 import com.storyteller_f.view_holder_compose.ComposeSourceAdapter
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.map
 
 class MainActivity : AppCompatActivity() {
     private val binding by viewBinding(ActivityMainBinding::inflate)
@@ -62,16 +65,20 @@ class MainActivity : AppCompatActivity() {
             {
                 requireRepoDatabase.reposDao().selectAll()
             },
-            { repo -> RepoItemHolder(repo) },
-            { before, after ->
-                val dataItemHolder: SeparatorItemHolder? = when {
-                    after == null -> null
-                    before == null -> SeparatorItemHolder("${after.roundedStarCount}0.000+ stars")
-                    before.roundedStarCount <= after.roundedStarCount -> null
-                    after.roundedStarCount >= 1 -> SeparatorItemHolder("${after.roundedStarCount}0.000+ stars")
-                    else -> SeparatorItemHolder("< 10.000+ stars")
+            { data ->
+                data.map { pagingData ->
+                    pagingData.map { repo -> RepoItemHolder(repo) }
+                        .insertSeparators { before: RepoItemHolder?, after: RepoItemHolder? ->
+                            val dataItemHolder: SeparatorItemHolder? = when {
+                                after == null -> null
+                                before == null -> SeparatorItemHolder("${after.roundedStarCount}0.000+ stars")
+                                before.roundedStarCount <= after.roundedStarCount -> null
+                                after.roundedStarCount >= 1 -> SeparatorItemHolder("${after.roundedStarCount}0.000+ stars")
+                                else -> SeparatorItemHolder("< 10.000+ stars")
+                            }
+                            dataItemHolder
+                        }
                 }
-                dataItemHolder
             }
         )
     })
