@@ -36,7 +36,7 @@ open class TestDataViewModelFragment : CommonFragment(R.layout.fragment_test_dat
             { p, size ->
                 requireReposService.searchRepos(p, size)
             },
-            { repo, _ -> RepoItemHolder(repo) },
+            { repo -> RepoItemHolder(repo) },
         )
     )
     private val adapter = SimpleDataAdapter<RepoItemHolder, RepoViewHolder>()

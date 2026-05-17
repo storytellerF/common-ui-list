@@ -62,7 +62,7 @@ class MainActivity : AppCompatActivity() {
             {
                 requireRepoDatabase.reposDao().selectAll()
             },
-            { repo, _ -> RepoItemHolder(repo) },
+            { repo -> RepoItemHolder(repo) },
             { before, after ->
                 val dataItemHolder: SeparatorItemHolder? = when {
                     after == null -> null

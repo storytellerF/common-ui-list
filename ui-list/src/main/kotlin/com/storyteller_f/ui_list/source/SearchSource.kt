@@ -81,10 +81,9 @@ class SimpleSearchRepository<D : Model, SQ : Any>(
 
 class SimpleSearchViewModel<D : Model, SQ : Any, Holder : DataItemHolder>(
     private val repository: SimpleSearchRepository<D, SQ>,
-    val processFactory: (D, D?, SQ) -> Holder,
+    val processFactory: (D, SQ) -> Holder,
 ) : ViewModel() {
     private var currentQueryValue: SQ? = null
-    private var last: D? = null
     var lastJob: Job? = null
 
     private var currentSearchResult: Flow<PagingData<Holder>>? = null
@@ -97,9 +96,7 @@ class SimpleSearchViewModel<D : Model, SQ : Any, Holder : DataItemHolder>(
         val newResult: Flow<PagingData<Holder>> = repository.search(sq)
             .map { pagingData ->
                 pagingData.map {
-                    processFactory(it, last, sq).apply {
-                        last = it
-                    }
+                    processFactory(it, sq)
                 }
             }
             .cachedIn(viewModelScope)
@@ -128,7 +125,7 @@ fun <SQ : Any, Holder : DataItemHolder> SimpleSearchViewModel<*, SQ, Holder>.obs
  */
 class SearchProducer<D : Model, SQ : Any, Holder : DataItemHolder>(
     val service: suspend (SQ, startPage: Int, count: Int) -> SimpleResponse<D>,
-    val processFactory: (D, list: D?, SQ) -> Holder,
+    val processFactory: (D, SQ) -> Holder,
 )
 
 fun <D : Model, SQ : Any, Holder : DataItemHolder, T> T.search(
