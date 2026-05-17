@@ -118,19 +118,14 @@ class SimpleDataRepository<D : Datum<RK>, RK : RemoteKey>(
  */
 class SimpleDataViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey>(
     private val sourceRepository: SimpleDataRepository<D, RK>,
-    processFactory: (D, D?) -> Holder,
+    processFactory: (D) -> Holder,
 ) : ViewModel() {
-
-    private var preDatum: D? = null
 
     val content: LiveData<FatData<D, Holder, RK>> = liveData {
         val asLiveData = sourceRepository.obtainResult().asLiveData(Dispatchers.Main)
         val source = asLiveData.map {
-            preDatum = null
             FatData(this@SimpleDataViewModel, it.map { datum ->
-                val holder = processFactory(datum, preDatum)
-                preDatum = datum
-                holder
+                processFactory(datum)
             }.toMutableList())
         }
         emitSource(source)
@@ -171,7 +166,7 @@ class SimpleDataViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey
 
 class DataProducer<RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder>(
     val service: suspend (Int, Int) -> CommonResponse<D, RK>,
-    val processFactory: (D, D?) -> Holder,
+    val processFactory: (D) -> Holder,
 )
 
 fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, T> T.data(

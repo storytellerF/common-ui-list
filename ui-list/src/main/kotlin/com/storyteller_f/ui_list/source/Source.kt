@@ -51,7 +51,7 @@ class SimpleSourceViewModel<D : Datum<RK>,
     RK : RemoteKey,
     DT : RoomDatabase>(
     sourceRepository: SimpleSourceRepository<D, RK, DT>,
-    processFactory: (D, D?) -> Holder,
+    processFactory: (D) -> Holder,
     interceptorFactory: ((Holder?, Holder?) -> DataItemHolder?)? = null
 ) : ViewModel() {
 
@@ -63,15 +63,10 @@ class SimpleSourceViewModel<D : Datum<RK>,
     @Suppress("MemberVisibilityCanBePrivate")
     val content2: Flow<PagingData<Holder>>
 
-    private var preDatum: D? = null
-
     init {
         val dataFlow = sourceRepository.resultStream.map {
-            preDatum = null
             it.map { repo ->
-                val holder = processFactory(repo, preDatum)
-                preDatum = repo
-                holder
+                processFactory(repo)
             }
         }
         if (interceptorFactory != null) {
@@ -96,7 +91,7 @@ class SourceProducer<RK : RemoteKey,
     val composite: () -> Composite,
     val service: suspend (Int, Int) -> CommonResponse<D, RK>,
     val pagingSourceFactory: () -> PagingSource<Int, D>,
-    val processFactory: (D, D?) -> Holder,
+    val processFactory: (D) -> Holder,
     val interceptorFactory: (Holder?, Holder?) -> DataItemHolder? = { _, _ -> null }
 )
 
