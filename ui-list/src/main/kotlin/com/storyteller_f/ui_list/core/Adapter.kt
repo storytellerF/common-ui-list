@@ -128,7 +128,7 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: 
         Log.d(
             TAG,
             "$label moveStateToStart() called with: " +
-                    "isHolderEvent = $isHolderEvent"
+                "isHolderEvent = $isHolderEvent"
         )
         moveToState(Lifecycle.Event.ON_START)
         // 开始监听外部LifecycleOwner
@@ -151,14 +151,14 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: 
         Log.d(
             TAG,
             "$label moveStateToStop() called with: " +
-                    "isHolderEvent = $isHolderEvent"
+                "isHolderEvent = $isHolderEvent"
         )
         val lifecycleOwner = holderLifecycleOwnerOrNull
         if (lifecycleOwner == null) {
             Log.i(
                 TAG,
                 "$label moveStateToStop: stop failed, " +
-                        "because this already be destroyed or not yet created"
+                    "because this already be destroyed or not yet created"
             )
             return
         }
@@ -183,14 +183,14 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: 
         Log.d(
             TAG,
             "$label moveStateToPause() called with: " +
-                    "isHolderEvent = $isHolderEvent"
+                "isHolderEvent = $isHolderEvent"
         )
         val lifecycleOwner = holderLifecycleOwnerOrNull
         if (lifecycleOwner == null) {
             Log.i(
                 TAG,
                 "$label moveStateToPause: pause failed, " +
-                        "because this already be destroyed or not yet created"
+                    "because this already be destroyed or not yet created"
             )
             return
         }
@@ -201,7 +201,7 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: 
         Log.d(
             TAG,
             "$label moveStateToCreate() called with: " +
-                    "isHolderEvent = $isHolderEvent"
+                "isHolderEvent = $isHolderEvent"
         )
         assert(holderLifecycleOwnerOrNull == null) {
             "$label create multi-times"
@@ -214,14 +214,14 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: 
         Log.d(
             TAG,
             "$label moveStateToDestroy() called with: " +
-                    "isHolderEvent = $isHolderEvent"
+                "isHolderEvent = $isHolderEvent"
         )
         val lifecycleOwner = holderLifecycleOwnerOrNull
         if (lifecycleOwner == null) {
             Log.i(
                 TAG,
                 "$label moveStateToDestroy: destroy failed, " +
-                        "because this already be destroyed or not yet created"
+                    "because this already be destroyed or not yet created"
             )
             return
         }

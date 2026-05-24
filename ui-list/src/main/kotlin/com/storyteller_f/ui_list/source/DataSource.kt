@@ -15,6 +15,7 @@ import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.core.Datum
 import com.storyteller_f.ui_list.data.CommonResponse
 import com.storyteller_f.ui_list.database.RemoteKey
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -114,19 +115,19 @@ class SimpleDataRepository<D : Datum<RK>, RK : RemoteKey>(
 }
 
 /**
- * 与 SimpleSourceViewModel 类似，不过支持排序
+ * 与 SourceHandler 类似，不过支持排序
  */
-class SimpleDataViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey>(
+class DataHandler<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey>(
     private val sourceRepository: SimpleDataRepository<D, RK>,
     processFactory: (D) -> Holder,
-) : ViewModel() {
+) {
 
     val content: LiveData<FatData<D, Holder, RK>> = liveData {
         val asLiveData = sourceRepository.obtainResult().asLiveData(Dispatchers.Main)
-        val source = asLiveData.map {
-            FatData(this@SimpleDataViewModel, it.map { datum ->
+        val source: LiveData<FatData<D, Holder, RK>> = asLiveData.map { data ->
+            FatData<D, Holder, RK>(data.map { datum ->
                 processFactory(datum)
-            }.toMutableList())
+            }.toMutableList(), ::swap)
         }
         emitSource(source)
     }
@@ -135,33 +136,73 @@ class SimpleDataViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey
         emitSource(sourceRepository.loadState.asLiveData())
     }
 
-    fun requestMore() {
-        viewModelScope.launch {
+    fun requestMore(scope: CoroutineScope) {
+        scope.launch {
             sourceRepository.requestMore()
         }
     }
 
-    fun retry() {
-        viewModelScope.launch {
+    fun retry(scope: CoroutineScope) {
+        scope.launch {
             sourceRepository.retry()
         }
     }
 
-    fun refresh() {
-        viewModelScope.launch {
+    fun refresh(scope: CoroutineScope) {
+        scope.launch {
             sourceRepository.refresh()
         }
     }
 
-    class FatData<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey>(
-        val viewModel: SimpleDataViewModel<D, Holder, RK>,
-        val list: MutableList<Holder>
+    internal fun swap(from: Int, to: Int) {
+        sourceRepository.swap(from, to)
+    }
+
+    open class FatData<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey>(
+        val list: MutableList<Holder>,
+        private val swapper: (Int, Int) -> Unit,
     ) {
         fun swap(from: Int, to: Int) {
             Collections.swap(list, from, to)
-            viewModel.sourceRepository.swap(from, to)
+            swapper(from, to)
         }
     }
+}
+
+@Deprecated(
+    message = "Use a business ViewModel that owns DataHandler instead of the shared SimpleDataViewModel.",
+    level = DeprecationLevel.WARNING
+)
+class SimpleDataViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey>(
+    sourceRepository: SimpleDataRepository<D, RK>,
+    processFactory: (D) -> Holder,
+) : ViewModel() {
+    internal val handler = DataHandler(sourceRepository, processFactory)
+
+    val content: LiveData<DataHandler.FatData<D, Holder, RK>> = handler.content
+    val loadState: LiveData<MoreInfoLoadState> = handler.loadState
+
+    fun requestMore() {
+        handler.requestMore(viewModelScope)
+    }
+
+    fun retry() {
+        handler.retry(viewModelScope)
+    }
+
+    fun refresh() {
+        handler.refresh(viewModelScope)
+    }
+
+    @Deprecated(
+        message = "Use DataHandler.FatData instead.",
+        level = DeprecationLevel.WARNING
+    )
+    @Suppress("DEPRECATION")
+    class FatData<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey>(
+        val viewModel: SimpleDataViewModel<D, Holder, RK>,
+        list: MutableList<Holder>
+    ) : DataHandler.FatData<D, Holder, RK>(list, viewModel.handler::swap)
 }
 
 class DataProducer<RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder>(
@@ -169,6 +210,11 @@ class DataProducer<RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder>(
     val processFactory: (D) -> Holder,
 )
 
+@Deprecated(
+    message = "Define a business ViewModel and use DataHandler inside it.",
+    level = DeprecationLevel.WARNING
+)
+@Suppress("DEPRECATION")
 fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, T> T.data(
     dataContent: DataProducer<RK, D, Holder>,
 ) where T : HasDefaultViewModelProviderFactory, T : ViewModelStoreOwner = vm({}) {
@@ -180,6 +226,11 @@ fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, T> T.data(
     )
 }
 
+@Deprecated(
+    message = "Define a business ViewModel and use DataHandler inside it.",
+    level = DeprecationLevel.WARNING
+)
+@Suppress("DEPRECATION")
 fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, ARG, T> T.data(
     arg: () -> ARG,
     dataContentProducer: (ARG) -> DataProducer<RK, D, Holder>,

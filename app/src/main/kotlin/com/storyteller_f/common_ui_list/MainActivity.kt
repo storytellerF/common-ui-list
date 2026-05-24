@@ -22,6 +22,8 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.paging.insertSeparators
 import androidx.paging.map
 import androidx.recyclerview.widget.RecyclerView
@@ -33,8 +35,10 @@ import com.storyteller_f.common_ui.repeatOnViewResumed
 import com.storyteller_f.common_ui.status
 import com.storyteller_f.common_ui.supportNavigatorBarImmersive
 import com.storyteller_f.common_ui.updateMargins
+import com.storyteller_f.common_ui_list.api.ReposService
 import com.storyteller_f.common_ui_list.api.requireReposService
 import com.storyteller_f.common_ui_list.databinding.ActivityMainBinding
+import com.storyteller_f.common_ui_list.db.RepoDatabase
 import com.storyteller_f.common_ui_list.db.composite.RepoComposite
 import com.storyteller_f.common_ui_list.db.requireRepoDatabase
 import com.storyteller_f.common_ui_list.holders.RepoItemHolder
@@ -42,12 +46,13 @@ import com.storyteller_f.common_ui_list.holders.seprator.SeparatorItemHolder
 import com.storyteller_f.common_ui_list.test_model.TestViewModelActivity
 import com.storyteller_f.common_ui_list.test_navigation.TestNavigationResultActivity
 import com.storyteller_f.common_vm_ktx.update
+import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.slim_ktx.toggle
 import com.storyteller_f.ui_list.core.AbstractViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.event.viewBinding
-import com.storyteller_f.ui_list.source.SourceProducer
-import com.storyteller_f.ui_list.source.source
+import com.storyteller_f.ui_list.source.SimpleSourceRepository
+import com.storyteller_f.ui_list.source.SourceHandler
 import com.storyteller_f.ui_list.ui.ListWithState
 import com.storyteller_f.view_holder_compose.ComposeSourceAdapter
 import kotlinx.coroutines.flow.collectLatest
@@ -56,32 +61,11 @@ import kotlinx.coroutines.flow.map
 class MainActivity : AppCompatActivity() {
     private val binding by viewBinding(ActivityMainBinding::inflate)
     private val editing = MutableLiveData(false)
-    private val viewModel by source({ }, {
-        SourceProducer(
-            { RepoComposite(requireRepoDatabase) },
-            { p, c ->
-                requireReposService.searchRepos(p, c)
-            },
-            {
-                requireRepoDatabase.reposDao().selectAll()
-            },
-            { data ->
-                data.map { pagingData ->
-                    pagingData.map { repo -> RepoItemHolder(repo) }
-                        .insertSeparators { before: RepoItemHolder?, after: RepoItemHolder? ->
-                            val dataItemHolder: SeparatorItemHolder? = when {
-                                after == null -> null
-                                before == null -> SeparatorItemHolder("${after.roundedStarCount}0.000+ stars")
-                                before.roundedStarCount <= after.roundedStarCount -> null
-                                after.roundedStarCount >= 1 -> SeparatorItemHolder("${after.roundedStarCount}0.000+ stars")
-                                else -> SeparatorItemHolder("< 10.000+ stars")
-                            }
-                            dataItemHolder
-                        }
-                }
-            }
-        )
-    })
+    private val viewModel by vm({
+        MainDependencies(requireReposService, requireRepoDatabase)
+    }) { dependencies: MainDependencies ->
+        MainViewModel(dependencies.service, dependencies.database)
+    }
 
     private val adapter =
         ComposeSourceAdapter<DataItemHolder, AbstractViewHolder<DataItemHolder>>()
@@ -242,4 +226,42 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+}
+
+private data class MainDependencies(
+    val service: ReposService,
+    val database: RepoDatabase,
+)
+
+private class MainViewModel(
+    service: ReposService,
+    database: RepoDatabase,
+) : ViewModel() {
+    private val sourceHandler = SourceHandler(
+        SimpleSourceRepository(
+            { page, count ->
+                service.searchRepos(page, count)
+            },
+            RepoComposite(database),
+            {
+                database.reposDao().selectAll()
+            },
+        ),
+        { data ->
+            data.map { pagingData ->
+                pagingData.map { repo -> RepoItemHolder(repo) }
+                    .insertSeparators { before: RepoItemHolder?, after: RepoItemHolder? ->
+                        when {
+                            after == null -> null
+                            before == null -> SeparatorItemHolder("${after.roundedStarCount}0.000+ stars")
+                            before.roundedStarCount <= after.roundedStarCount -> null
+                            after.roundedStarCount >= 1 -> SeparatorItemHolder("${after.roundedStarCount}0.000+ stars")
+                            else -> SeparatorItemHolder("< 10.000+ stars")
+                        }
+                    }
+            }
+        }
+    )
+
+    val content = sourceHandler.content(viewModelScope)
 }

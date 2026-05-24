@@ -8,12 +8,12 @@ import com.storyteller_f.ui_list.core.BuildBatch
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.core.DefaultAdapter
 import com.storyteller_f.ui_list.core.DefaultAdapter.Companion.common_diff_util
-import com.storyteller_f.ui_list.source.SimpleDataViewModel
+import com.storyteller_f.ui_list.source.DataHandler
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.reflect.KClass
 
 /**
- * 支持排序，需要搭配SimpleDataViewModel和SimpleDataRepository
+ * 支持排序，需要搭配DataHandler和SimpleDataRepository
  */
 @Suppress("UNCHECKED_CAST")
 class SimpleDataAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(
@@ -21,7 +21,7 @@ class SimpleDataAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(
 ) :
     ListAdapter<IH, VH>(common_diff_util as DiffUtil.ItemCallback<IH>) {
 
-    private var fatData: SimpleDataViewModel.FatData<*, IH, *>? = null
+    private var fatData: DataHandler.FatData<*, IH, *>? = null
     private val proxy = DefaultAdapter<IH, VH>(localCenter).apply {
         target = this@SimpleDataAdapter
     }
@@ -41,7 +41,7 @@ class SimpleDataAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(
 
     override fun onViewRecycled(holder: VH) = proxy.onViewRecycled(holder)
 
-    fun submitData(fatData: SimpleDataViewModel.FatData<*, IH, *>) {
+    fun submitData(fatData: DataHandler.FatData<*, IH, *>) {
         if (skipNext.compareAndSet(true, false)) return
         this.fatData = fatData
         submitList(fatData.list)

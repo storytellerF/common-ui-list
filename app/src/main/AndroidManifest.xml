@@ -21,7 +21,8 @@
             android:configChanges="keyboard|keyboardHidden"
             android:exported="true"
             android:label="@string/title_activity_main3"
-            android:theme="@style/Theme.Common_ui_list_structure.NoActionBar">
+            android:theme="@style/Theme.Common_ui_list_structure.NoActionBar"
+            tools:ignore="Instantiatable">
 
         </activity>
 
@@ -29,11 +30,13 @@
             android:name=".test_model.TestViewModelActivity"
             android:configChanges="keyboard|keyboardHidden"
             android:exported="false"
-            android:label="@string/title_activity_main2" />
+            android:label="@string/title_activity_main2"
+            tools:ignore="Instantiatable" />
         <activity
             android:name=".MainActivity"
             android:configChanges="keyboard|keyboardHidden"
-            android:exported="true">
+            android:exported="true"
+            tools:ignore="Instantiatable">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

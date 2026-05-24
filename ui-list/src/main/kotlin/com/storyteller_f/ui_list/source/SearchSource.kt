@@ -20,6 +20,7 @@ import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.core.Model
 import com.storyteller_f.ui_list.data.SimpleResponse
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
@@ -79,15 +80,16 @@ class SimpleSearchRepository<D : Model, SQ : Any>(
     }
 }
 
-class SimpleSearchViewModel<D : Model, SQ : Any, Holder : DataItemHolder>(
+class SearchHandler<D : Model, SQ : Any, Holder : DataItemHolder>(
     private val repository: SimpleSearchRepository<D, SQ>,
     val processFactory: (D, SQ) -> Holder,
-) : ViewModel() {
+) {
     private var currentQueryValue: SQ? = null
     var lastJob: Job? = null
 
     private var currentSearchResult: Flow<PagingData<Holder>>? = null
-    fun search(sq: SQ): Flow<PagingData<Holder>> {
+
+    fun search(sq: SQ, scope: CoroutineScope): Flow<PagingData<Holder>> {
         val lastResult = currentSearchResult
         if (sq == currentQueryValue && lastResult != null) {
             return lastResult
@@ -99,12 +101,38 @@ class SimpleSearchViewModel<D : Model, SQ : Any, Holder : DataItemHolder>(
                     processFactory(it, sq)
                 }
             }
-            .cachedIn(viewModelScope)
+            .cachedIn(scope)
         currentSearchResult = newResult
         return newResult
     }
 }
 
+@Deprecated(
+    message = "Use a business ViewModel that owns SearchHandler instead of the shared SimpleSearchViewModel.",
+    level = DeprecationLevel.WARNING
+)
+class SimpleSearchViewModel<D : Model, SQ : Any, Holder : DataItemHolder>(
+    private val repository: SimpleSearchRepository<D, SQ>,
+    val processFactory: (D, SQ) -> Holder,
+) : ViewModel() {
+    internal val handler = SearchHandler(repository, processFactory)
+
+    var lastJob: Job?
+        get() = handler.lastJob
+        set(value) {
+            handler.lastJob = value
+        }
+
+    fun search(sq: SQ): Flow<PagingData<Holder>> {
+        return handler.search(sq, viewModelScope)
+    }
+}
+
+@Deprecated(
+    message = "Use a business ViewModel that owns SearchHandler instead of SimpleSearchViewModel.",
+    level = DeprecationLevel.WARNING
+)
+@Suppress("DEPRECATION")
 fun <SQ : Any, Holder : DataItemHolder> SimpleSearchViewModel<*, SQ, Holder>.observerInScope(
     lifecycleOwner: LifecycleOwner,
     search: SQ,
@@ -128,6 +156,11 @@ class SearchProducer<D : Model, SQ : Any, Holder : DataItemHolder>(
     val processFactory: (D, SQ) -> Holder,
 )
 
+@Deprecated(
+    message = "Define a business ViewModel and use SearchHandler inside it.",
+    level = DeprecationLevel.WARNING
+)
+@Suppress("DEPRECATION")
 fun <D : Model, SQ : Any, Holder : DataItemHolder, T> T.search(
     searchProducer: SearchProducer<D, SQ, Holder>
 ) where T : HasDefaultViewModelProviderFactory, T : ViewModelStoreOwner = vm({}) {
@@ -137,6 +170,11 @@ fun <D : Model, SQ : Any, Holder : DataItemHolder, T> T.search(
     )
 }
 
+@Deprecated(
+    message = "Define a business ViewModel and use SearchHandler inside it.",
+    level = DeprecationLevel.WARNING
+)
+@Suppress("DEPRECATION")
 fun <D : Model, SQ : Any, Holder : DataItemHolder, T, ARG> T.search(
     arg: () -> ARG,
     searchContentProducer: (ARG) -> SearchProducer<D, SQ, Holder>

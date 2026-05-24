@@ -18,6 +18,7 @@ import com.storyteller_f.ui_list.data.CommonResponse
 import com.storyteller_f.ui_list.database.CommonRoomDatabase
 import com.storyteller_f.ui_list.database.RemoteKey
 import com.storyteller_f.ui_list.database.SimpleRemoteMediator
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 
 const val STARTING_PAGE_INDEX = 1
@@ -42,6 +43,23 @@ class SimpleSourceRepository<D : Datum<RK>, RK : RemoteKey, DT : RoomDatabase>(
     }
 }
 
+class SourceHandler<D : Datum<RK>,
+    Holder : DataItemHolder,
+    RK : RemoteKey,
+    DT : RoomDatabase>(
+    private val sourceRepository: SimpleSourceRepository<D, RK, DT>,
+    private val flowFactory: (Flow<PagingData<D>>) -> Flow<PagingData<Holder>>,
+) {
+    fun content(scope: CoroutineScope): Flow<PagingData<Holder>> {
+        return flowFactory(sourceRepository.resultStream)
+            .cachedIn(scope)
+    }
+}
+
+@Deprecated(
+    message = "Use a business ViewModel that owns SourceHandler instead of the shared SimpleSourceViewModel.",
+    level = DeprecationLevel.WARNING
+)
 class SimpleSourceViewModel<D : Datum<RK>,
     Holder : DataItemHolder,
     RK : RemoteKey,
@@ -49,9 +67,9 @@ class SimpleSourceViewModel<D : Datum<RK>,
     sourceRepository: SimpleSourceRepository<D, RK, DT>,
     flowFactory: (Flow<PagingData<D>>) -> Flow<PagingData<Holder>>,
 ) : ViewModel() {
+    private val handler = SourceHandler(sourceRepository, flowFactory)
 
-    val content: Flow<PagingData<Holder>> = flowFactory(sourceRepository.resultStream)
-        .cachedIn(viewModelScope)
+    val content: Flow<PagingData<Holder>> = handler.content(viewModelScope)
 }
 
 class SourceProducer<RK : RemoteKey,
@@ -65,6 +83,11 @@ class SourceProducer<RK : RemoteKey,
     val flowFactory: (Flow<PagingData<D>>) -> Flow<PagingData<Holder>>,
 )
 
+@Deprecated(
+    message = "Define a business ViewModel and use SourceHandler inside it.",
+    level = DeprecationLevel.WARNING
+)
+@Suppress("DEPRECATION")
 fun <RK : RemoteKey,
     D : Datum<RK>,
     Holder : DataItemHolder,
@@ -84,6 +107,11 @@ fun <RK : RemoteKey,
     )
 }
 
+@Deprecated(
+    message = "Define a business ViewModel and use SourceHandler inside it.",
+    level = DeprecationLevel.WARNING
+)
+@Suppress("DEPRECATION")
 fun <RK : RemoteKey,
     D : Datum<RK>,
     Holder : DataItemHolder,
