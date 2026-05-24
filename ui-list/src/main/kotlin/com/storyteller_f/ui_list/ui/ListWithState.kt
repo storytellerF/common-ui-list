@@ -34,7 +34,7 @@ import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
 import com.storyteller_f.ui_list.core.AbstractViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.databinding.ListWithStateBinding
-import com.storyteller_f.ui_list.source.SimpleDataViewModel
+import com.storyteller_f.ui_list.source.DataHandler
 import com.storyteller_f.ui_list.source.isError
 import com.storyteller_f.ui_list.source.isLoading
 import com.storyteller_f.ui_list.source.isNotLoading
@@ -120,7 +120,7 @@ class ListWithState @JvmOverloads constructor(
     fun dataUp(
         adapter: SimpleDataAdapter<*, *>,
         lifecycleOwner: LifecycleOwner,
-        vm: SimpleDataViewModel<*, *, *>,
+        handler: DataHandler<*, *, *>,
     ) {
         setupLinearLayoutManager()
         val layoutManager = binding.list.layoutManager as LinearLayoutManager
@@ -131,21 +131,34 @@ class ListWithState @JvmOverloads constructor(
                 val visibleItemCount = layoutManager.childCount
                 val lastVisibleItem = layoutManager.findLastVisibleItemPosition()
                 if (visibleItemCount + lastVisibleItem + visibleItemCount >= totalItemCount) {
-                    vm.requestMore()
+                    handler.requestMore(lifecycleOwner.lifecycleScope)
                 }
             }
         })
         binding.list.adapter = adapter
         binding.refreshLayout.setOnRefreshListener {
-            vm.refresh()
+            handler.refresh(lifecycleOwner.lifecycleScope)
         }
         binding.retryButton.setOnClickListener {
-            vm.retry()
+            handler.retry(lifecycleOwner.lifecycleScope)
         }
-        vm.loadState.map { simple(it.loadState, it.itemCount) }.observe(lifecycleOwner) {
+        handler.loadState.map { simple(it.loadState, it.itemCount) }.observe(lifecycleOwner) {
             flash(it)
         }
         setupSwapSupport(adapter)
+    }
+
+    @Deprecated(
+        message = "Use DataHandler with a business ViewModel instead of SimpleDataViewModel.",
+        level = DeprecationLevel.WARNING
+    )
+    @Suppress("DEPRECATION")
+    fun dataUp(
+        adapter: SimpleDataAdapter<*, *>,
+        lifecycleOwner: LifecycleOwner,
+        vm: com.storyteller_f.ui_list.source.SimpleDataViewModel<*, *, *>,
+    ) {
+        dataUp(adapter, lifecycleOwner, vm.handler)
     }
 
     @Suppress("unused")
