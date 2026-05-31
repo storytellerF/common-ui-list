@@ -9,6 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SECRETS_CONTEXT: ${{ toJson(secrets) }}
+      ORG_GRADLE_PROJECT_gpr_user: ${{ github.actor }}
+      ORG_GRADLE_PROJECT_gpr_key: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -49,7 +51,7 @@ jobs:
           script: echo "Generated AVD snapshot for caching."
 
       - name: build app
-        run: bash gradlew clean build
+        run: ./build-on-ci.sh
 
       - name: run tests
         uses: reactivecircus/android-emulator-runner@v2
