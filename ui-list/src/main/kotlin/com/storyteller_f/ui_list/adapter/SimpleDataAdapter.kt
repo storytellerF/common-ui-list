@@ -17,12 +17,12 @@ import kotlin.reflect.KClass
  */
 @Suppress("UNCHECKED_CAST")
 class SimpleDataAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(
-    localCenter: Map<KClass<out DataItemHolder>, BuildBatch>? = null
+    buildBatch: Map<KClass<out DataItemHolder>, BuildBatch>
 ) :
     ListAdapter<IH, VH>(common_diff_util as DiffUtil.ItemCallback<IH>) {
 
     private var fatData: DataHandler.FatData<*, IH, *>? = null
-    private val proxy = DefaultAdapter<IH, VH>(localCenter).apply {
+    private val proxy = DefaultAdapter<IH, VH>(buildBatch).apply {
         target = this@SimpleDataAdapter
     }
     private val skipNext = AtomicBoolean(false)

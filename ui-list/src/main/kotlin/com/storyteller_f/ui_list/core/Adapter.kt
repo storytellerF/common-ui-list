@@ -41,17 +41,6 @@ data class ViewHolderKey(
 class BuildBatch(val b2: BuildViewHolderFunction2? = null, val b3: BuildViewHolderFunction3? = null)
 
 /**
- * 外部只能通过holders 修改
- */
-internal val registerCenter = mutableMapOf<KClass<out DataItemHolder>, BuildBatch>()
-
-fun holders(vararg blocks: (MutableMap<KClass<out DataItemHolder>, BuildBatch>) -> Unit) {
-    blocks.forEach {
-        it(registerCenter)
-    }
-}
-
-/**
  * @param type 和注册ViewHolder 的时候的type 保持一致
  * @param key 会在ViewHolder 初始化的时候传入，以达到ItemHolder 和ViewHolder 绑定的作用
  */
@@ -289,7 +278,7 @@ abstract class BindingViewHolder<IH : DataItemHolder>(binding: ViewBinding, key:
     AbstractViewHolder<IH>(binding.root, key = key)
 
 open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(
-    private val localCenter: Map<KClass<out DataItemHolder>, BuildBatch>? = null
+    private val buildBatch: Map<KClass<out DataItemHolder>, BuildBatch>
 ) :
     RecyclerView.Adapter<VH>() {
     lateinit var target: RecyclerView.Adapter<VH>
@@ -298,9 +287,13 @@ open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
         val key = indexManager.getKey(viewType)
-        val any = localCenter?.get(key.itemHolderClass) ?: registerCenter[key.itemHolderClass]
+        val any = buildBatch[key.itemHolderClass]
         val viewHolder =
             any?.b2?.let { it(parent, key.type) } ?: any?.b3?.let { it(parent, key.type, key.key) }
+        requireNotNull(viewHolder) {
+            "No BuildBatch registered for ${key.itemHolderClass.qualifiedName}, " +
+                "type=${key.type}, key=${key.key}"
+        }
         @Suppress("UNCHECKED_CAST")
         return viewHolder as VH
     }
