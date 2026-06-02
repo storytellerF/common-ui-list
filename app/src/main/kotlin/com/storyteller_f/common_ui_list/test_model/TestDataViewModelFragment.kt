@@ -11,13 +11,17 @@ import com.storyteller_f.common_ui_list.api.requireReposService
 import com.storyteller_f.common_ui_list.databinding.FragmentTestDataBinding
 import com.storyteller_f.common_ui_list.holders.RepoItemHolder
 import com.storyteller_f.common_ui_list.holders.RepoViewHolder
+import com.storyteller_f.common_ui_list.holders.ui_list.registerRepoItemHolder
 import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.ext_func_definition.ExtFuncFlat
 import com.storyteller_f.ext_func_definition.ExtFuncFlatType
 import com.storyteller_f.ui_list.adapter.SimpleDataAdapter
+import com.storyteller_f.ui_list.core.BuildBatch
+import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.event.viewBinding
 import com.storyteller_f.ui_list.source.DataHandler
 import com.storyteller_f.ui_list.source.SimpleDataRepository
+import kotlin.reflect.KClass
 
 class Test {
     fun sayTest() {
@@ -39,7 +43,11 @@ open class TestDataViewModelFragment : CommonFragment(R.layout.fragment_test_dat
     }) { dependencies: TestDataDependencies ->
         TestDataViewModel(dependencies.service)
     }
-    private val adapter = SimpleDataAdapter<RepoItemHolder, RepoViewHolder>()
+    private val adapter = SimpleDataAdapter<RepoItemHolder, RepoViewHolder>(
+        mutableMapOf<KClass<out DataItemHolder>, BuildBatch>().apply {
+            registerRepoItemHolder(this)
+        }
+    )
     private val binding: FragmentTestDataBinding by viewBinding(FragmentTestDataBinding::bind)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

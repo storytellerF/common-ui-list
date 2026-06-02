@@ -34,20 +34,6 @@ class KotlinGenerator(
         getDependencyFiles(entries, allItemHolderName, mapPair.first, mapPair.second)
     private val allImports = allImports(entries, mapPair.first, mapPair.second)
     private val affectInfo = getAffectFileInfo(packageName, dependencyFiles)
-    override fun buildAddFunction(entry: List<Entry<KSAnnotated>>): String {
-        val addFunctions = entry.joinToString("\n") {
-            buildRegisterBlock(it)
-        }
-        return """
-            fun registerAll(map: MutableMap<KClass<out DataItemHolder>, BuildBatch>) {
-                $1
-            }
-            """.trimAndReplaceCode(addFunctions.yes())
-    }
-
-    private fun buildRegisterBlock(it: Entry<KSAnnotated>) = """
-                register${it.itemHolderName}(map)
-    """.trimIndent()
 
     private fun getAffectFileInfo(
         uiListPackageName: String,
@@ -151,10 +137,6 @@ class KotlinGenerator(
                     mapPair.second
                 )
             )
-            // registerAll 为了能够使用:: 语法必须放到一个类中
-            writer.writeLine("object $CLASS_NAME {")
-            writer.writeLine(buildAddFunction(entries).prependIndent())
-            writer.writeLine("}\n")
         }
     }
 
@@ -191,11 +173,10 @@ class KotlinGenerator(
                     $1
                     throw Exception("unrecognized type:[${'$'}type]")
                 }
-                
+
                 fun register${entry.itemHolderName}(map: MutableMap<KClass<out DataItemHolder>, BuildBatch>) {
                     map.put(${entry.itemHolderName}::class, BuildBatch(${if (itemHolderExtraParameter.isEmpty()) "b2 =" else "b3 ="} ::build${entry.itemHolderName}));
                 }
-                
         """.trimIndent().replaceCode(viewHolderBuilderContent.yes())
     }
 

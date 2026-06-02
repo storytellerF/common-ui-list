@@ -43,12 +43,15 @@ import com.storyteller_f.common_ui_list.db.composite.RepoComposite
 import com.storyteller_f.common_ui_list.db.requireRepoDatabase
 import com.storyteller_f.common_ui_list.holders.RepoItemHolder
 import com.storyteller_f.common_ui_list.holders.seprator.SeparatorItemHolder
+import com.storyteller_f.common_ui_list.holders.seprator.ui_list.registerSeparatorItemHolder
+import com.storyteller_f.common_ui_list.holders.ui_list.registerRepoItemHolder
 import com.storyteller_f.common_ui_list.test_model.TestViewModelActivity
 import com.storyteller_f.common_ui_list.test_navigation.TestNavigationResultActivity
 import com.storyteller_f.common_vm_ktx.update
 import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.slim_ktx.toggle
 import com.storyteller_f.ui_list.core.AbstractViewHolder
+import com.storyteller_f.ui_list.core.BuildBatch
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.event.viewBinding
 import com.storyteller_f.ui_list.source.SimpleSourceRepository
@@ -57,6 +60,7 @@ import com.storyteller_f.ui_list.ui.ListWithState
 import com.storyteller_f.view_holder_compose.ComposeSourceAdapter
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
+import kotlin.reflect.KClass
 
 class MainActivity : AppCompatActivity() {
     private val binding by viewBinding(ActivityMainBinding::inflate)
@@ -68,7 +72,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val adapter =
-        ComposeSourceAdapter<DataItemHolder, AbstractViewHolder<DataItemHolder>>()
+        ComposeSourceAdapter<DataItemHolder, AbstractViewHolder<DataItemHolder>>(
+            mutableMapOf<KClass<out DataItemHolder>, BuildBatch>().apply {
+                registerSeparatorItemHolder(this)
+                registerRepoItemHolder(this)
+            }
+        )
 
     private val selectedItemHolder = MutableLiveData<List<DataItemHolder>>()
 

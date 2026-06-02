@@ -12,12 +12,12 @@ import kotlin.reflect.KClass
 
 @Suppress("UNCHECKED_CAST")
 open class SimpleSourceAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(
-    localCenter: Map<KClass<out DataItemHolder>, BuildBatch>? = null
+    buildBatch: Map<KClass<out DataItemHolder>, BuildBatch>
 ) :
     PagingDataAdapter<IH, VH>(
         common_diff_util as DiffUtil.ItemCallback<IH>
     ) {
-    private val proxy = object : DefaultAdapter<IH, VH>(localCenter) {
+    private val proxy = object : DefaultAdapter<IH, VH>(buildBatch) {
         override fun getItemAbstract(position: Int): IH? = getItem(position)
     }.apply {
         target = this@SimpleSourceAdapter
