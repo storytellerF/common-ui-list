@@ -14,6 +14,7 @@ class Holder<T>(
 class Entry<T>(
     val itemHolderName: String,
     val itemHolderFullName: ItemHolderFullName,
+    val itemHolderOrigin: T,
     val viewHolders: MutableMap<String, Holder<T>>,
 ) {
     val packageName = itemHolderFullName.substringBeforeLast(".")

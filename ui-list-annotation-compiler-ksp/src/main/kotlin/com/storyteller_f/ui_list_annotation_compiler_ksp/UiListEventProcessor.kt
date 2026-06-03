@@ -27,12 +27,13 @@ import com.storyteller_f.ui_list_annotation_common.Entry
 import com.storyteller_f.ui_list_annotation_common.Event
 import com.storyteller_f.ui_list_annotation_common.Holder
 import com.storyteller_f.ui_list_annotation_common.UIListHolderZoom
-import com.storyteller_f.ui_list_annotation_common.UiAdapterGenerator.Companion.CLASS_NAME
 import java.io.BufferedWriter
 import java.io.OutputStreamWriter
 import kotlin.reflect.KClass
 
 data class Identity(val fullName: String, val name: String)
+
+data class ItemHolderDefinition(val identity: Identity, val origin: KSAnnotated)
 
 fun BufferedWriter.writeLine(line: String = "") {
     write("$line\n")
@@ -70,8 +71,8 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
         zoom.addClickEvent(processEvent(clickEvents, isLong = false))
         zoom.addLongClick(processEvent(longClickEvents, isLong = true))
 
-        zoom.grouped().forEach { (packageName, entries) ->
-            writeFile(packageName, entries)
+        zoom.entries().forEach { entry ->
+            writeFile(entry)
         }
     }
 
@@ -110,19 +111,20 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
     }
 
     private fun writeFile(
-        packageName: String,
-        entries: List<Entry<KSAnnotated>>,
+        entry: Entry<KSAnnotated>,
     ) {
-        val uiListPackageName = "$packageName.ui_list"
-        logger.info("ui-list package $uiListPackageName")
+        val uiListPackageName = "${entry.packageName}.ui_list"
+        val fileName = "${entry.itemHolderName}Builder"
+        logger.info("ui-list package $uiListPackageName file $fileName")
 
-        KotlinGenerator(entries, zoom, logger, uiListPackageName) {
-            writer(uiListPackageName, it)
+        KotlinGenerator(entry, zoom, logger, uiListPackageName) {
+            writer(uiListPackageName, fileName, it)
         }.write()
     }
 
     private fun writer(
         uiListPackageName: String,
+        fileName: String,
         dependencyFiles: List<KSFile>
     ): BufferedWriter {
         val dependencies =
@@ -132,7 +134,7 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
                 environment.codeGenerator.createNewFile(
                     dependencies,
                     uiListPackageName,
-                    CLASS_NAME
+                    fileName
                 )
             )
         )
@@ -196,12 +198,14 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
         return viewHolders.map { viewHolder ->
             viewHolder as KSClassDeclaration
             val type = viewHolder.getAnnotationsByType(BindItemHolder::class).first().type
-            val (itemHolderFullName, itemHolderName) = getItemHolderIdentity(viewHolder)
+            val itemHolderDefinition = getItemHolderDefinition(viewHolder)
+            val (itemHolderFullName, itemHolderName) = itemHolderDefinition.identity
             val (bindingName, bindingFullName) = getBindingDetail(viewHolder)
             val (viewHolderFullName, viewHolderName) = viewHolder.identity()
             Entry(
                 itemHolderName,
                 itemHolderFullName,
+                itemHolderDefinition.origin,
                 mutableMapOf(
                     type to Holder(
                         bindingName,
@@ -216,7 +220,7 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
         }
     }
 
-    private fun getItemHolderIdentity(viewHolder: KSAnnotated): Identity {
+    private fun getItemHolderDefinition(viewHolder: KSAnnotated): ItemHolderDefinition {
         val bindItemHolderList = viewHolder.annotations.filter {
             it.shortName.asString() == BindItemHolder::class.simpleName
         }.toList()
@@ -240,7 +244,7 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
         assert(isDataClass || hasOverride) {
             "[${declaration.qualifiedName?.asString()}] 需要添加data 修饰符或者重载equals/areContentsTheSame"
         }
-        return declaration.identity()
+        return ItemHolderDefinition(declaration.identity(), declaration)
     }
 
     private fun getItemHolderIdentityInClickEvent(methodDeclaration: KSAnnotated): Identity {

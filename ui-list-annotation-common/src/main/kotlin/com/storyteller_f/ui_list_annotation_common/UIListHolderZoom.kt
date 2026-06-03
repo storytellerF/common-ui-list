@@ -27,6 +27,8 @@ class UIListHolderZoom<T> {
         it.packageName
     }
 
+    fun entries(): List<Entry<T>> = holderEntry
+
     fun addHolderEntry(list: List<Entry<T>>) {
         holderEntry.addAll(getGroupedHolders(holderEntry + list))
     }
