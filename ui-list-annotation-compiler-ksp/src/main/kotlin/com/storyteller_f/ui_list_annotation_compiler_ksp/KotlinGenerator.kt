@@ -20,19 +20,17 @@ import com.storyteller_f.ui_list_annotation_common.ViewName
 import java.io.BufferedWriter
 
 class KotlinGenerator(
-    private val entries: List<Entry<KSAnnotated>>,
+    private val entry: Entry<KSAnnotated>,
     private val zoom: UIListHolderZoom<KSAnnotated>,
     private val logger: KSPLogger,
     private val packageName: String,
     private val writer: (List<KSFile>) -> BufferedWriter
-) : UiAdapterGenerator<KSAnnotated>() {
-    private val allItemHolderName = entries.map {
-        it.itemHolderFullName
-    }
-    private val mapPair = zoom.extractEventMap(allItemHolderName)
+) {
+    private val itemHolderNames = listOf(entry.itemHolderFullName)
+    private val mapPair = zoom.extractEventMap(itemHolderNames)
     private val dependencyFiles =
-        getDependencyFiles(entries, allItemHolderName, mapPair.first, mapPair.second)
-    private val allImports = allImports(entries, mapPair.first, mapPair.second)
+        getDependencyFiles(entry, itemHolderNames, mapPair.first, mapPair.second)
+    private val allImports = allImports(entry, mapPair.first, mapPair.second)
     private val affectInfo = getAffectFileInfo(packageName, dependencyFiles)
 
     private fun getAffectFileInfo(
@@ -66,24 +64,24 @@ class KotlinGenerator(
     }
 
     private fun allImports(
-        entries: List<Entry<KSAnnotated>>,
+        entry: Entry<KSAnnotated>,
         clickEventsMap: EventMap<KSAnnotated>,
         longClickEventsMap: EventMap<KSAnnotated>
     ): List<String> {
-        val bindingClass = zoom.importHolders(entries)
+        val bindingClass = zoom.importHolders(listOf(entry))
         val receiverClass = zoom.importReceiverClass(clickEventsMap, longClickEventsMap)
 
-        return (bindingClass + receiverClass + commonImports).distinct()
+        return (bindingClass + receiverClass + UiAdapterGenerator.commonImports).distinct()
     }
 
     private fun getDependencyFiles(
-        entries: List<Entry<KSAnnotated>>,
+        entry: Entry<KSAnnotated>,
         allItemHolderName: List<ItemHolderFullName>,
         clickEventsMap: EventMap<KSAnnotated>,
         longClickEventsMap: EventMap<KSAnnotated>
     ): List<KSFile> {
         val dependencyFiles = getDependencies(
-            entries,
+            entry,
             allItemHolderName,
             clickEventsMap,
             longClickEventsMap
@@ -96,7 +94,7 @@ class KotlinGenerator(
     }
 
     private fun <T> getDependencies(
-        entries: List<Entry<T>>,
+        entry: Entry<T>,
         allItemHolderName: List<ItemHolderFullName>,
         clickEventsMap: EventMap<T>,
         longClickEventsMap: EventMap<T>,
@@ -106,12 +104,12 @@ class KotlinGenerator(
                 listEntry.value.map(Event<T>::origin)
             }
         }
-        return (entries.filter {
-            allItemHolderName.any { entry ->
-                entry == it.itemHolderFullName
+        return (listOf(entry.itemHolderOrigin) + listOf(entry).filter {
+            allItemHolderName.any { itemHolderName ->
+                itemHolderName == it.itemHolderFullName
             }
-        }.flatMap { entry ->
-            entry.viewHolders.map {
+        }.flatMap { itemHolderEntry ->
+            itemHolderEntry.viewHolders.map {
                 it.value.origin
             }
         } + clickEventsMap.flatMap(
@@ -131,25 +129,11 @@ class KotlinGenerator(
             })
             writer.writeLine()
             writer.writeLine(
-                buildViewHolders(
-                    entries,
-                    mapPair.first,
-                    mapPair.second
+                createMultiViewHolder(
+                    entry,
+                    mapPair.first[entry.itemHolderFullName].orEmpty(),
+                    mapPair.second[entry.itemHolderFullName].orEmpty()
                 )
-            )
-        }
-    }
-
-    private fun buildViewHolders(
-        entries: List<Entry<KSAnnotated>>,
-        clickEventsMap: Map<ItemHolderFullName, Map<ViewName, List<Event<KSAnnotated>>>>,
-        longClickEventsMap: Map<ItemHolderFullName, Map<ViewName, List<Event<KSAnnotated>>>>,
-    ): String {
-        return entries.joinToString("\n\n") { entry ->
-            createMultiViewHolder(
-                entry,
-                clickEventsMap[entry.itemHolderFullName].orEmpty(),
-                longClickEventsMap[entry.itemHolderFullName].orEmpty()
             )
         }
     }
