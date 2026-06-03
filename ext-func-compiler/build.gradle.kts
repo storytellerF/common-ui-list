@@ -8,4 +8,7 @@ dependencies {
     implementation(project(":slim-ktx"))
     api(project(":ext-func-definition"))
     implementation(libs.symbol.processing.api)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlin.compile.testing.ksp)
 }
