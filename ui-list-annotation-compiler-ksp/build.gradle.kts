@@ -9,4 +9,7 @@ dependencies {
     implementation(project(":ui-list-annotation-definition"))
     implementation(project(":ui-list-annotation-common"))
     implementation(libs.symbol.processing.api)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlin.compile.testing.ksp)
 }
