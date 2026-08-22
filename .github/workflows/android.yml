@@ -8,9 +8,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      SECRETS_CONTEXT: ${{ toJson(secrets) }}
-      ORG_GRADLE_PROJECT_gpr_user: ${{ github.actor }}
-      ORG_GRADLE_PROJECT_gpr_key: ${{ secrets.GITHUB_TOKEN }}
+      storyteller_f_sign_alias: ${{ secrets.STORYTELLER_F_SIGN_ALIAS }}
+      storyteller_f_sign_store_password: ${{ secrets.STORYTELLER_F_SIGN_STORE_PASSWORD }}
+      storyteller_f_sign_key_password: ${{ secrets.STORYTELLER_F_SIGN_KEY_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -28,6 +28,14 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: gradle
+
+      - name: Decode signing keystore
+        env:
+          SIGNING_KEY_BASE64: ${{ secrets.STORYTELLER_F_SIGN_KEY }}
+        run: |
+          KEYSTORE_PATH="$RUNNER_TEMP/signing_key.jks"
+          printf '%s' "$SIGNING_KEY_BASE64" | base64 --decode > "$KEYSTORE_PATH"
+          echo "storyteller_f_sign_path=$KEYSTORE_PATH" >> "$GITHUB_ENV"
 
       - name: AVD cache
         uses: actions/cache@v4
@@ -71,7 +79,6 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
-      # Example use of `signedReleaseFile` output -- not needed
       - uses: actions/upload-artifact@v4
         with:
           name: Signed app bundle
