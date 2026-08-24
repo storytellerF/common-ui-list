@@ -1,7 +1,7 @@
-name: Android CI
+name: Test
 
 on:
-  push:
+  pull_request:
     branches: [ "main" ]
 
 jobs:
@@ -12,7 +12,7 @@ jobs:
       storyteller_f_sign_store_password: ${{ secrets.STORYTELLER_F_SIGN_STORE_PASSWORD }}
       storyteller_f_sign_key_password: ${{ secrets.STORYTELLER_F_SIGN_KEY_PASSWORD }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           submodules: 'recursive'
 
@@ -23,7 +23,7 @@ jobs:
           sudo udevadm trigger --name-match=kvm
 
       - name: set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
         with:
           java-version: '21'
           distribution: 'temurin'
@@ -38,7 +38,7 @@ jobs:
           echo "storyteller_f_sign_path=$KEYSTORE_PATH" >> "$GITHUB_ENV"
 
       - name: AVD cache
-        uses: actions/cache@v4
+        uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a # v4.2.4
         id: avd-cache
         with:
           path: |
@@ -49,7 +49,7 @@ jobs:
       #11271302
       - name: create AVD and generate snapshot for caching
         if: steps.avd-cache.outputs.cache-hit != 'true'
-        uses: reactivecircus/android-emulator-runner@v2
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
           api-level: 34
           force-avd-creation: false
@@ -62,7 +62,7 @@ jobs:
         run: ./build-on-ci.sh
 
       - name: run tests
-        uses: reactivecircus/android-emulator-runner@v2
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
           api-level: 34
           force-avd-creation: false
@@ -75,11 +75,11 @@ jobs:
         run: bash gradlew koverXmlReport
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v6.0.1
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: Signed app bundle
           path: app/build/outputs/apk/release/app-release.apk
