@@ -3,14 +3,24 @@ name: Test
 on:
   pull_request:
     branches: [ "main" ]
+    paths:
+      - '**/*.kt'
+      - '**/*.kts'
+      - '**/*.java'
+      - '**/*.xml'
+      - '**/*.gradle*'
+      - 'gradle/**'
+      - 'gradle.properties'
+      - 'gradlew'
+      - 'gradlew.bat'
+      - 'build-on-ci.sh'
+      - 'config/**'
+      - '.github/workflows/test.yml'
+      - '.github/workflows/build-app.yml'
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      storyteller_f_sign_alias: ${{ secrets.STORYTELLER_F_SIGN_ALIAS }}
-      storyteller_f_sign_store_password: ${{ secrets.STORYTELLER_F_SIGN_STORE_PASSWORD }}
-      storyteller_f_sign_key_password: ${{ secrets.STORYTELLER_F_SIGN_KEY_PASSWORD }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
@@ -27,15 +37,11 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-          cache: gradle
 
-      - name: Decode signing keystore
-        env:
-          SIGNING_KEY_BASE64: ${{ secrets.STORYTELLER_F_SIGN_KEY }}
-        run: |
-          KEYSTORE_PATH="$RUNNER_TEMP/signing_key.jks"
-          printf '%s' "$SIGNING_KEY_BASE64" | base64 --decode > "$KEYSTORE_PATH"
-          echo "storyteller_f_sign_path=$KEYSTORE_PATH" >> "$GITHUB_ENV"
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+        with:
+          cache-provider: basic
 
       - name: AVD cache
         uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a # v4.2.4
@@ -58,9 +64,6 @@ jobs:
           arch: x86_64
           script: echo "Generated AVD snapshot for caching."
 
-      - name: build app
-        run: ./build-on-ci.sh
-
       - name: run tests
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
@@ -78,8 +81,3 @@ jobs:
         uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v6.0.1
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: Signed app bundle
-          path: app/build/outputs/apk/release/app-release.apk
