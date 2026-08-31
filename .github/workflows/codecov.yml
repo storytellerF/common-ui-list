@@ -1,7 +1,7 @@
-name: Test
+name: Codecov
 
 on:
-  pull_request:
+  push:
     branches: [ "main" ]
     paths:
       - '**/*.kt'
@@ -15,11 +15,13 @@ on:
       - 'gradlew.bat'
       - 'build-on-ci.sh'
       - 'config/**'
-      - '.github/workflows/test.yml'
-      - '.github/workflows/build-app.yml'
+      - '.github/workflows/codecov.yml'
+
+permissions:
+  contents: read
 
 jobs:
-  build:
+  coverage:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -50,7 +52,6 @@ jobs:
             ~/.android/adb*
           key: avd-34
 
-      #11271302
       - name: create AVD and generate snapshot for caching
         if: steps.avd-cache.outputs.cache-hit != 'true'
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
@@ -71,3 +72,11 @@ jobs:
           disable-animations: true
           arch: x86_64
           script: sh gradlew connectedCheck
+
+      - name: generate XML report
+        run: bash gradlew koverXmlReport
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
