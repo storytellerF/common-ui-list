@@ -12,10 +12,10 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 buildscript {
     dependencies {
         classpath(libs.safeArgs.plugin.lib)
-        classpath(libs.jksify.gradle.plugin)
     }
 }
 plugins {
+    id("com.vanniktech.maven.publish") version "0.37.0" apply false
     alias(libs.plugins.android) apply false
     alias(libs.plugins.kotlin) apply false
     alias(libs.plugins.ksp) apply false
