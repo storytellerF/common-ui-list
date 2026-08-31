@@ -1,4 +1,5 @@
 [versions]
+compileSdk = "37"
 targetSdk = "36"
 minSdk = "26"
 android = "9.2.1"
