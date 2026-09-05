@@ -9,6 +9,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -49,6 +50,43 @@ class SimpleDataRepositoryTest {
         val state = repository.loadState.first()
         assertTrue(state.loadState is LoadState.Error)
         assertEquals(0, state.itemCount)
+    }
+
+    @Test
+    fun `obtaining results repeatedly initializes the repository only once`() = runBlocking {
+        val requestedPages = mutableListOf<Int>()
+        val repository = SimpleDataRepository<TestDatum, RemoteKey> { page, _ ->
+            requestedPages += page
+            CommonResponse(items = listOf(TestDatum("item-$page")))
+        }
+
+        val first = repository.obtainResult()
+        val second = repository.obtainResult()
+
+        assertSame(first, second)
+        assertEquals(listOf(1), requestedPages)
+        assertEquals(listOf(TestDatum("item-1")), second.first())
+    }
+
+    @Test
+    fun `concurrent result collectors share the single initialization request`() = runBlocking {
+        val started = CompletableDeferred<Unit>()
+        val release = CompletableDeferred<Unit>()
+        val requestedPages = mutableListOf<Int>()
+        val repository = SimpleDataRepository<TestDatum, RemoteKey> { page, _ ->
+            requestedPages += page
+            started.complete(Unit)
+            release.await()
+            CommonResponse(items = listOf(TestDatum("item-$page")))
+        }
+
+        val first = async { repository.obtainResult() }
+        started.await()
+        val second = async { repository.obtainResult() }
+        release.complete(Unit)
+
+        assertSame(first.await(), second.await())
+        assertEquals(listOf(1), requestedPages)
     }
 
     @Test

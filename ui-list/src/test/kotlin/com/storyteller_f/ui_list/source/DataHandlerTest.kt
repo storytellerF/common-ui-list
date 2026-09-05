@@ -16,7 +16,9 @@ class DataHandlerTest {
 
     @Test
     fun `content maps repository data to holders and keeps swaps in sync`() = runBlocking {
+        val requestedPages = mutableListOf<Int>()
         val repository = SimpleDataRepository<TestDatum, RemoteKey> { _, _ ->
+            requestedPages += 1
             CommonResponse(items = listOf(TestDatum("first"), TestDatum("second")))
         }
         val handler = DataHandler(repository) { datum -> TestHolder(datum.id) }
@@ -26,6 +28,10 @@ class DataHandlerTest {
 
         content.swap(0, 1)
         assertEquals(listOf("second", "first"), content.list.map { it.id })
+
+        val recreatedCollector = handler.content.first()
+        assertEquals(listOf("second", "first"), recreatedCollector.list.map { it.id })
+        assertEquals(listOf(1), requestedPages)
     }
 
     private data class TestDatum(val id: String) : Datum<RemoteKey> {

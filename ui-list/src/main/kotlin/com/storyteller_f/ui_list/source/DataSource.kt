@@ -7,7 +7,6 @@ import com.storyteller_f.ui_list.core.Datum
 import com.storyteller_f.ui_list.data.CommonResponse
 import com.storyteller_f.ui_list.database.RemoteKey
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.emitAll
@@ -38,19 +37,29 @@ class SimpleDataRepository<D : Datum<RK>, RK : RemoteKey>(
     // 保存上一次请求的页数，如果成功，自增
     private var lastRequestedPage = 0
 
+    private val initializationMutex = Mutex()
+    private var initialized = false
+
     // 避免同一时刻进行多个请求
-    private var isRequestInProgress = Mutex()
+    private val isRequestInProgress = Mutex()
 
     suspend fun obtainResult(): Flow<List<D>> {
-        coroutineScope {
-            requestNextPage()
+        initializationMutex.withLock {
+            if (!initialized) {
+                initialized = true
+                requestNextPage()
+            }
         }
         return results
     }
 
     suspend fun requestMore() {
-        if (isRequestInProgress.isLocked) return
-        requestNextPage()
+        if (!isRequestInProgress.tryLock()) return
+        try {
+            requestNextPageLocked()
+        } finally {
+            isRequestInProgress.unlock()
+        }
     }
 
     suspend fun retry() {
@@ -58,22 +67,26 @@ class SimpleDataRepository<D : Datum<RK>, RK : RemoteKey>(
     }
 
     suspend fun refresh() {
-        if (isRequestInProgress.isLocked) return
-        lastRequestedPage = 0
-        inMemoryCache.clear()
-        requestNextPage()
-    }
-
-    private suspend fun requestNextPage() {
-        val successful = requestAndSaveData(lastRequestedPage + 1)
-        if (successful) {
-            lastRequestedPage++
+        if (!isRequestInProgress.tryLock()) return
+        try {
+            lastRequestedPage = 0
+            inMemoryCache.clear()
+            requestNextPageLocked()
+        } finally {
+            isRequestInProgress.unlock()
         }
     }
 
-    private suspend fun requestAndSaveData(pageCount: Int): Boolean {
-        return isRequestInProgress.withLock {
-            requestPage(pageCount)
+    private suspend fun requestNextPage() {
+        isRequestInProgress.withLock {
+            requestNextPageLocked()
+        }
+    }
+
+    private suspend fun requestNextPageLocked() {
+        val successful = requestPage(lastRequestedPage + 1)
+        if (successful) {
+            lastRequestedPage++
         }
     }
 
