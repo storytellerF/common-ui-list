@@ -11,12 +11,15 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.core.widget.doAfterTextChanged
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
-import com.storyteller_f.common_vm_ktx.state
+import androidx.lifecycle.repeatOnLifecycle
 import com.storyteller_f.ext_func_definition.ExtFuncFlat
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 fun <T : View> T.setOnClick(block: (T) -> Unit) {
     setOnClickListener {
@@ -44,11 +47,15 @@ fun <T> MutableStateFlow<T?>.bind(
     map: T.() -> String,
     rebuild: T.(String) -> T
 ) {
-    map {
-        it?.map()
-    }.state(owner) {
-        if (it != editText.text.toString()) {
-            editText.setText(it)
+    owner.scope.launch {
+        owner.cycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            this@bind.map {
+                it?.map()
+            }.collect { value ->
+                if (value != editText.text.toString()) {
+                    editText.setText(value)
+                }
+            }
         }
     }
     editText.doAfterTextChanged { s ->

@@ -21,9 +21,7 @@ import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.storyteller_f.common_vm_ktx.combine
-import com.storyteller_f.common_vm_ktx.debounce
-import com.storyteller_f.common_vm_ktx.state
+import com.storyteller_f.common_ui.owner
 import com.storyteller_f.ui_list.adapter.ManualAdapter
 import com.storyteller_f.ui_list.adapter.SimpleDataAdapter
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
@@ -36,10 +34,14 @@ import com.storyteller_f.ui_list.source.isLoading
 import com.storyteller_f.ui_list.source.isNotLoading
 import com.storyteller_f.ui_list.ui.SimpleLoadStateAdapter
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
@@ -288,18 +290,26 @@ class ListWithState @JvmOverloads constructor(
         }).attachToRecyclerView(binding.list)
     }
 
+    @OptIn(FlowPreview::class)
     fun setupClickSelectableSupport(
         editing: StateFlow<Boolean>,
         lifecycleOwner: LifecycleOwner,
         selectableDrawer: SelectableDrawer,
         selectedItemHolders: StateFlow<List<DataItemHolder>>,
     ) {
-        combine(("editing" to editing), ("selected" to selectedItemHolders)).distinctUntilChanged()
-            .debounce(200)
-            .state(lifecycleOwner) {
-                val adapter = binding.list.adapter
-                binding.list.adapter = adapter
+        val collectionOwner = lifecycleOwner.owner
+        collectionOwner.lifecycleScope.launch {
+            collectionOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                combine(editing, selectedItemHolders) { editingValue, selectedItemHoldersValue ->
+                    editingValue to selectedItemHoldersValue
+                }.distinctUntilChanged()
+                    .debounce(200)
+                    .collect {
+                        val adapter = binding.list.adapter
+                        binding.list.adapter = adapter
+                    }
             }
+        }
         val decoration = object : RecyclerView.ItemDecoration() {
             override fun getItemOffsets(
                 outRect: Rect,
