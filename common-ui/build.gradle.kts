@@ -18,10 +18,10 @@ android {
 dependencies {
     ksp(project(":ext-func-compiler"))
     api(project(":ext-func-definition"))
-    implementation(project(":common-ktx"))
-    implementation(project(":slim-ktx"))
     implementation(project(":compat-ktx"))
     implementation(project(":common-vm-ktx"))
+    implementation(libs.navigation.common.ktx)
+    implementation(libs.navigation.fragment.ktx)
     implementation(libs.navigation.runtime.ktx)
     implementation(libs.viewbinding)
     implementation(libs.compos.material)
@@ -33,6 +33,7 @@ dependencies {
     implementation(libs.fragment.ktx)
     implementation(libs.activity.ktx)
     testImplementation(libs.junit)
+    testImplementation(libs.navigation.testing)
     androidTestImplementation(libs.android.junit)
     androidTestImplementation(libs.android.espresso)
 }

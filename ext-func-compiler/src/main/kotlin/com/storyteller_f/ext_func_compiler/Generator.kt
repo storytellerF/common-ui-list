@@ -36,18 +36,6 @@ internal fun generatePropertyV4(name: String, annotation: ExtFuncFlat): String {
     """.trimIndent()
 }
 
-internal fun generateForV7(): String {
-    return MutableList(8) {
-        val i = it + 2
-        val p = i - 1
-        """
-            data class Dao$i<${repeat("out D1", i)}>(${repeat("val d1: D1", i)})
-
-            infix fun <${repeat("D1", i)}> Dao$p<${repeat("D1", p)}>.dao(d$i: D$i) = Dao$i(${repeat("d1", i)})
-        """.trimIndent()
-    }.joinToString("\n")
-}
-
 val builtinMethod = listOf("equals", "hashCode", "toString", "<init>")
 
 internal fun generateForV8(task: ExtFuncProcessor.Task, logger: KSPLogger): String {

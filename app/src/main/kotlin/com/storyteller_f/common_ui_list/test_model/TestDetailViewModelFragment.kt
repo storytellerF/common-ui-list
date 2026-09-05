@@ -1,7 +1,10 @@
 package com.storyteller_f.common_ui_list.test_model
 
 import android.widget.TextView
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewModelScope
 import com.storyteller_f.common_ui.RegularFragment
 import com.storyteller_f.common_ui_list.api.ReposService
@@ -11,6 +14,8 @@ import com.storyteller_f.common_ui_list.db.RepoDatabase
 import com.storyteller_f.common_ui_list.db.requireRepoDatabase
 import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.ui_list.source.DetailHandler
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 
 class TestDetailViewModelFragment : RegularFragment<FragmentTestDetailBinding>(FragmentTestDetailBinding::inflate) {
 
@@ -22,8 +27,12 @@ class TestDetailViewModelFragment : RegularFragment<FragmentTestDetailBinding>(F
 
     override fun onBindViewEvent(binding: FragmentTestDetailBinding) {
         val textView: TextView = binding.textNotifications
-        detail.content.observe(viewLifecycleOwner) {
-            textView.text = it.fullName
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                detail.content.collect { repo ->
+                    textView.text = repo?.fullName.orEmpty()
+                }
+            }
         }
     }
 }

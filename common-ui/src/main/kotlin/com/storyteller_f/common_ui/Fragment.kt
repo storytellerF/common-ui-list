@@ -11,10 +11,6 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.viewbinding.ViewBinding
 
-/**
- * @author storyteller_f
- */
-
 abstract class CommonFragment(layoutRes: Int = 0) : Fragment(layoutRes), ResponseFragment, Registry {
 
     override val vm by responseModel
@@ -30,7 +26,8 @@ abstract class SimpleFragment<T : ViewBinding>(
 ) : CommonFragment() {
     private var _binding: T? = null
     val binding: T get() = _binding!!
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val bindingLocal = viewBindingInflateFactory(layoutInflater)
         _binding = bindingLocal
         onBindViewEvent(binding)
@@ -45,12 +42,6 @@ abstract class SimpleFragment<T : ViewBinding>(
     }
 }
 
-/**
- * fragment 中的toolbar 有两种情况
- * 1 使用activity 的toolbar
- * 2 使用fragment 自己的toolbar ，这时不能使用supportToolbar 等方法。
- * RegularFragment 使用的是第一种方法，假定activity 含有一个toolbar，且这个toolbar 是包含一个ComposeView的
- */
 abstract class RegularFragment<T : ViewBinding>(
     viewBindingFactory: (LayoutInflater) -> T
 ) : SimpleFragment<T>(viewBindingFactory) {
@@ -67,6 +58,5 @@ abstract class RegularFragment<T : ViewBinding>(
 val Fragment.toolbar: ActionBar
     get() = (activity as AppCompatActivity).supportActionBar!!
 
-val Fragment.toolbarCompose
-    get() = (activity!!.findViewById<Toolbar>(R.id.toolbar)).getChildAt(0) as
-        ComposeView
+val Fragment.toolbarCompose: ComposeView
+    get() = (activity!!.findViewById<Toolbar>(R.id.toolbar)).getChildAt(0) as ComposeView

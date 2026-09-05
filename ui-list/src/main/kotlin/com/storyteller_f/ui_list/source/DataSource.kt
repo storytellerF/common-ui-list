@@ -1,25 +1,17 @@
 package com.storyteller_f.ui_list.source
 
 import android.util.Log
-import androidx.lifecycle.HasDefaultViewModelProviderFactory
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelStoreOwner
-import androidx.lifecycle.asLiveData
-import androidx.lifecycle.liveData
-import androidx.lifecycle.map
-import androidx.lifecycle.viewModelScope
 import androidx.paging.LoadState
-import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.core.Datum
 import com.storyteller_f.ui_list.data.CommonResponse
 import com.storyteller_f.ui_list.database.RemoteKey
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -45,19 +37,29 @@ class SimpleDataRepository<D : Datum<RK>, RK : RemoteKey>(
     // 保存上一次请求的页数，如果成功，自增
     private var lastRequestedPage = 0
 
+    private val initializationMutex = Mutex()
+    private var initialized = false
+
     // 避免同一时刻进行多个请求
-    private var isRequestInProgress = Mutex()
+    private val isRequestInProgress = Mutex()
 
     suspend fun obtainResult(): Flow<List<D>> {
-        coroutineScope {
-            requestNextPage()
+        initializationMutex.withLock {
+            if (!initialized) {
+                initialized = true
+                requestNextPage()
+            }
         }
         return results
     }
 
     suspend fun requestMore() {
-        if (isRequestInProgress.isLocked) return
-        requestNextPage()
+        if (!isRequestInProgress.tryLock()) return
+        try {
+            requestNextPageLocked()
+        } finally {
+            isRequestInProgress.unlock()
+        }
     }
 
     suspend fun retry() {
@@ -65,22 +67,26 @@ class SimpleDataRepository<D : Datum<RK>, RK : RemoteKey>(
     }
 
     suspend fun refresh() {
-        if (isRequestInProgress.isLocked) return
-        lastRequestedPage = 0
-        inMemoryCache.clear()
-        requestNextPage()
-    }
-
-    private suspend fun requestNextPage() {
-        val successful = requestAndSaveData(lastRequestedPage + 1)
-        if (successful) {
-            lastRequestedPage++
+        if (!isRequestInProgress.tryLock()) return
+        try {
+            lastRequestedPage = 0
+            inMemoryCache.clear()
+            requestNextPageLocked()
+        } finally {
+            isRequestInProgress.unlock()
         }
     }
 
-    private suspend fun requestAndSaveData(pageCount: Int): Boolean {
-        return isRequestInProgress.withLock {
-            requestPage(pageCount)
+    private suspend fun requestNextPage() {
+        isRequestInProgress.withLock {
+            requestNextPageLocked()
+        }
+    }
+
+    private suspend fun requestNextPageLocked() {
+        val successful = requestPage(lastRequestedPage + 1)
+        if (successful) {
+            lastRequestedPage++
         }
     }
 
@@ -113,7 +119,6 @@ class SimpleDataRepository<D : Datum<RK>, RK : RemoteKey>(
         private const val TAG = "DataSource"
     }
 }
-
 /**
  * 与 SourceHandler 类似，不过支持排序
  */
@@ -122,19 +127,15 @@ class DataHandler<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey>(
     processFactory: (D) -> Holder,
 ) {
 
-    val content: LiveData<FatData<D, Holder, RK>> = liveData {
-        val asLiveData = sourceRepository.obtainResult().asLiveData(Dispatchers.Main)
-        val source: LiveData<FatData<D, Holder, RK>> = asLiveData.map { data ->
+    val content: Flow<FatData<D, Holder, RK>> = flow {
+        emitAll(sourceRepository.obtainResult().map { data ->
             FatData<D, Holder, RK>(data.map { datum ->
                 processFactory(datum)
             }.toMutableList(), ::swap)
-        }
-        emitSource(source)
+        })
     }
 
-    val loadState: LiveData<MoreInfoLoadState> = liveData {
-        emitSource(sourceRepository.loadState.asLiveData())
-    }
+    val loadState: Flow<MoreInfoLoadState> = sourceRepository.loadState
 
     fun requestMore(scope: CoroutineScope) {
         scope.launch {
@@ -168,70 +169,3 @@ class DataHandler<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey>(
         }
     }
 }
-
-@Deprecated(
-    message = "Use a business ViewModel that owns DataHandler instead of the shared SimpleDataViewModel.",
-    level = DeprecationLevel.WARNING
-)
-class SimpleDataViewModel<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey>(
-    sourceRepository: SimpleDataRepository<D, RK>,
-    processFactory: (D) -> Holder,
-) : ViewModel() {
-    internal val handler = DataHandler(sourceRepository, processFactory)
-
-    val content: LiveData<DataHandler.FatData<D, Holder, RK>> = handler.content
-    val loadState: LiveData<MoreInfoLoadState> = handler.loadState
-
-    fun requestMore() {
-        handler.requestMore(viewModelScope)
-    }
-
-    fun retry() {
-        handler.retry(viewModelScope)
-    }
-
-    fun refresh() {
-        handler.refresh(viewModelScope)
-    }
-
-    @Deprecated(
-        message = "Use DataHandler.FatData instead.",
-        level = DeprecationLevel.WARNING
-    )
-    @Suppress("DEPRECATION")
-    class FatData<D : Datum<RK>, Holder : DataItemHolder, RK : RemoteKey>(
-        val viewModel: SimpleDataViewModel<D, Holder, RK>,
-        list: MutableList<Holder>
-    ) : DataHandler.FatData<D, Holder, RK>(list, viewModel.handler::swap)
-}
-
-class DataProducer<RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder>(
-    val service: suspend (Int, Int) -> CommonResponse<D, RK>,
-    val processFactory: (D) -> Holder,
-)
-
-@Deprecated(
-    message = "Define a business ViewModel and use DataHandler inside it.",
-    level = DeprecationLevel.WARNING
-)
-@Suppress("DEPRECATION")
-fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, T> T.data(
-    dataContent: DataProducer<RK, D, Holder>,
-) where T : HasDefaultViewModelProviderFactory, T : ViewModelStoreOwner = vm({}) {
-    SimpleDataViewModel(
-        SimpleDataRepository(
-            dataContent.service,
-        ),
-        dataContent.processFactory
-    )
-}
-
-@Deprecated(
-    message = "Define a business ViewModel and use DataHandler inside it.",
-    level = DeprecationLevel.WARNING
-)
-@Suppress("DEPRECATION")
-fun <RK : RemoteKey, D : Datum<RK>, Holder : DataItemHolder, ARG, T> T.data(
-    arg: () -> ARG,
-    dataContentProducer: (ARG) -> DataProducer<RK, D, Holder>,
-) where T : HasDefaultViewModelProviderFactory, T : ViewModelStoreOwner = data(dataContentProducer(arg()))

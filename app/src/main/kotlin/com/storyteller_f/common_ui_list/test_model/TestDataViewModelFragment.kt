@@ -2,9 +2,11 @@ package com.storyteller_f.common_ui_list.test_model
 
 import android.os.Bundle
 import android.view.View
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.storyteller_f.common_ui.CommonFragment
-import com.storyteller_f.common_ui.repeatOnViewResumed
 import com.storyteller_f.common_ui_list.R
 import com.storyteller_f.common_ui_list.api.ReposService
 import com.storyteller_f.common_ui_list.api.requireReposService
@@ -18,9 +20,11 @@ import com.storyteller_f.ext_func_definition.ExtFuncFlatType
 import com.storyteller_f.ui_list.adapter.SimpleDataAdapter
 import com.storyteller_f.ui_list.core.BuildBatch
 import com.storyteller_f.ui_list.core.DataItemHolder
-import com.storyteller_f.ui_list.event.viewBinding
+import com.storyteller_f.common_ui.viewBinding
 import com.storyteller_f.ui_list.source.DataHandler
 import com.storyteller_f.ui_list.source.SimpleDataRepository
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import kotlin.reflect.KClass
 
 class Test {
@@ -53,9 +57,11 @@ open class TestDataViewModelFragment : CommonFragment(R.layout.fragment_test_dat
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.listWithState.dataUp(adapter, viewLifecycleOwner, data.dataHandler)
-        repeatOnViewResumed {
-            data.content.observe(viewLifecycleOwner) {
-                adapter.submitData(it)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                data.content.collectLatest {
+                    adapter.submitData(it)
+                }
             }
         }
     }

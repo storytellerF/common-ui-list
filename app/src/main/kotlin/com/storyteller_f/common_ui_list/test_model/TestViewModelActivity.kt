@@ -7,7 +7,7 @@ import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.storyteller_f.common_ui_list.R
 import com.storyteller_f.common_ui_list.databinding.ActivityTestViewModelBinding
-import com.storyteller_f.ui_list.event.viewBinding
+import com.storyteller_f.common_ui.viewBinding
 
 class TestViewModelActivity : AppCompatActivity() {
 

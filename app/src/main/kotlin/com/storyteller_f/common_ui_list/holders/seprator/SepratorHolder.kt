@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.sp
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.annotation_defination.ItemHolder
 import com.storyteller_f.common_ui_list.R
-import com.storyteller_f.slim_ktx.propertiesSame
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.view_holder_compose.ComposeViewHolder
 import com.storyteller_f.view_holder_compose.EDComposeView
@@ -29,15 +28,11 @@ abstract class SeparatorHolder : DataItemHolder()
 
 class SeparatorItemHolder(val info: String) : SeparatorHolder() {
     override fun areItemsTheSame(other: DataItemHolder): Boolean {
-        return propertiesSame(other, {
-            info
-        })
+        return other is SeparatorItemHolder && info == other.info
     }
 
     override fun areContentsTheSame(other: DataItemHolder): Boolean {
-        return propertiesSame(other, {
-            info
-        })
+        return other is SeparatorItemHolder && info == other.info
     }
 }
 

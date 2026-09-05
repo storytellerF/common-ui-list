@@ -1,17 +1,13 @@
 package com.storyteller_f.ui_list.source
 
 import android.util.Log
-import androidx.lifecycle.HasDefaultViewModelProviderFactory
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelStoreOwner
-import androidx.lifecycle.viewModelScope
 import androidx.paging.LoadState
-import com.storyteller_f.common_vm_ktx.vm
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -23,8 +19,10 @@ class DetailHandler<D : Any>(
 ) {
     constructor(detailProducer: DetailProducer<D>) : this(detailProducer.producer, detailProducer.local)
 
-    val content = MutableLiveData<D>()
-    val loadState = MutableLiveData<LoadState>()
+    private val _content = MutableStateFlow<D?>(null)
+    val content: StateFlow<D?> = _content
+    private val _loadState = MutableStateFlow<LoadState?>(null)
+    val loadState: StateFlow<LoadState?> = _loadState
 
     private val local: (suspend () -> D?)? = local
 
@@ -39,15 +37,15 @@ class DetailHandler<D : Any>(
     private fun request(scope: CoroutineScope, local: (suspend () -> D?)?): Job {
         return scope.launch {
             try {
-                loadState.value = LoadState.Loading
+                _loadState.value = LoadState.Loading
                 val value = obtainValue(local)
-                content.value = value
-                loadState.value = LoadState.NotLoading(true)
+                _content.value = value
+                _loadState.value = LoadState.NotLoading(true)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 Log.e(TAG, "request: ", e)
-                loadState.value = LoadState.Error(e)
+                _loadState.value = LoadState.Error(e)
             }
         }
     }
@@ -70,53 +68,7 @@ class DetailHandler<D : Any>(
     }
 }
 
-@Deprecated(
-    message = "Use a business ViewModel that owns DetailHandler instead of the shared SimpleDetailViewModel.",
-    level = DeprecationLevel.WARNING
-)
-class SimpleDetailViewModel<D : Any>(
-    producer: suspend () -> D,
-    local: (suspend () -> D?)? = null
-) : ViewModel() {
-    private val handler = DetailHandler(producer, local)
-
-    val content = handler.content
-    val loadState = handler.loadState
-
-    init {
-        handler.load(viewModelScope)
-    }
-
-    fun refresh() {
-        handler.refresh(viewModelScope)
-    }
-}
-
 class DetailProducer<D : Any>(
     val producer: suspend () -> D,
     val local: (suspend () -> D?)? = null
 )
-
-@Deprecated(
-    message = "Define a business ViewModel and use DetailHandler inside it.",
-    level = DeprecationLevel.WARNING
-)
-@Suppress("DEPRECATION")
-fun <D : Any, T> T.detail(
-    detailContent: DetailProducer<D>,
-) where T : HasDefaultViewModelProviderFactory, T : ViewModelStoreOwner = vm({}) {
-    SimpleDetailViewModel(
-        detailContent.producer,
-        detailContent.local
-    )
-}
-
-@Deprecated(
-    message = "Define a business ViewModel and use DetailHandler inside it.",
-    level = DeprecationLevel.WARNING
-)
-@Suppress("DEPRECATION")
-fun <D : Any, ARG, T> T.detail(
-    arg: () -> ARG,
-    detailContentProducer: (ARG) -> DetailProducer<D>,
-) where T : HasDefaultViewModelProviderFactory, T : ViewModelStoreOwner = detail(detailContentProducer(arg()))

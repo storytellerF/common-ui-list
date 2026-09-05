@@ -4,6 +4,7 @@ plugins {
 
     id("android-common-publish")
     id("custom-android-library")
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -14,14 +15,17 @@ android {
         }
     }
     
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
+
     buildFeatures {
         viewBinding = true
     }
+
 }
 
 dependencies {
-    implementation(project(":common-ktx"))
-    implementation(project(":slim-ktx"))
     implementation(project(":ui-list-annotation-definition"))
     testImplementation(libs.junit)
     androidTestImplementation(libs.android.junit)
@@ -43,7 +47,6 @@ dependencies {
     // lifecycle & view model
     api(libs.lifecycle.runtime.ktx)
     api(libs.lifecycle.viewmodel.ktx)
-    api(libs.lifecycle.livedata.ktx)
     api(libs.lifecycle.viewmodel.savedstate)
     api(project(":common-vm-ktx"))
 
@@ -51,6 +54,7 @@ dependencies {
     api(libs.room.runtime)
     api(libs.room.ktx)
     api(libs.room.paging)
+    kspTest(libs.room.compiler)
 
     api(libs.paging.runtime.ktx)
 

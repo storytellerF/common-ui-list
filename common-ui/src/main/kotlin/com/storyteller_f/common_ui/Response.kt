@@ -248,7 +248,7 @@ fun <T : Parcelable, A> A.observeResponse(
 /**
  * 在Activity 中监听结果。
  */
-internal fun <A> A.observeResponse() where A : FragmentActivity, A : Registry {
+fun <A> A.observeResponse() where A : FragmentActivity, A : Registry {
     waitingInActivity[registryKey()]?.forEach {
         val action = it.action
         val requestKey = it.requestKey
