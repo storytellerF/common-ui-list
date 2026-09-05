@@ -101,7 +101,6 @@ class ListWithState @JvmOverloads constructor(
         )
         lifecycleOwner.lifecycleScope.launch {
             lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                autoScrollToTop(adapter.loadStateFlow)
                 launch {
                     adapter.loadStateFlow.map {
                         Log.d(TAG, "sourceUp: ${it.debugEmoji()}")
@@ -164,21 +163,6 @@ class ListWithState @JvmOverloads constructor(
         }
         binding.retryButton.setOnClickListener {
             refresh?.invoke()
-        }
-    }
-
-    @Suppress("UnusedPrivateMember")
-    private fun CoroutineScope.autoScrollToTop(
-        statesFlow: Flow<CombinedLoadStates>
-    ) {
-        launch {
-            statesFlow.filter {
-                val mediator = it.mediator
-                mediator != null && mediator.refresh.isNotLoading && it.source.refresh.isNotLoading
-            }.take(1).collect {
-                Log.i(TAG, "autoScrollToTop: ${it.debugEmoji()}")
-                binding.list.smoothScrollToPosition(0)
-            }
         }
     }
 
