@@ -7,7 +7,6 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine as combineFlows
 import kotlinx.coroutines.flow.debounce as flowDebounce
@@ -66,8 +65,4 @@ fun <T> Flow<T>.observe(owner: LifecycleOwner, function: (T) -> Unit) {
     lifecycleOwner.lifecycleScope.launch {
         collect(function)
     }
-}
-
-fun <T> MutableStateFlow<T>.update(function: (T) -> T) {
-    value = function(value)
 }
