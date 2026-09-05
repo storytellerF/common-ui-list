@@ -1,4 +1,4 @@
-package com.storyteller_f.ui_list.ui
+package com.storyteller_f.common_ui_list.ui
 
 import android.content.Context
 import android.graphics.Canvas
@@ -12,11 +12,7 @@ import android.widget.FrameLayout
 import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.distinctUntilChanged
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.map
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.paging.CombinedLoadStates
 import androidx.paging.LoadState
@@ -27,21 +23,25 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.storyteller_f.common_vm_ktx.combine
 import com.storyteller_f.common_vm_ktx.debounce
+import com.storyteller_f.common_vm_ktx.state
 import com.storyteller_f.slim_ktx.exceptionMessage
 import com.storyteller_f.ui_list.adapter.ManualAdapter
 import com.storyteller_f.ui_list.adapter.SimpleDataAdapter
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
 import com.storyteller_f.ui_list.core.AbstractViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
-import com.storyteller_f.ui_list.databinding.ListWithStateBinding
+import com.storyteller_f.common_ui_list.databinding.ListWithStateBinding
 import com.storyteller_f.ui_list.source.DataHandler
 import com.storyteller_f.ui_list.source.isError
 import com.storyteller_f.ui_list.source.isLoading
 import com.storyteller_f.ui_list.source.isNotLoading
+import com.storyteller_f.ui_list.ui.SimpleLoadStateAdapter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -142,23 +142,12 @@ class ListWithState @JvmOverloads constructor(
         binding.retryButton.setOnClickListener {
             handler.retry(lifecycleOwner.lifecycleScope)
         }
-        handler.loadState.map { simple(it.loadState, it.itemCount) }.observe(lifecycleOwner) {
-            flash(it)
+        lifecycleOwner.lifecycleScope.launch {
+            lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                handler.loadState.map { simple(it.loadState, it.itemCount) }.collect(::flash)
+            }
         }
         setupSwapSupport(adapter)
-    }
-
-    @Deprecated(
-        message = "Use DataHandler with a business ViewModel instead of SimpleDataViewModel.",
-        level = DeprecationLevel.WARNING
-    )
-    @Suppress("DEPRECATION")
-    fun dataUp(
-        adapter: SimpleDataAdapter<*, *>,
-        lifecycleOwner: LifecycleOwner,
-        vm: com.storyteller_f.ui_list.source.SimpleDataViewModel<*, *, *>,
-    ) {
-        dataUp(adapter, lifecycleOwner, vm.handler)
     }
 
     @Suppress("unused")
@@ -301,14 +290,14 @@ class ListWithState @JvmOverloads constructor(
     }
 
     fun setupClickSelectableSupport(
-        editing: MutableLiveData<Boolean>,
+        editing: StateFlow<Boolean>,
         lifecycleOwner: LifecycleOwner,
         selectableDrawer: SelectableDrawer,
-        selectedItemHolders: LiveData<List<DataItemHolder>>,
+        selectedItemHolders: StateFlow<List<DataItemHolder>>,
     ) {
         combine(("editing" to editing), ("selected" to selectedItemHolders)).distinctUntilChanged()
             .debounce(200)
-            .observe(lifecycleOwner) {
+            .state(lifecycleOwner) {
                 val adapter = binding.list.adapter
                 binding.list.adapter = adapter
             }
@@ -320,7 +309,7 @@ class ListWithState @JvmOverloads constructor(
                 state: RecyclerView.State
             ) {
                 super.getItemOffsets(outRect, view, parent, state)
-                if (editing.value == true) {
+                if (editing.value) {
                     val childAdapterPosition = parent.getChildAdapterPosition(view)
                     val childViewHolder = parent.getChildViewHolder(view)
                     val itemHolder =
@@ -335,7 +324,7 @@ class ListWithState @JvmOverloads constructor(
 
             override fun onDraw(c: Canvas, parent: RecyclerView, state: RecyclerView.State) {
                 super.onDraw(c, parent, state)
-                if (editing.value == true) {
+                if (editing.value) {
                     for (i in 0 until parent.childCount) {
                         val child = parent.getChildAt(i)
                         val top = child.top
@@ -355,7 +344,7 @@ class ListWithState @JvmOverloads constructor(
                             parent,
                             state,
                             itemHolder,
-                            selectedItemHolders.value?.contains(itemHolder) == true
+                            selectedItemHolders.value.contains(itemHolder)
                         )
                     }
                 }

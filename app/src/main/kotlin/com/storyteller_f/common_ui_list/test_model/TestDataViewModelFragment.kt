@@ -21,6 +21,7 @@ import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.event.viewBinding
 import com.storyteller_f.ui_list.source.DataHandler
 import com.storyteller_f.ui_list.source.SimpleDataRepository
+import kotlinx.coroutines.flow.collectLatest
 import kotlin.reflect.KClass
 
 class Test {
@@ -54,7 +55,7 @@ open class TestDataViewModelFragment : CommonFragment(R.layout.fragment_test_dat
         super.onViewCreated(view, savedInstanceState)
         binding.listWithState.dataUp(adapter, viewLifecycleOwner, data.dataHandler)
         repeatOnViewResumed {
-            data.content.observe(viewLifecycleOwner) {
+            data.content.collectLatest {
                 adapter.submitData(it)
             }
         }

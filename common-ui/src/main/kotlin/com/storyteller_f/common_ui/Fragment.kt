@@ -30,6 +30,7 @@ abstract class SimpleFragment<T : ViewBinding>(
 ) : CommonFragment() {
     private var _binding: T? = null
     val binding: T get() = _binding!!
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val bindingLocal = viewBindingInflateFactory(layoutInflater)
         _binding = bindingLocal
@@ -45,12 +46,6 @@ abstract class SimpleFragment<T : ViewBinding>(
     }
 }
 
-/**
- * fragment 中的toolbar 有两种情况
- * 1 使用activity 的toolbar
- * 2 使用fragment 自己的toolbar ，这时不能使用supportToolbar 等方法。
- * RegularFragment 使用的是第一种方法，假定activity 含有一个toolbar，且这个toolbar 是包含一个ComposeView的
- */
 abstract class RegularFragment<T : ViewBinding>(
     viewBindingFactory: (LayoutInflater) -> T
 ) : SimpleFragment<T>(viewBindingFactory) {

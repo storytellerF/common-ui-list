@@ -84,7 +84,6 @@ kotlin {
 dependencies {
 //    implementation(libs.startup)
     implementation(project(":slim-ktx"))
-    implementation(project(":common-ktx"))
     implementation(project(":compat-ktx"))
     implementation(project(":common-ui"))
     implementation(project(":ui-list"))
@@ -97,6 +96,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.fragment.ktx)
     implementation(libs.activity.ktx)
+    implementation(libs.swipe.refresh)
     implementation(libs.retrofit)
     implementation(libs.retrofit.mock)
     implementation(libs.log.receptor)

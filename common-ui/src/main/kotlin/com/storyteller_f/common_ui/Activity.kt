@@ -22,6 +22,7 @@ abstract class SimpleActivity<T : ViewBinding>(
 ) : AppCompatActivity(), Registry {
     private var _binding: T? = null
     val binding: T get() = _binding!!
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val bindingLocal = viewBindingFactory(layoutInflater)
@@ -31,6 +32,7 @@ abstract class SimpleActivity<T : ViewBinding>(
     }
 
     abstract fun onBindViewEvent(binding: T)
+
     override fun onDestroy() {
         super.onDestroy()
         _binding = null

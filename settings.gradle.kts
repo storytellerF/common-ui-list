@@ -37,7 +37,6 @@ include(":composite-compiler-ksp")
 
 include(":common-vm-ktx")
 include(":common-ui")
-include(":common-ktx")
 include(":common-pr")
 include(":slim-ktx")
 include(":compat-ktx")

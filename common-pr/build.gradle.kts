@@ -19,7 +19,6 @@ kotlin {
 dependencies {
     ksp(project(":ext-func-compiler"))
     implementation(project(":ext-func-definition"))
-    implementation(project(":common-ktx"))
     implementation(project(":common-vm-ktx"))
     implementation(project(":common-ui"))
     testImplementation(libs.junit)
@@ -27,4 +26,5 @@ dependencies {
     androidTestImplementation(libs.android.espresso)
     implementation(libs.navigation.common.ktx)
     implementation(libs.navigation.fragment.ktx)
+    implementation(libs.fragment.ktx)
 }

@@ -16,8 +16,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -25,6 +23,8 @@ import androidx.viewbinding.ViewBinding
 import com.storyteller_f.slim_ktx.IndexManager
 import com.storyteller_f.ui_list.event.findActivityOrNull
 import com.storyteller_f.ui_list.event.findFragmentOrNull
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlin.reflect.KClass
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -66,12 +66,12 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: 
     /**
      * 在moveToCreate 中会创建一个BindLifecycleOwner
      */
-    private val _holderLifecycleOwnerLiveData = MutableLiveData<BindLifecycleOwner?>()
-    val holderLifecycleLiveData: LiveData<BindLifecycleOwner?> by ::_holderLifecycleOwnerLiveData
+    private val _holderLifecycleOwner = MutableStateFlow<BindLifecycleOwner?>(null)
+    val holderLifecycleOwnerFlow: StateFlow<BindLifecycleOwner?> = _holderLifecycleOwner
 
     @Suppress("MemberVisibilityCanBePrivate")
     val holderLifecycleOwner: LifecycleOwner get() = holderLifecycleOwnerOrNull!!
-    val holderLifecycleOwnerOrNull get() = _holderLifecycleOwnerLiveData.value
+    val holderLifecycleOwnerOrNull get() = _holderLifecycleOwner.value
 
     private var _itemHolder: IH? = null
 
@@ -231,11 +231,11 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: 
     }
 
     private fun bindLifecycleOwner() {
-        _holderLifecycleOwnerLiveData.value = BindLifecycleOwner()
+        _holderLifecycleOwner.value = BindLifecycleOwner()
     }
 
     private fun unbindLifecycleOwner() {
-        _holderLifecycleOwnerLiveData.value = null
+        _holderLifecycleOwner.value = null
     }
 
     /**

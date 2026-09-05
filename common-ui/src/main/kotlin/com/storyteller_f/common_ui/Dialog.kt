@@ -18,14 +18,12 @@ abstract class CommonDialogFragment : DialogFragment(), ResponseFragment {
     override val vm by responseModel
 }
 
-/**
- * @param viewBindingFactory inflate
- */
 abstract class SimpleDialogFragment<T : ViewBinding>(
     val viewBindingFactory: (LayoutInflater) -> T
 ) : CommonDialogFragment() {
     private var _binding: T? = null
     val binding: T get() = _binding!!
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val bindingLocal = viewBindingFactory(layoutInflater)
         _binding = bindingLocal

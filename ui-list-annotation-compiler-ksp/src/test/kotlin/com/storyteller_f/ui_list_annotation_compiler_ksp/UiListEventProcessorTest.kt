@@ -101,7 +101,10 @@ class UiListEventProcessorTest {
     }
 
     private fun String.normalizeGenerated(): String =
-        replace(Regex("/tmp/Kotlin-Compilation[^/]+/sources/"), "<sources>/")
+        replace(
+            Regex("(?:[A-Za-z]:[/\\\\][^\\r\\n]*?Kotlin-Compilation[^/\\\\]+[/\\\\]sources[/\\\\]|/tmp/Kotlin-Compilation[^/]+/sources/)"),
+            "<sources>/"
+        )
             .replace("\r\n", "\n")
             .trim()
 }

@@ -40,7 +40,6 @@ setupDeprecationCheck(listOf(""))
 setupDetekt()
 setupKover(
     listOf(
-        "common-ktx",
         "common-pr",
         "common-ui",
         "common-vm-ktx",

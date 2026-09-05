@@ -110,11 +110,6 @@ class ExtFuncProcessor(private val codeGenerator: CodeGenerator, private val log
 
                     ExtFuncFlatType.V5 -> generatePropertyV5(it)
 
-                    ExtFuncFlatType.V6 -> setOf(
-                        "androidx.lifecycle.LiveData", "androidx.lifecycle.MediatorLiveData"
-                    ) to generateForV6()
-
-                    ExtFuncFlatType.V7 -> setOf<String>() to generateForV7()
                     ExtFuncFlatType.V8 -> setOf<String>() to generateForV8(it, logger)
                 }
             }

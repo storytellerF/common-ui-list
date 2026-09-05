@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     tools:context=".test_model.TestDataViewModelFragment">
 
-    <com.storyteller_f.ui_list.ui.ListWithState
+    <com.storyteller_f.common_ui_list.ui.ListWithState
         android:id="@+id/list_with_state"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

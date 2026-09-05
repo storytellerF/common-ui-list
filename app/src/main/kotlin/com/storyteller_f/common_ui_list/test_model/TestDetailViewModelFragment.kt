@@ -11,6 +11,7 @@ import com.storyteller_f.common_ui_list.db.RepoDatabase
 import com.storyteller_f.common_ui_list.db.requireRepoDatabase
 import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.ui_list.source.DetailHandler
+import com.storyteller_f.common_vm_ktx.state
 
 class TestDetailViewModelFragment : RegularFragment<FragmentTestDetailBinding>(FragmentTestDetailBinding::inflate) {
 
@@ -22,8 +23,8 @@ class TestDetailViewModelFragment : RegularFragment<FragmentTestDetailBinding>(F
 
     override fun onBindViewEvent(binding: FragmentTestDetailBinding) {
         val textView: TextView = binding.textNotifications
-        detail.content.observe(viewLifecycleOwner) {
-            textView.text = it.fullName
+        detail.content.state(viewLifecycleOwner) { repo ->
+            textView.text = repo?.fullName.orEmpty()
         }
     }
 }

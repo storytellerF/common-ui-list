@@ -10,6 +10,11 @@ class IndentKtTest {
     fun testIndent() {
         assertTrue("test\nhello".indentStartAt().startsWith("test"))
         assertTrue("test\nhello".indentStartAt(0).startsWith(" "))
+        assertEquals(
+            "first\n    \n    \n    last",
+            "first\n\n    \nlast".indentStartAt(indent = "    "),
+        )
+        assertEquals("first\nsecond", "first\nsecond".indentStartAt(startIndex = 2))
     }
 
     @Test
@@ -18,5 +23,6 @@ class IndentKtTest {
         assertEquals("hello", "$1".replaceCode("hello".yes()))
         assertEquals("hello\n    world", "$1".replaceCode("hello\nworld".yes()))
         assertEquals("hello\n    world", "    $1".trimAndReplaceCode("hello\nworld".yes()))
+        assertEquals("first + second", "$1 + $2".replaceCode("first".no(), "second".no()))
     }
 }

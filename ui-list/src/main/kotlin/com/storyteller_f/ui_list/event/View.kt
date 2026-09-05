@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentManager.findFragment
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
@@ -19,46 +20,39 @@ class FragmentViewBindingDelegate<T : ViewBinding>(
     val viewBindingFactory: (View) -> T
 ) : ReadOnlyProperty<Fragment, T> {
     private var binding: T? = null
+    private val lifecycleCallbacks = object : FragmentManager.FragmentLifecycleCallbacks() {
+        override fun onFragmentViewDestroyed(fragmentManager: FragmentManager, destroyed: Fragment) {
+            if (destroyed === fragment) binding = null
+        }
+    }
 
     init {
         fragment.lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onCreate(owner: LifecycleOwner) {
-                fragment.viewLifecycleOwnerLiveData.observe(fragment) { viewLifecycleOwner: LifecycleOwner? ->
-                    viewLifecycleOwner?.lifecycle?.addObserver(object : DefaultLifecycleObserver {
-                        override fun onDestroy(owner: LifecycleOwner) {
-                            binding = null
-                        }
-                    })
-                }
+                fragment.parentFragmentManager.registerFragmentLifecycleCallbacks(lifecycleCallbacks, false)
+            }
+
+            override fun onDestroy(owner: LifecycleOwner) {
+                fragment.parentFragmentManager.unregisterFragmentLifecycleCallbacks(lifecycleCallbacks)
             }
         })
     }
 
     override fun getValue(thisRef: Fragment, property: KProperty<*>): T {
-        val binding = binding
-        if (binding != null) {
-            return binding
+        binding?.let { return it }
+        check(fragment.viewLifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.INITIALIZED)) {
+            "Should not attempt to get bindings when Fragment views are destroyed."
         }
-        val lifecycle = fragment.viewLifecycleOwner.lifecycle
-        check(
-            lifecycle.currentState.isAtLeast(Lifecycle.State.INITIALIZED)
-        ) { "Should not attempt to get bindings when Fragment views are destroyed." }
-        return viewBindingFactory(thisRef.requireView()).also { this.binding = it }
+        return viewBindingFactory(thisRef.requireView()).also { binding = it }
     }
 }
 
 fun <T : ViewBinding> Fragment.viewBinding(viewBindingFactory: (View) -> T) =
     FragmentViewBindingDelegate(this, viewBindingFactory)
 
-/**
- * 需要在onCreate 中使用，自动为activity 设置contentView
- * 所以即使用不到，也需要进行引用以确保正常
- */
 inline fun <T : ViewBinding> AppCompatActivity.viewBinding(crossinline bindingInflater: (LayoutInflater) -> T) =
     lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
-        val invoke = bindingInflater.invoke(layoutInflater)
-        setContentView(invoke.root)
-        invoke
+        bindingInflater(layoutInflater).also { setContentView(it.root) }
     }
 
 /**

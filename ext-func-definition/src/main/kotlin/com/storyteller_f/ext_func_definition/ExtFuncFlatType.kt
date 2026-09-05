@@ -5,8 +5,6 @@ enum class ExtFuncFlatType {
     V3, // fragment view view_binding
     V4, // int to float
     V5, // axx pxx
-    V6, // combineDao
-    V7, // Dao
     V8, // non interface delegate
 }
 
