@@ -1,4 +1,4 @@
-package com.storyteller_f.ui_list.event
+package com.storyteller_f.common_ui
 
 import android.view.View
 import androidx.fragment.app.Fragment

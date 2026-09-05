@@ -7,7 +7,6 @@ import android.widget.EditText
 import androidx.fragment.app.FragmentActivity
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -19,38 +18,24 @@ import org.robolectric.Shadows
 @RunWith(RobolectricTestRunner::class)
 class ViewTest {
     @Test
-    fun `click post visibility and margins update the target view`() {
+    fun `click margins and layout inflation update the target view`() {
         val activity = Robolectric.buildActivity(FragmentActivity::class.java).setup().get()
         val view = View(activity).apply {
             layoutParams = ViewGroup.MarginLayoutParams(20, 20)
         }
         activity.setContentView(view)
         var clicks = 0
-        var posted = false
-        var visibleValue = ""
-
         view.setOnClick { clicks++ }
         view.performClick()
-        view.pp { posted = it === view }
-        view.setVisible(true) { assertTrue(it === view) }
-        view.setVisible("shown", { value: String -> value == "shown" }) { _, value: String ->
-            visibleValue = value
-        }
         view.updateMargins {
             leftMargin = 3
             topMargin = 4
         }
-        Shadows.shadowOf(Looper.getMainLooper()).idle()
 
         assertEquals(1, clicks)
-        assertTrue(posted)
-        assertTrue(view.visibility == View.VISIBLE)
-        assertEquals("shown", visibleValue)
         assertEquals(3, (view.layoutParams as ViewGroup.MarginLayoutParams).leftMargin)
         assertEquals(4, (view.layoutParams as ViewGroup.MarginLayoutParams).topMargin)
 
-        view.setVisible(1, { value: String -> value.isNotEmpty() }) { _, _ -> error("wrong type") }
-        assertFalse(view.visibility == View.VISIBLE)
         assertTrue(
             RuntimeEnvironment.getApplication().lf.inflate(android.R.layout.simple_list_item_1, null)
                 is android.widget.TextView,

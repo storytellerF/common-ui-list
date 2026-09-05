@@ -26,7 +26,6 @@ android {
 }
 
 dependencies {
-    implementation(project(":slim-ktx"))
     implementation(project(":ui-list-annotation-definition"))
     testImplementation(libs.junit)
     androidTestImplementation(libs.android.junit)

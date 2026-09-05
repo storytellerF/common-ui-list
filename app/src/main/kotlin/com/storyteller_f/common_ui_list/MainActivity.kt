@@ -27,7 +27,7 @@ import androidx.paging.insertSeparators
 import androidx.paging.map
 import androidx.recyclerview.widget.RecyclerView
 import com.storyteller_f.annotation_defination.BindClickEvent
-import com.storyteller_f.common_pr.dipToInt
+import com.storyteller_f.common_ui.dipToInt
 import com.storyteller_f.common_ui.navigator
 import com.storyteller_f.common_ui.owner
 import com.storyteller_f.common_ui.repeatOnViewResumed
@@ -46,20 +46,19 @@ import com.storyteller_f.common_ui_list.holders.seprator.ui_list.registerSeparat
 import com.storyteller_f.common_ui_list.holders.ui_list.registerRepoItemHolder
 import com.storyteller_f.common_ui_list.test_model.TestViewModelActivity
 import com.storyteller_f.common_ui_list.test_navigation.TestNavigationResultActivity
-import com.storyteller_f.common_vm_ktx.update
 import com.storyteller_f.common_vm_ktx.vm
-import com.storyteller_f.slim_ktx.toggle
 import com.storyteller_f.ui_list.core.AbstractViewHolder
 import com.storyteller_f.ui_list.core.BuildBatch
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.source.SimpleSourceRepository
 import com.storyteller_f.ui_list.source.SourceHandler
 import com.storyteller_f.common_ui_list.ui.ListWithState
-import com.storyteller_f.ui_list.event.viewBinding
+import com.storyteller_f.common_ui.viewBinding
 import com.storyteller_f.view_holder_compose.ComposeSourceAdapter
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import kotlin.reflect.KClass
 
 class MainActivity : AppCompatActivity() {
@@ -174,7 +173,7 @@ class MainActivity : AppCompatActivity() {
         Toast.makeText(this, itemHolder.repo.fullName, Toast.LENGTH_SHORT).show()
         selectedItemHolder.update {
             it?.toMutableList()?.apply {
-                toggle(itemHolder)
+                if (contains(itemHolder)) remove(itemHolder) else add(itemHolder)
             } ?: listOf(itemHolder)
         }
     }

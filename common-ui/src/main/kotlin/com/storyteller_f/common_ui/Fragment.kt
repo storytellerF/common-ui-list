@@ -11,10 +11,6 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.viewbinding.ViewBinding
 
-/**
- * @author storyteller_f
- */
-
 abstract class CommonFragment(layoutRes: Int = 0) : Fragment(layoutRes), ResponseFragment, Registry {
 
     override val vm by responseModel
@@ -31,7 +27,7 @@ abstract class SimpleFragment<T : ViewBinding>(
     private var _binding: T? = null
     val binding: T get() = _binding!!
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val bindingLocal = viewBindingInflateFactory(layoutInflater)
         _binding = bindingLocal
         onBindViewEvent(binding)
@@ -62,6 +58,5 @@ abstract class RegularFragment<T : ViewBinding>(
 val Fragment.toolbar: ActionBar
     get() = (activity as AppCompatActivity).supportActionBar!!
 
-val Fragment.toolbarCompose
-    get() = (activity!!.findViewById<Toolbar>(R.id.toolbar)).getChildAt(0) as
-        ComposeView
+val Fragment.toolbarCompose: ComposeView
+    get() = (activity!!.findViewById<Toolbar>(R.id.toolbar)).getChildAt(0) as ComposeView

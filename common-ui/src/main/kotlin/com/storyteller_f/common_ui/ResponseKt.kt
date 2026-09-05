@@ -1,6 +1,6 @@
 @file:Suppress("detekt.formatting")
 
-package com.storyteller_f.common_pr
+package com.storyteller_f.common_ui
 
 import android.os.Parcelable
 import androidx.fragment.app.Fragment
@@ -8,10 +8,6 @@ import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavDirections
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
-import com.storyteller_f.common_ui.FragmentRequest
-import com.storyteller_f.common_ui.Registry
-import com.storyteller_f.common_ui.observeResponse
-import com.storyteller_f.common_ui.request
 import kotlin.reflect.KClass
 
 

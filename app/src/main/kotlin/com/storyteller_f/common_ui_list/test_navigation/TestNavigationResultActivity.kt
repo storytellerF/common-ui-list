@@ -1,20 +1,22 @@
 package com.storyteller_f.common_ui_list.test_navigation
 
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import com.google.android.material.snackbar.Snackbar
-import com.storyteller_f.common_pr.response
-import com.storyteller_f.common_ui.CommonActivity
+import com.storyteller_f.common_ui.Registry
+import com.storyteller_f.common_ui.observeResponse
 import com.storyteller_f.common_ui.request
+import com.storyteller_f.common_ui.response
 import com.storyteller_f.common_ui_list.R
 import com.storyteller_f.common_ui_list.databinding.ActivityTestNavigationResultBinding
 import com.storyteller_f.common_ui_list.dialog.TestDialog2
-import com.storyteller_f.ui_list.event.viewBinding
+import com.storyteller_f.common_ui.viewBinding
 
-class TestNavigationResultActivity : CommonActivity() {
+class TestNavigationResultActivity : AppCompatActivity(), Registry {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private val binding by viewBinding(ActivityTestNavigationResultBinding::inflate)
@@ -33,6 +35,11 @@ class TestNavigationResultActivity : CommonActivity() {
                     .setAction("activity->dialog", null).show()
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        observeResponse()
     }
 
     override fun onSupportNavigateUp(): Boolean {

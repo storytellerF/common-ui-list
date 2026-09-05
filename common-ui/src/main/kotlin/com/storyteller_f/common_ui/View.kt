@@ -24,12 +24,6 @@ fun <T : View> T.setOnClick(block: (T) -> Unit) {
     }
 }
 
-fun <T : View> T.pp(block: (T) -> Unit) {
-    post {
-        block(this)
-    }
-}
-
 val WindowInsetsCompat.navigator get() = getInsets(WindowInsetsCompat.Type.navigationBars())
 
 val WindowInsetsCompat.status get() = getInsets(WindowInsetsCompat.Type.statusBars())
@@ -40,42 +34,9 @@ inline fun View.updateMargins(block: ViewGroup.MarginLayoutParams.() -> Unit) {
     updateLayoutParams(block)
 }
 
-@RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
-fun View.updateMargin(rect: Direction) {
-    updateMargins {
-        marginStart = rect.start
-        marginEnd = rect.end
-        topMargin = rect.top
-        bottomMargin = rect.bottom
-    }
-}
-
-fun <T : View> T.setVisible(visible: Boolean, block: (T) -> Unit) {
-    isVisible = visible
-    if (visible) {
-        block(this)
-    }
-}
-
-inline fun <T : View, reified V> T.setVisible(obj: Any, visible: (V) -> Boolean, block: (T, V) -> Unit) {
-    val b = if (obj is V) {
-        visible(obj)
-    } else {
-        false
-    }
-    isVisible = b
-    if (b) block(this, obj as V)
-}
-
 @ExtFuncFlat()
 val Context.lf: LayoutInflater
     get() = LayoutInflater.from(this)
-
-fun List<View>.onVisible(view: View) {
-    forEach {
-        it.isVisible = it === view
-    }
-}
 
 fun <T> MutableStateFlow<T?>.bind(
     owner: LifecycleOwner,

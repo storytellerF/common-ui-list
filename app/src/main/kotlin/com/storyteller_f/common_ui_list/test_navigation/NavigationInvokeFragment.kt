@@ -3,10 +3,9 @@ package com.storyteller_f.common_ui_list.test_navigation
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
-import com.storyteller_f.common_pr.request
-import com.storyteller_f.common_pr.response
 import com.storyteller_f.common_ui.SimpleFragment
 import com.storyteller_f.common_ui.request
+import com.storyteller_f.common_ui.response
 import com.storyteller_f.common_ui.setOnClick
 import com.storyteller_f.common_ui_list.R
 import com.storyteller_f.common_ui_list.databinding.FragmentNavigationInvokeBinding

@@ -83,7 +83,6 @@ kotlin {
 
 dependencies {
 //    implementation(libs.startup)
-    implementation(project(":slim-ktx"))
     implementation(project(":compat-ktx"))
     implementation(project(":common-ui"))
     implementation(project(":ui-list"))
@@ -113,5 +112,4 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.android.junit)
     androidTestImplementation(libs.android.espresso)
-    implementation(project(":common-pr"))
 }

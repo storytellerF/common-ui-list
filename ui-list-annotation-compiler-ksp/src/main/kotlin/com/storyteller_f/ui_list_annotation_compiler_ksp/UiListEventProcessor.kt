@@ -22,7 +22,6 @@ import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.annotation_defination.BindItemHolder
 import com.storyteller_f.annotation_defination.BindLongClickEvent
 import com.storyteller_f.annotation_defination.ItemHolder
-import com.storyteller_f.slim_ktx.nestedGroupBy
 import com.storyteller_f.ui_list_annotation_common.Entry
 import com.storyteller_f.ui_list_annotation_common.Event
 import com.storyteller_f.ui_list_annotation_common.Holder
@@ -34,6 +33,20 @@ import kotlin.reflect.KClass
 data class Identity(val fullName: String, val name: String)
 
 data class ItemHolderDefinition(val identity: Identity, val origin: KSAnnotated)
+
+private inline fun <T, K1, K2, V> Sequence<T>.nestedGroupBy(
+    doubleKeySelector: (T) -> Pair<K1, K2>?,
+    valueTransform: (T) -> V
+): Map<K1, Map<K2, List<V>>> {
+    val destination = mutableMapOf<K1, MutableMap<K2, MutableList<V>>>()
+    for (element in this) {
+        val key = doubleKeySelector(element) ?: continue
+        val values = destination.getOrPut(key.first) { mutableMapOf() }
+            .getOrPut(key.second) { mutableListOf() }
+        values.add(valueTransform(element))
+    }
+    return destination
+}
 
 fun BufferedWriter.writeLine(line: String = "") {
     write("$line\n")

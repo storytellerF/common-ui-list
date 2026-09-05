@@ -40,7 +40,6 @@ setupDeprecationCheck(listOf(""))
 setupDetekt()
 setupKover(
     listOf(
-        "common-pr",
         "common-ui",
         "common-vm-ktx",
         "compat-ktx",
@@ -51,7 +50,6 @@ setupKover(
         "composite-definition",
         "ext-func-compiler",
         "ext-func-definition",
-        "slim-ktx",
         "ui-list-annotation-common",
         "ui-list-annotation-compiler-ksp",
         "ui-list-annotation-definition",

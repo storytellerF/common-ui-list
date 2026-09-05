@@ -20,7 +20,6 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
-import com.storyteller_f.slim_ktx.IndexManager
 import com.storyteller_f.ui_list.event.findActivityOrNull
 import com.storyteller_f.ui_list.event.findFragmentOrNull
 import kotlinx.coroutines.flow.MutableStateFlow

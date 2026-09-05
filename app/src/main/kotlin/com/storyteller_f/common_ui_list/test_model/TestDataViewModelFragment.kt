@@ -18,7 +18,7 @@ import com.storyteller_f.ext_func_definition.ExtFuncFlatType
 import com.storyteller_f.ui_list.adapter.SimpleDataAdapter
 import com.storyteller_f.ui_list.core.BuildBatch
 import com.storyteller_f.ui_list.core.DataItemHolder
-import com.storyteller_f.ui_list.event.viewBinding
+import com.storyteller_f.common_ui.viewBinding
 import com.storyteller_f.ui_list.source.DataHandler
 import com.storyteller_f.ui_list.source.SimpleDataRepository
 import kotlinx.coroutines.flow.collectLatest

@@ -1,7 +1,6 @@
 package com.storyteller_f.ext_func_compiler
 
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
-import com.storyteller_f.slim_ktx.yes
 
 internal fun generatePropertyV5(task: ExtFuncProcessor.Task): Pair<Set<String>, String> {
     val arguments = if (task.ksAnnotated is KSFunctionDeclaration) {
@@ -20,10 +19,10 @@ internal fun generatePropertyV5(task: ExtFuncProcessor.Task): Pair<Set<String>, 
 private fun extendVm(extra: String?, task: ExtFuncProcessor.Task): String {
     val parameterList =
         getParameterListExcludeDefaultList(task.ksAnnotated as KSFunctionDeclaration)
-    val parameterString = parameterList.joinToString(",\n").yes(3).indentRest()
+    val parameterString = parameterList.joinToString(",\n").indent(3)
     val second = parameterList.toMutableList().apply {
         add(1, "vmScope: VMScope")
-    }.joinToString(",\n").yes(3).indentRest()
+    }.joinToString(",\n").indent(3)
     return """
         //$extra
         @MainThread
@@ -40,3 +39,12 @@ private fun extendVm(extra: String?, task: ExtFuncProcessor.Task): String {
         )  where T : HasDefaultViewModelProviderFactory, T : ViewModelStoreOwner = ${task.name}(arg, vmScope.storeProducer, vmScope.ownerProducer, vmProducer)
     """.trimIndent()
 }
+
+private fun String.indent(level: Int): String = lineSequence().mapIndexed { index, line ->
+    when {
+        index == 0 -> line
+        line.isNotBlank() -> "    ".repeat(level) + line
+        line.length < 4 -> "    "
+        else -> line
+    }
+}.joinToString("\n")

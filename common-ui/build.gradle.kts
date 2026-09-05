@@ -18,9 +18,10 @@ android {
 dependencies {
     ksp(project(":ext-func-compiler"))
     api(project(":ext-func-definition"))
-    implementation(project(":slim-ktx"))
     implementation(project(":compat-ktx"))
     implementation(project(":common-vm-ktx"))
+    implementation(libs.navigation.common.ktx)
+    implementation(libs.navigation.fragment.ktx)
     implementation(libs.navigation.runtime.ktx)
     implementation(libs.viewbinding)
     implementation(libs.compos.material)

@@ -24,7 +24,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.storyteller_f.common_vm_ktx.combine
 import com.storyteller_f.common_vm_ktx.debounce
 import com.storyteller_f.common_vm_ktx.state
-import com.storyteller_f.slim_ktx.exceptionMessage
 import com.storyteller_f.ui_list.adapter.ManualAdapter
 import com.storyteller_f.ui_list.adapter.SimpleDataAdapter
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
@@ -458,7 +457,9 @@ class ListWithState @JvmOverloads constructor(
                 ?: loadState.mediator?.append as? LoadState.Error
                 ?: loadState.mediator?.prepend as? LoadState.Error
                 ?: loadState.mediator?.refresh as? LoadState.Error
-            val errorSpannable = error?.error?.exceptionMessage?.let {
+            val errorSpannable = error?.error?.let { throwable ->
+                throwable.localizedMessage ?: throwable.message ?: throwable.javaClass.toString()
+            }?.let {
                 SpannableString(it)
             }
             return UIState(

@@ -1,19 +1,11 @@
 @file:Suppress("detekt.formatting")
 
-package com.storyteller_f.common_pr
+package com.storyteller_f.common_ui
 
 import android.content.Context
 import android.util.TypedValue
-import androidx.lifecycle.LifecycleOwner
-import com.storyteller_f.common_vm_ktx.state
 import com.storyteller_f.ext_func_definition.ExtFuncFlat
 import com.storyteller_f.ext_func_definition.ExtFuncFlatType
-import kotlinx.coroutines.flow.Flow
-
-context(owner: LifecycleOwner)
-fun <T> Flow<T>.state(function: (T) -> Unit) {
-    state(owner, function)
-}
 
 context(ctx: Context)
 @ExtFuncFlat(ExtFuncFlatType.V4, isContextReceiver = true)

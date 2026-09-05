@@ -7,16 +7,13 @@ import com.storyteller_f.annotation_defination.ItemHolder
 import com.storyteller_f.common_ui_list.R
 import com.storyteller_f.common_ui_list.databinding.RepoViewItemBinding
 import com.storyteller_f.common_ui_list.model.Repo
-import com.storyteller_f.slim_ktx.propertiesSame
 import com.storyteller_f.ui_list.core.BindingViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
 
 @ItemHolder("repo")
 data class RepoItemHolder(val repo: Repo) : DataItemHolder(key = " from common-ui-list") {
     override fun areItemsTheSame(other: DataItemHolder): Boolean {
-        return propertiesSame(other, {
-            repo.id
-        })
+        return other is RepoItemHolder && repo.id == other.repo.id
     }
 
     val roundedStarCount = repo.stars / 10_000

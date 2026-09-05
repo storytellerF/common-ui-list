@@ -4,10 +4,6 @@ import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSFile
-import com.storyteller_f.slim_ktx.no
-import com.storyteller_f.slim_ktx.replaceCode
-import com.storyteller_f.slim_ktx.trimAndReplaceCode
-import com.storyteller_f.slim_ktx.yes
 import com.storyteller_f.ui_list_annotation_common.Entry
 import com.storyteller_f.ui_list_annotation_common.Event
 import com.storyteller_f.ui_list_annotation_common.EventEntry
