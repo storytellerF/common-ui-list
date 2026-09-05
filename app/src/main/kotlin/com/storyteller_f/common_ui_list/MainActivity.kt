@@ -22,6 +22,9 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.paging.insertSeparators
 import androidx.paging.map
@@ -30,7 +33,6 @@ import com.storyteller_f.annotation_defination.BindClickEvent
 import com.storyteller_f.common_ui.dipToInt
 import com.storyteller_f.common_ui.navigator
 import com.storyteller_f.common_ui.owner
-import com.storyteller_f.common_ui.repeatOnViewResumed
 import com.storyteller_f.common_ui.status
 import com.storyteller_f.common_ui.supportNavigatorBarImmersive
 import com.storyteller_f.common_ui.updateMargins
@@ -59,6 +61,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlin.reflect.KClass
 
 class MainActivity : AppCompatActivity() {
@@ -131,9 +134,11 @@ class MainActivity : AppCompatActivity() {
             selectedItemHolder
         )
         supportNavigatorBarImmersive()
-        repeatOnViewResumed {
-            viewModel.content.collectLatest {
-                adapter.submitData(it)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                viewModel.content.collectLatest {
+                    adapter.submitData(it)
+                }
             }
         }
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
