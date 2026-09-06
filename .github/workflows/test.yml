@@ -13,7 +13,6 @@ on:
       - 'gradle.properties'
       - 'gradlew'
       - 'gradlew.bat'
-      - 'build-on-ci.sh'
       - 'config/**'
       - '.github/workflows/test.yml'
   pull_request:
@@ -28,7 +27,6 @@ on:
       - 'gradle.properties'
       - 'gradlew'
       - 'gradlew.bat'
-      - 'build-on-ci.sh'
       - 'config/**'
       - '.github/workflows/test.yml'
       - '.github/workflows/build-app.yml'
@@ -94,5 +92,10 @@ jobs:
       - name: Upload coverage reports to Codecov
         if: github.event_name == 'push'
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        with:
+          # Upload only the root Kover aggregate. The sample app is deliberately
+          # excluded from its dependency set and must not affect repository coverage.
+          files: build/reports/kover/report.xml
+          disable_search: true
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

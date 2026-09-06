@@ -13,7 +13,6 @@ on:
       - 'gradle.properties'
       - 'gradlew'
       - 'gradlew.bat'
-      - 'build-on-ci.sh'
       - 'config/**'
       - '.github/workflows/test.yml'
       - '.github/workflows/build-app.yml'

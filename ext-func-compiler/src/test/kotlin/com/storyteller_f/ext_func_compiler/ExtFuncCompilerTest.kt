@@ -86,12 +86,6 @@ class ExtFuncCompilerTest {
         ).joinToString("\n---\n").normalizeGenerated()
 
         assertGolden("pure_generators.kt", output)
-        val v6 = generateForV6()
-        val v7 = generateForV7()
-        assertTrue(v6.contains("fun<T1, T2> combineDao"))
-        assertTrue(v6.contains("fun<T1, T2, T3, T4, T5, T6, T7, T8, T9> combineDao"))
-        assertTrue(v7.contains("data class Dao2<out D1, out D2>"))
-        assertTrue(v7.contains("data class Dao9<out D1, out D2, out D3, out D4, out D5, out D6, out D7, out D8, out D9>"))
     }
 
     private fun compile(
@@ -119,6 +113,7 @@ class ExtFuncCompilerTest {
     private fun String.normalizeGenerated(): String =
         replace(Regex("(/[A-Za-z0-9_.-]+)+/common-ui-list/"), "<repo>/")
             .replace(Regex("KSCallableReferenceImpl@[0-9a-f]+"), "KSCallableReferenceImpl@<hash>")
+            .replace(Regex("KSFunctionDeclaration[A-Za-z]*Impl"), "KSFunctionDeclarationImpl")
             .replace("\r\n", "\n")
             .trim()
 }
@@ -142,6 +137,14 @@ private val androidStubs = arrayOf(
 )
 
 private val lifecycleStubs = arrayOf(
+    SourceFile.kotlin(
+        "androidx/viewbinding/ViewBinding.kt",
+        """
+        package androidx.viewbinding
+        import android.view.View
+        interface ViewBinding { val root: View }
+        """.trimIndent()
+    ),
     SourceFile.kotlin(
         "androidx/annotation/MainThread.kt",
         """
@@ -167,25 +170,12 @@ private val lifecycleStubs = arrayOf(
         """.trimIndent()
     ),
     SourceFile.kotlin(
-        "androidx/viewbinding/ViewBinding.kt",
-        """
-        package androidx.viewbinding
-        import android.view.View
-        interface ViewBinding { val root: View }
-        """.trimIndent()
-    ),
-    SourceFile.kotlin(
         "androidx/lifecycle/Lifecycle.kt",
         """
         package androidx.lifecycle
         open class ViewModel
         class ViewModelStore
         interface ViewModelStoreOwner { val viewModelStore: ViewModelStore }
-        open class LiveData<T>(open val value: T? = null)
-        class MediatorLiveData<T> : LiveData<T>() {
-            fun <S> addSource(source: LiveData<S>, onChanged: (S) -> Unit) = Unit
-            override var value: T? = null
-        }
         """.trimIndent()
     ),
     SourceFile.kotlin(

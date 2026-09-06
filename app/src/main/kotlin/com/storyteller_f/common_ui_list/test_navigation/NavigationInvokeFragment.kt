@@ -1,12 +1,18 @@
 package com.storyteller_f.common_ui_list.test_navigation
 
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
-import com.storyteller_f.common_pr.request
-import com.storyteller_f.common_pr.response
-import com.storyteller_f.common_ui.SimpleFragment
+import com.storyteller_f.common_ui.Registry
+import com.storyteller_f.common_ui.ResponseFragment
+import com.storyteller_f.common_ui.observeResponse
 import com.storyteller_f.common_ui.request
+import com.storyteller_f.common_ui.response
+import com.storyteller_f.common_ui.responseModel
 import com.storyteller_f.common_ui.setOnClick
 import com.storyteller_f.common_ui_list.R
 import com.storyteller_f.common_ui_list.databinding.FragmentNavigationInvokeBinding
@@ -16,10 +22,21 @@ import com.storyteller_f.common_ui_list.dialog.TestDialog2
 /**
  * A simple [Fragment] subclass as the default destination in the navigation.
  */
-class NavigationInvokeFragment : SimpleFragment<FragmentNavigationInvokeBinding>(
-    FragmentNavigationInvokeBinding::inflate
-) {
-    override fun onBindViewEvent(binding: FragmentNavigationInvokeBinding) {
+class NavigationInvokeFragment : Fragment(), ResponseFragment, Registry {
+    override val vm by responseModel
+
+    override fun onStart() {
+        super.onStart()
+        observeResponse()
+    }
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
+    ): View = FragmentNavigationInvokeBinding.inflate(inflater, container, false).also(::bind).root
+
+    private fun bind(binding: FragmentNavigationInvokeBinding) {
         binding.buttonFirst.setOnClickListener {
             NavigationInvokeFragmentDirections.actionFirstFragmentToSecondFragment().request()
                 .response(NavigationResultFragment.Result::class.java) { r ->

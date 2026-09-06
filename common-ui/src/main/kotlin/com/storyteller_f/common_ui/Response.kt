@@ -223,6 +223,17 @@ fun <T : Parcelable, F> F.observeResponse(
     val callback = buildCallback(result, action)
     waitingResponseInFragment(fragmentRequest, action, callback)
 }
+/** Re-registers fragment result listeners that were pending before lifecycle recovery. */
+fun <F> F.observeResponse() where F : Fragment, F : Registry {
+    waitingInFragment[registryKey()]?.forEach {
+        val action = it.action
+        val requestKey = it.requestKey
+        val callback = buildCallback(Parcelable::class.java, action)
+        val fragmentManager = fm
+        fragmentManager.clearFragmentResultListener(requestKey)
+        fragmentManager.setFragmentResultListener(requestKey, owner, callback)
+    }
+}
 
 /**
  * 在Activity 中监听结果。
@@ -248,7 +259,7 @@ fun <T : Parcelable, A> A.observeResponse(
 /**
  * 在Activity 中监听结果。
  */
-internal fun <A> A.observeResponse() where A : FragmentActivity, A : Registry {
+fun <A> A.observeResponse() where A : FragmentActivity, A : Registry {
     waitingInActivity[registryKey()]?.forEach {
         val action = it.action
         val requestKey = it.requestKey
@@ -256,19 +267,5 @@ internal fun <A> A.observeResponse() where A : FragmentActivity, A : Registry {
         val supportFragmentManager = fm
         supportFragmentManager.clearFragmentResultListener(requestKey)
         supportFragmentManager.setFragmentResultListener(requestKey, this, callback)
-    }
-}
-
-/**
- * 在Fragment 中监听结果。
- */
-internal fun CommonFragment.observeResponse() {
-    waitingInFragment[registryKey()]?.forEach {
-        val action = it.action
-        val requestKey = it.requestKey
-        val callback = buildCallback(Parcelable::class.java, action)
-        val fragmentManager = fm
-        fragmentManager.clearFragmentResultListener(requestKey)
-        fragmentManager.setFragmentResultListener(requestKey, owner, callback)
     }
 }

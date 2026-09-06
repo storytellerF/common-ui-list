@@ -9,6 +9,7 @@ junit = "4.13.2"
 kotlin = "2.4.10"
 ksp = "2.3.11"
 lifecycleRuntimeKtx = "2.10.0"
+viewbinding = "9.1.0"
 navigationRuntimeKtx = "2.10.0"
 pagingRuntimeKtx = "3.5.1"
 roomRuntime = "2.8.4"
@@ -27,7 +28,6 @@ swipe-refresh = "1.2.0"
 symbolProcessingApi = "2.3.11"
 kotlinCompileTesting = "0.13.0"
 ui = "1.10.4"
-viewbinding = "9.1.0"
 leak-canary = "2.14"
 multi-dex = "2.0.1"
 retrofit = "3.0.0"
@@ -44,13 +44,14 @@ detekt-formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", 
 detekt-rules-ruleauthors = { module = "io.gitlab.arturbosch.detekt:detekt-rules-ruleauthors", version.ref = "detektVersion" }
 junit = { module = "junit:junit", version.ref = "junit" }
 kotlin-plugin-lib = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
-lifecycle-livedata-ktx = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "lifecycleRuntimeKtx" }
 lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
 lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycleRuntimeKtx" }
 lifecycle-viewmodel-savedstate = { module = "androidx.lifecycle:lifecycle-viewmodel-savedstate", version.ref = "lifecycleRuntimeKtx" }
+viewbinding = { module = "androidx.databinding:viewbinding", version.ref = "viewbinding" }
 navigation-common-ktx = { module = "androidx.navigation:navigation-common-ktx", version.ref = "navigationRuntimeKtx" }
 navigation-fragment-ktx = { module = "androidx.navigation:navigation-fragment-ktx", version.ref = "navigationRuntimeKtx" }
 navigation-runtime-ktx = { module = "androidx.navigation:navigation-runtime-ktx", version.ref = "navigationRuntimeKtx" }
+navigation-testing = { module = "androidx.navigation:navigation-testing", version.ref = "navigationRuntimeKtx" }
 paging-runtime-ktx = { module = "androidx.paging:paging-runtime-ktx", version.ref = "pagingRuntimeKtx" }
 room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomRuntime" }
 room-paging = { module = "androidx.room:room-paging", version.ref = "roomRuntime" }
@@ -68,7 +69,6 @@ swipe-refresh = { module = "androidx.swiperefreshlayout:swiperefreshlayout", ver
 symbol-processing-api = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "symbolProcessingApi" }
 kotlin-compile-testing-ksp = { module = "dev.zacsweers.kctfork:ksp", version.ref = "kotlinCompileTesting" }
 ui = { module = "androidx.compose.ui:ui", version.ref = "ui" }
-viewbinding = { module = "androidx.databinding:viewbinding", version.ref = "viewbinding" }
 leak-canary = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leak-canary" }
 multi-dex = { module = "androidx.multidex:multidex", version.ref = "multi-dex" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }

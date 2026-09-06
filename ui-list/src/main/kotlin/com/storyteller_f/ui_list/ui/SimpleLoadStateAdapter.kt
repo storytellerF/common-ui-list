@@ -15,10 +15,7 @@ class SimpleLoadStateAdapter(private val retry: () -> Unit) :
         holder.bind(loadState)
     }
 
-    override fun onCreateViewHolder(
-        parent: ViewGroup,
-        loadState: LoadState
-    ): SimpleLoadStateViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, loadState: LoadState): SimpleLoadStateViewHolder {
         return SimpleLoadStateViewHolder.create(parent, retry)
     }
 }

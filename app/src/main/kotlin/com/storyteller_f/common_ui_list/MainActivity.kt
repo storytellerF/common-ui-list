@@ -21,17 +21,18 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.paging.insertSeparators
 import androidx.paging.map
 import androidx.recyclerview.widget.RecyclerView
 import com.storyteller_f.annotation_defination.BindClickEvent
-import com.storyteller_f.common_pr.dipToInt
+import com.storyteller_f.common_ui.dipToInt
 import com.storyteller_f.common_ui.navigator
 import com.storyteller_f.common_ui.owner
-import com.storyteller_f.common_ui.repeatOnViewResumed
 import com.storyteller_f.common_ui.status
 import com.storyteller_f.common_ui.supportNavigatorBarImmersive
 import com.storyteller_f.common_ui.updateMargins
@@ -47,24 +48,25 @@ import com.storyteller_f.common_ui_list.holders.seprator.ui_list.registerSeparat
 import com.storyteller_f.common_ui_list.holders.ui_list.registerRepoItemHolder
 import com.storyteller_f.common_ui_list.test_model.TestViewModelActivity
 import com.storyteller_f.common_ui_list.test_navigation.TestNavigationResultActivity
-import com.storyteller_f.common_vm_ktx.update
 import com.storyteller_f.common_vm_ktx.vm
-import com.storyteller_f.slim_ktx.toggle
 import com.storyteller_f.ui_list.core.AbstractViewHolder
 import com.storyteller_f.ui_list.core.BuildBatch
 import com.storyteller_f.ui_list.core.DataItemHolder
-import com.storyteller_f.ui_list.event.viewBinding
 import com.storyteller_f.ui_list.source.SimpleSourceRepository
 import com.storyteller_f.ui_list.source.SourceHandler
-import com.storyteller_f.ui_list.ui.ListWithState
+import com.storyteller_f.common_ui_list.ui.ListWithState
+import com.storyteller_f.common_ui.viewBinding
 import com.storyteller_f.view_holder_compose.ComposeSourceAdapter
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlin.reflect.KClass
 
 class MainActivity : AppCompatActivity() {
     private val binding by viewBinding(ActivityMainBinding::inflate)
-    private val editing = MutableLiveData(false)
+    private val editing = MutableStateFlow(false)
     private val viewModel by vm({
         MainDependencies(requireReposService, requireRepoDatabase)
     }) { dependencies: MainDependencies ->
@@ -79,7 +81,7 @@ class MainActivity : AppCompatActivity() {
             }
         )
 
-    private val selectedItemHolder = MutableLiveData<List<DataItemHolder>>()
+    private val selectedItemHolder = MutableStateFlow<List<DataItemHolder>>(emptyList())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -132,9 +134,11 @@ class MainActivity : AppCompatActivity() {
             selectedItemHolder
         )
         supportNavigatorBarImmersive()
-        repeatOnViewResumed {
-            viewModel.content.collectLatest {
-                adapter.submitData(it)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                viewModel.content.collectLatest {
+                    adapter.submitData(it)
+                }
             }
         }
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
@@ -174,7 +178,7 @@ class MainActivity : AppCompatActivity() {
         Toast.makeText(this, itemHolder.repo.fullName, Toast.LENGTH_SHORT).show()
         selectedItemHolder.update {
             it?.toMutableList()?.apply {
-                toggle(itemHolder)
+                if (contains(itemHolder)) remove(itemHolder) else add(itemHolder)
             } ?: listOf(itemHolder)
         }
     }

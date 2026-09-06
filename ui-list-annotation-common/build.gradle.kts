@@ -5,5 +5,5 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":slim-ktx"))
+    testImplementation(libs.junit)
 }

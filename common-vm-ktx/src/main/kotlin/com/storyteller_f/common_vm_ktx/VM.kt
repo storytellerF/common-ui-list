@@ -10,7 +10,6 @@ import androidx.activity.ComponentActivity
 import androidx.annotation.MainThread
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.HasDefaultViewModelProviderFactory
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -23,6 +22,7 @@ import androidx.lifecycle.viewmodel.MutableCreationExtras
 import com.storyteller_f.ext_func_definition.ExtFuncFlat
 import com.storyteller_f.ext_func_definition.ExtFuncFlatType
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlin.reflect.KClass
 import kotlin.reflect.cast
@@ -186,7 +186,7 @@ inline fun <reified VM : ViewModel, T, ARG> T.svm(
     }
 
 class GenericValueModel<T> : ViewModel() {
-    val data = MutableLiveData<T>()
+    val data = MutableStateFlow<T?>(null)
 }
 
 fun <T> genericValueModel(t: T) = GenericValueModel<T>().apply {
@@ -205,7 +205,7 @@ class BuilderValueModel<T>(onInit: Boolean = true, val builder: suspend () -> T)
 }
 
 class StateValueModel<T>(stateHandle: SavedStateHandle, key: String = "default", default: T) : ViewModel() {
-    val data = stateHandle.getLiveData(key, default)
+    val data: StateFlow<T> = stateHandle.getStateFlow(key, default)
 }
 
 fun <T> stateValueModel(t: T, stateHandle: SavedStateHandle): StateValueModel<T> {

@@ -13,7 +13,7 @@
         android:orientation="horizontal"
         tools:ignore="Instantiatable" />
 
-    <com.storyteller_f.ui_list.ui.ListWithState
+    <com.storyteller_f.common_ui_list.ui.ListWithState
         android:id="@+id/content"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

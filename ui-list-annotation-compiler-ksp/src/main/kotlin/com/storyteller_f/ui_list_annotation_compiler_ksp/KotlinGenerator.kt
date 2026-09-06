@@ -4,10 +4,6 @@ import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSFile
-import com.storyteller_f.slim_ktx.no
-import com.storyteller_f.slim_ktx.replaceCode
-import com.storyteller_f.slim_ktx.trimAndReplaceCode
-import com.storyteller_f.slim_ktx.yes
 import com.storyteller_f.ui_list_annotation_common.Entry
 import com.storyteller_f.ui_list_annotation_common.Event
 import com.storyteller_f.ui_list_annotation_common.EventEntry
@@ -161,7 +157,9 @@ class KotlinGenerator(
                 fun register${entry.itemHolderName}(map: MutableMap<KClass<out DataItemHolder>, BuildBatch>) {
                     map.put(${entry.itemHolderName}::class, BuildBatch(${if (itemHolderExtraParameter.isEmpty()) "b2 =" else "b3 ="} ::build${entry.itemHolderName}));
                 }
-        """.trimIndent().replaceCode(viewHolderBuilderContent.yes())
+        """.trimIndent()
+            .replace("$1", viewHolderBuilderContent.replace("\n", "\n    "))
+            .replace("\n        \n", "\n    \n")
     }
 
     private fun buildViewHolderContent(
@@ -189,7 +187,9 @@ class KotlinGenerator(
                 if (type.equals("${viewHolder.key}")) {
                     $1
                 }//type if end
-            """.trimIndent().replaceCode(viewHolderContent.yes())
+            """.trimIndent()
+                .replace("$1", viewHolderContent.replace("\n", "\n    "))
+                .replace("\n        \n", "\n    \n")
         }.joinToString("\n")
         return viewHolderBuilderContent
     }
@@ -211,10 +211,9 @@ class KotlinGenerator(
                 $2
             }
             return viewHolder
-            """.trimAndReplaceCode(
-            buildComposeClickListener(clickEventMap).yes(),
-            buildComposeClickListener(longClickEventMap).yes()
-        )
+            """.trimIndent()
+                .replace("$1", buildComposeClickListener(clickEventMap).replace("\n", "\n    "))
+                .replace("$2", buildComposeClickListener(longClickEventMap).replace("\n", "\n    "))
     }
 
     private fun buildComposeClickListener(event: Map<ViewName, List<Event<KSAnnotated>>>) =
@@ -226,7 +225,7 @@ class KotlinGenerator(
             if (s == "${it.key}") {
                 $1                
             }//if end
-        """.trimAndReplaceCode(clickBlock.yes())
+        """.trimIndent().replace("$1", clickBlock.replace("\n", "\n    "))
         }.joinToString("\n")
 
     private fun produceClickBlockForCompose(e: Event<KSAnnotated>): String {
@@ -250,11 +249,13 @@ class KotlinGenerator(
         return """
             val context = parent.context
             val binding = ${entry.bindingName}.inflate(LayoutInflater.from(context), parent, false)
-            
+
             val viewHolder = ${entry.viewHolderName}(binding${entry.constructorExtraParams})
             $1
             return viewHolder
-            """.trimAndReplaceCode(buildInvokeClickEvent(eventMapClick, eventMapLongClick).no())
+            """.trimIndent()
+                .replace("\n    \n", "\n\n")
+                .replace("$1", buildInvokeClickEvent(eventMapClick, eventMapLongClick))
     }
 
     private fun buildInvokeClickEvent(
@@ -270,14 +271,14 @@ class KotlinGenerator(
             binding.${it.key}.setOnClickListener { v ->
                 $1
             }
-        """.trimAndReplaceCode(buildInvokeClickEvent(it.value).yes())
+        """.trimIndent().replace("$1", buildInvokeClickEvent(it.value).replace("\n", "\n    "))
 
     private fun produceLongClickListener(it: Map.Entry<String, List<Event<KSAnnotated>>>) = """
             binding.${it.key}.setOnLongClickListener { v ->
                 $1
                 return true;
             }
-        """.trimAndReplaceCode(buildInvokeClickEvent(it.value).yes())
+        """.trimIndent().replace("$1", buildInvokeClickEvent(it.value).replace("\n", "\n    "))
 
     private fun buildInvokeClickEvent(events: List<Event<KSAnnotated>>): String {
         return events.joinToString("\n") { event ->
