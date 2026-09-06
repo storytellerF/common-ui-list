@@ -2,11 +2,11 @@ package com.storyteller_f.common_ui_list.test_model
 
 import android.os.Bundle
 import android.view.View
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.storyteller_f.common_ui.CommonFragment
 import com.storyteller_f.common_ui_list.R
 import com.storyteller_f.common_ui_list.api.ReposService
 import com.storyteller_f.common_ui_list.api.requireReposService
@@ -33,7 +33,7 @@ class Test {
     }
 }
 
-open class TestDataViewModelFragment : CommonFragment(R.layout.fragment_test_data) {
+open class TestDataViewModelFragment : Fragment(R.layout.fragment_test_data) {
     /**
      * auto generate
      * fun test() = test.test()

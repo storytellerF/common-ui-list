@@ -132,16 +132,16 @@ class ResponseTest {
     }
 
     @Test
-    fun `common fragment re-registers an outstanding result listener on start`() {
+    fun `fragment re-registers an outstanding result listener on start`() {
         val activity = Robolectric.buildActivity(FragmentActivity::class.java).setup().get()
-        val fragment = ResponseCommonFragment()
+        val fragment = ResponseTestFragment()
         val request = FragmentRequest(UUID.randomUUID())
         var received: Bundle? = null
         waitingInFragment[fragment.registryKey()] = listOf(
             FragmentAction({ _, value -> received = value as Bundle }, request.toString()),
         )
 
-        activity.supportFragmentManager.beginTransaction().add(fragment, "common-response-test").commitNow()
+        activity.supportFragmentManager.beginTransaction().add(fragment, "response-test").commitNow()
         activity.supportFragmentManager.setFragmentResult(
             request.toString(),
             Bundle().apply {
@@ -157,17 +157,14 @@ class ResponseTest {
 class ResponseTestActivity : FragmentActivity(), Registry
 
 class ResponseTestFragment : Fragment(), Registry {
+    override fun onStart() {
+        super.onStart()
+        observeResponse()
+    }
+
     override fun onCreateView(
         inflater: android.view.LayoutInflater,
         container: android.view.ViewGroup?,
         savedInstanceState: android.os.Bundle?,
-    ) = View(requireContext())
-}
-
-class ResponseCommonFragment : CommonFragment() {
-    override fun onCreateView(
-        inflater: android.view.LayoutInflater,
-        container: android.view.ViewGroup?,
-        savedInstanceState: Bundle?,
     ) = View(requireContext())
 }
