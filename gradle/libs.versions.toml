@@ -2,7 +2,7 @@
 compileSdk = "37"
 targetSdk = "36"
 minSdk = "26"
-android = "9.3.2"
+android = "9.4.0"
 converterGson = "3.0.0"
 detektVersion = "1.23.8"
 junit = "4.13.2"
