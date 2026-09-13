@@ -38,7 +38,7 @@ class ViewTest {
 
         assertTrue(
             RuntimeEnvironment.getApplication().lf.inflate(android.R.layout.simple_list_item_1, null)
-                is android.widget.TextView,
+            is android.widget.TextView,
         )
     }
 

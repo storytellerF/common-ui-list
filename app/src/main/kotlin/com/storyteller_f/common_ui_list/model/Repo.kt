@@ -4,8 +4,7 @@ import androidx.annotation.Keep
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
-import com.storyteller_f.ui_list.core.Datum
-import com.storyteller_f.ui_list.database.RemoteKey
+import com.storyteller_f.common_ui_list.db.RemoteKey
 
 @Keep
 @Entity(tableName = "repos")

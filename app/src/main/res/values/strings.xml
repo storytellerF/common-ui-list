@@ -1,8 +1,9 @@
 <resources>
     <string name="app_name">common_ui_list_structure</string>
+    <string name="title_home">Search</string>
+    <string name="search_repositories">Search repositories</string>
     <string name="language">Language: %s</string>
     <string name="title_activity_main2">MainActivity2</string>
-    <string name="title_home">Home</string>
     <string name="title_dashboard">Dashboard</string>
     <string name="title_notifications">Notifications</string>
     <string name="title_activity_main3">MainActivity3</string>

@@ -211,9 +211,9 @@ class KotlinGenerator(
                 $2
             }
             return viewHolder
-            """.trimIndent()
-                .replace("$1", buildComposeClickListener(clickEventMap).replace("\n", "\n    "))
-                .replace("$2", buildComposeClickListener(longClickEventMap).replace("\n", "\n    "))
+        """.trimIndent()
+            .replace("$1", buildComposeClickListener(clickEventMap).replace("\n", "\n    "))
+            .replace("$2", buildComposeClickListener(longClickEventMap).replace("\n", "\n    "))
     }
 
     private fun buildComposeClickListener(event: Map<ViewName, List<Event<KSAnnotated>>>) =
@@ -225,7 +225,7 @@ class KotlinGenerator(
             if (s == "${it.key}") {
                 $1                
             }//if end
-        """.trimIndent().replace("$1", clickBlock.replace("\n", "\n    "))
+            """.trimIndent().replace("$1", clickBlock.replace("\n", "\n    "))
         }.joinToString("\n")
 
     private fun produceClickBlockForCompose(e: Event<KSAnnotated>): String {
@@ -253,9 +253,9 @@ class KotlinGenerator(
             val viewHolder = ${entry.viewHolderName}(binding${entry.constructorExtraParams})
             $1
             return viewHolder
-            """.trimIndent()
-                .replace("\n    \n", "\n\n")
-                .replace("$1", buildInvokeClickEvent(eventMapClick, eventMapLongClick))
+        """.trimIndent()
+            .replace("\n    \n", "\n\n")
+            .replace("$1", buildInvokeClickEvent(eventMapClick, eventMapLongClick))
     }
 
     private fun buildInvokeClickEvent(
@@ -271,14 +271,14 @@ class KotlinGenerator(
             binding.${it.key}.setOnClickListener { v ->
                 $1
             }
-        """.trimIndent().replace("$1", buildInvokeClickEvent(it.value).replace("\n", "\n    "))
+    """.trimIndent().replace("$1", buildInvokeClickEvent(it.value).replace("\n", "\n    "))
 
     private fun produceLongClickListener(it: Map.Entry<String, List<Event<KSAnnotated>>>) = """
             binding.${it.key}.setOnLongClickListener { v ->
                 $1
                 return true;
             }
-        """.trimIndent().replace("$1", buildInvokeClickEvent(it.value).replace("\n", "\n    "))
+    """.trimIndent().replace("$1", buildInvokeClickEvent(it.value).replace("\n", "\n    "))
 
     private fun buildInvokeClickEvent(events: List<Event<KSAnnotated>>): String {
         return events.joinToString("\n") { event ->

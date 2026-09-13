@@ -1,7 +1,7 @@
 package com.storyteller_f.common_ui_list.test_navigation
 
-import android.os.Parcelable
 import android.os.Bundle
+import android.os.Parcelable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup

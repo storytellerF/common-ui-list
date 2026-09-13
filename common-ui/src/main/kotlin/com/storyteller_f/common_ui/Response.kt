@@ -223,6 +223,7 @@ fun <T : Parcelable, F> F.observeResponse(
     val callback = buildCallback(result, action)
     waitingResponseInFragment(fragmentRequest, action, callback)
 }
+
 /** Re-registers fragment result listeners that were pending before lifecycle recovery. */
 fun <F> F.observeResponse() where F : Fragment, F : Registry {
     waitingInFragment[registryKey()]?.forEach {

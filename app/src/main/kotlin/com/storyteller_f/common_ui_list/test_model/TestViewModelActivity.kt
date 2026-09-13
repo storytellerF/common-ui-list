@@ -5,9 +5,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.storyteller_f.common_ui.viewBinding
 import com.storyteller_f.common_ui_list.R
 import com.storyteller_f.common_ui_list.databinding.ActivityTestViewModelBinding
-import com.storyteller_f.common_ui.viewBinding
 
 class TestViewModelActivity : AppCompatActivity() {
 

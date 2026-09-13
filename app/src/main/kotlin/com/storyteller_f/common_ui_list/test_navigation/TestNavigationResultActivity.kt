@@ -11,10 +11,10 @@ import com.storyteller_f.common_ui.Registry
 import com.storyteller_f.common_ui.observeResponse
 import com.storyteller_f.common_ui.request
 import com.storyteller_f.common_ui.response
+import com.storyteller_f.common_ui.viewBinding
 import com.storyteller_f.common_ui_list.R
 import com.storyteller_f.common_ui_list.databinding.ActivityTestNavigationResultBinding
 import com.storyteller_f.common_ui_list.dialog.TestDialog2
-import com.storyteller_f.common_ui.viewBinding
 
 class TestNavigationResultActivity : AppCompatActivity(), Registry {
 

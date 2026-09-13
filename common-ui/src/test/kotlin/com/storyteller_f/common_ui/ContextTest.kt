@@ -5,7 +5,6 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -31,5 +30,4 @@ class ContextTest {
             override val lifecycle = LifecycleRegistry(this)
         }.ctx
     }
-
 }

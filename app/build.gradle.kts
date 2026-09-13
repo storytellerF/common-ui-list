@@ -82,14 +82,12 @@ kotlin {
 }
 
 dependencies {
-//    implementation(libs.startup)
     implementation(project(":compat-ktx"))
     implementation(project(":common-ui"))
+    implementation(project(":common-vm-ktx"))
     implementation(project(":ui-list"))
     implementation(project(":ui-list-annotation-definition"))
     ksp(project(":ui-list-annotation-compiler-ksp"))
-    implementation(project(":composite-definition"))
-    ksp(project(":composite-compiler-ksp"))
     implementation(libs.core)
     implementation(libs.appcompat)
     implementation(libs.material)
@@ -100,7 +98,14 @@ dependencies {
     implementation(libs.retrofit.mock)
     implementation(libs.log.receptor)
     implementation(libs.converter.gson)
+    implementation(libs.coroutines)
+    implementation(libs.coroutines.android)
+    implementation(libs.paging.runtime.ktx)
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    implementation(libs.room.paging)
     ksp(libs.room.compiler)
+    kspTest(libs.room.compiler)
 
     debugImplementation(libs.leak.canary)
     implementation(libs.compos.material)
@@ -110,6 +115,7 @@ dependencies {
     implementation(libs.navigation.fragment.ktx)
     implementation(libs.nav.ui.ktx)
     testImplementation(libs.junit)
+    testImplementation("org.robolectric:robolectric:4.16.1")
     androidTestImplementation(libs.android.junit)
     androidTestImplementation(libs.android.espresso)
 }

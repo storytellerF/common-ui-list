@@ -46,8 +46,6 @@ setupKover(
         "ui-list",
         "view-holder-compose"
     ), listOf(
-        "composite-compiler-ksp",
-        "composite-definition",
         "ext-func-compiler",
         "ext-func-definition",
         "ui-list-annotation-common",

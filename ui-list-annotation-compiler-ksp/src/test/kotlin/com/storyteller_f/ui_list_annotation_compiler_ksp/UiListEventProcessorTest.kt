@@ -6,9 +6,9 @@ import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.configureKsp
 import com.tschuchort.compiletesting.kspWithCompilation
 import com.tschuchort.compiletesting.sourcesGeneratedBySymbolProcessor
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 
 @OptIn(ExperimentalCompilerApi::class)
 class UiListEventProcessorTest {
@@ -102,7 +102,9 @@ class UiListEventProcessorTest {
 
     private fun String.normalizeGenerated(): String =
         replace(
-            Regex("(?:[A-Za-z]:[/\\\\][^\\r\\n]*?Kotlin-Compilation[^/\\\\]+[/\\\\]sources[/\\\\]|/tmp/Kotlin-Compilation[^/]+/sources/)"),
+            Regex(
+                "(?:[A-Za-z]:[/\\\\][^\\r\\n]*?Kotlin-Compilation[^/\\\\]+[/\\\\]sources[/\\\\]|/tmp/Kotlin-Compilation[^/]+/sources/)"
+            ),
             "<sources>/"
         )
             .replace("\r\n", "\n")

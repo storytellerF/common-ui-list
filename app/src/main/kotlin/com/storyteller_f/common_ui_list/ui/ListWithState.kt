@@ -22,31 +22,22 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.storyteller_f.common_ui.owner
+import com.storyteller_f.common_ui_list.databinding.ListWithStateBinding
 import com.storyteller_f.ui_list.adapter.ManualAdapter
-import com.storyteller_f.ui_list.adapter.SimpleDataAdapter
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
 import com.storyteller_f.ui_list.core.AbstractViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
-import com.storyteller_f.common_ui_list.databinding.ListWithStateBinding
-import com.storyteller_f.ui_list.source.DataHandler
-import com.storyteller_f.ui_list.source.isError
-import com.storyteller_f.ui_list.source.isLoading
-import com.storyteller_f.ui_list.source.isNotLoading
 import com.storyteller_f.ui_list.ui.SimpleLoadStateAdapter
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
@@ -117,39 +108,6 @@ class ListWithState @JvmOverloads constructor(
         }
     }
 
-    fun dataUp(
-        adapter: SimpleDataAdapter<*, *>,
-        lifecycleOwner: LifecycleOwner,
-        handler: DataHandler<*, *, *>,
-    ) {
-        setupLinearLayoutManager()
-        val layoutManager = binding.list.layoutManager as LinearLayoutManager
-        binding.list.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-                val totalItemCount = layoutManager.itemCount
-                val visibleItemCount = layoutManager.childCount
-                val lastVisibleItem = layoutManager.findLastVisibleItemPosition()
-                if (visibleItemCount + lastVisibleItem + visibleItemCount >= totalItemCount) {
-                    handler.requestMore(lifecycleOwner.lifecycleScope)
-                }
-            }
-        })
-        binding.list.adapter = adapter
-        binding.refreshLayout.setOnRefreshListener {
-            handler.refresh(lifecycleOwner.lifecycleScope)
-        }
-        binding.retryButton.setOnClickListener {
-            handler.retry(lifecycleOwner.lifecycleScope)
-        }
-        lifecycleOwner.lifecycleScope.launch {
-            lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                handler.loadState.map { simple(it.loadState, it.itemCount) }.collect(::flash)
-            }
-        }
-        setupSwapSupport(adapter)
-    }
-
     @Suppress("unused")
     fun manualUp(
         adapter: ManualAdapter<*, *>,
@@ -164,32 +122,6 @@ class ListWithState @JvmOverloads constructor(
         binding.retryButton.setOnClickListener {
             refresh?.invoke()
         }
-    }
-
-    /**
-     * 仅data adapter 可用
-     */
-    private fun setupSwapSupport(adapter: SimpleDataAdapter<*, *>) {
-        ItemTouchHelper(object :
-            ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
-            override fun onMove(
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder,
-                target: RecyclerView.ViewHolder
-            ): Boolean {
-                val from = viewHolder.absoluteAdapterPosition
-                val to = target.absoluteAdapterPosition
-                adapter.swap(from, to)
-                return true
-            }
-
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) = Unit
-
-            override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
-                super.onSelectedChanged(viewHolder, actionState)
-                binding.refreshLayout.isEnabled = viewHolder == null
-            }
-        }).attachToRecyclerView(binding.list)
     }
 
     @Suppress("unused")
@@ -466,18 +398,6 @@ class ListWithState @JvmOverloads constructor(
             )
         }
 
-        fun simple(loadState: LoadState, itemCount: Int): UIState {
-            val refresh = if (!loadState.isLoading) false else null
-            return UIState(
-                loadState.isError,
-                loadState.isNotLoading && itemCount != 0,
-                loadState.isNotLoading && itemCount == 0,
-                loadState.isLoading,
-                null,
-                refresh
-            )
-        }
-
         private const val TAG = "ListWithState"
     }
 
@@ -506,6 +426,10 @@ class ListWithState @JvmOverloads constructor(
         ): Boolean
     }
 }
+
+private val LoadState?.isError get() = this is LoadState.Error
+private val LoadState?.isLoading get() = this is LoadState.Loading
+private val LoadState?.isNotLoading get() = this is LoadState.NotLoading
 
 fun LoadState.debugEmoji() = when (this) {
     is LoadState.NotLoading -> if (endOfPaginationReached) "\uD83D\uDD1A" else "\uD83D\uDEA7"

@@ -21,8 +21,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewModelScope
@@ -36,26 +36,26 @@ import com.storyteller_f.common_ui.owner
 import com.storyteller_f.common_ui.status
 import com.storyteller_f.common_ui.supportNavigatorBarImmersive
 import com.storyteller_f.common_ui.updateMargins
+import com.storyteller_f.common_ui.viewBinding
 import com.storyteller_f.common_ui_list.api.ReposService
 import com.storyteller_f.common_ui_list.api.requireReposService
 import com.storyteller_f.common_ui_list.databinding.ActivityMainBinding
+import com.storyteller_f.common_ui_list.db.RepoComposite
 import com.storyteller_f.common_ui_list.db.RepoDatabase
-import com.storyteller_f.common_ui_list.db.composite.RepoComposite
 import com.storyteller_f.common_ui_list.db.requireRepoDatabase
 import com.storyteller_f.common_ui_list.holders.RepoItemHolder
 import com.storyteller_f.common_ui_list.holders.seprator.SeparatorItemHolder
 import com.storyteller_f.common_ui_list.holders.seprator.ui_list.registerSeparatorItemHolder
 import com.storyteller_f.common_ui_list.holders.ui_list.registerRepoItemHolder
+import com.storyteller_f.common_ui_list.source.SimpleSourceRepository
+import com.storyteller_f.common_ui_list.source.SourceHandler
 import com.storyteller_f.common_ui_list.test_model.TestViewModelActivity
 import com.storyteller_f.common_ui_list.test_navigation.TestNavigationResultActivity
+import com.storyteller_f.common_ui_list.ui.ListWithState
 import com.storyteller_f.common_vm_ktx.vm
 import com.storyteller_f.ui_list.core.AbstractViewHolder
 import com.storyteller_f.ui_list.core.BuildBatch
 import com.storyteller_f.ui_list.core.DataItemHolder
-import com.storyteller_f.ui_list.source.SimpleSourceRepository
-import com.storyteller_f.ui_list.source.SourceHandler
-import com.storyteller_f.common_ui_list.ui.ListWithState
-import com.storyteller_f.common_ui.viewBinding
 import com.storyteller_f.view_holder_compose.ComposeSourceAdapter
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -253,7 +253,7 @@ private class MainViewModel(
     private val sourceHandler = SourceHandler(
         SimpleSourceRepository(
             { page, count ->
-                service.searchRepos(page, count)
+                service.searchRepos("Android", page, count)
             },
             RepoComposite(database),
             {

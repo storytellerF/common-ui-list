@@ -6,19 +6,22 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
+import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewModelScope
+import com.storyteller_f.common_ui_list.R
 import com.storyteller_f.common_ui_list.api.ReposService
 import com.storyteller_f.common_ui_list.api.requireReposService
 import com.storyteller_f.common_ui_list.databinding.FragmentTestDetailBinding
 import com.storyteller_f.common_ui_list.db.RepoDatabase
 import com.storyteller_f.common_ui_list.db.requireRepoDatabase
+import com.storyteller_f.common_ui_list.source.DetailHandler
 import com.storyteller_f.common_vm_ktx.vm
-import com.storyteller_f.ui_list.source.DetailHandler
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
@@ -33,6 +36,7 @@ class TestDetailViewModelFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         (requireActivity() as AppCompatActivity).supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+        (requireActivity().findViewById<Toolbar>(R.id.toolbar).getChildAt(0) as ComposeView).setContent { }
     }
 
     override fun onCreateView(
@@ -64,7 +68,7 @@ private class TestDetailViewModel(
 ) : ViewModel() {
     private val detailHandler = DetailHandler(
         producer = {
-            service.searchRepos(1, 1).items.first()
+            service.searchRepos("Android", 1, 1).items.first()
         },
         local = {
             database.reposDao().select()

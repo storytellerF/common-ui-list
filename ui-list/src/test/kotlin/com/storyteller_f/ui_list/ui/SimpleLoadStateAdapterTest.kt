@@ -35,7 +35,10 @@ class SimpleLoadStateAdapterTest {
         val activity = Robolectric.buildActivity(ComponentActivity::class.java).setup().get()
         var retries = 0
         val adapter = SimpleLoadStateAdapter { retries++ }
-        val holder = adapter.onCreateViewHolder(FrameLayout(activity), LoadState.Error(IllegalStateException("offline")))
+        val holder = adapter.onCreateViewHolder(
+            FrameLayout(activity),
+            LoadState.Error(IllegalStateException("offline"))
+        )
 
         adapter.onBindViewHolder(holder, LoadState.Error(IllegalStateException("offline")))
         holder.itemView.findViewById<android.view.View>(R.id.retry_button).performClick()

@@ -5,7 +5,6 @@ import androidx.paging.PagingSource
 import androidx.room.*
 import com.storyteller_f.common_ui_list.model.Repo
 import com.storyteller_f.common_ui_list.model.RepoRemoteKey
-import com.storyteller_f.composite_defination.Composite
 import com.storyteller_f.ext_func_definition.ExtFuncFlat
 import com.storyteller_f.ext_func_definition.ExtFuncFlatType
 
@@ -51,7 +50,6 @@ interface RemoteKeysDao {
     version = 2,
     exportSchema = false
 )
-@Composite("Repo")
 abstract class RepoDatabase : RoomDatabase() {
 
     abstract fun reposDao(): RepoDao

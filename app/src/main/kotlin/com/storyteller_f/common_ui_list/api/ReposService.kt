@@ -2,9 +2,9 @@ package com.storyteller_f.common_ui_list.api
 
 import android.app.Activity
 import androidx.fragment.app.Fragment
+import com.storyteller_f.common_ui_list.data.CommonResponse
 import com.storyteller_f.common_ui_list.model.Repo
 import com.storyteller_f.common_ui_list.model.RepoRemoteKey
-import com.storyteller_f.ui_list.data.CommonResponse
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import okhttp3.logging.HttpLoggingInterceptor.Level
@@ -17,8 +17,9 @@ interface ReposService {
     /**
      * Get repos ordered by stars.
      */
-    @GET("search/repositories?sort=stars&q=Android")
+    @GET("search/repositories?sort=stars")
     suspend fun searchRepos(
+        @Query("q") query: String,
         @Query("page") page: Int,
         @Query("per_page") itemsPerPage: Int
     ): CommonResponse<Repo, RepoRemoteKey>

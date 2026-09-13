@@ -6,11 +6,9 @@ import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.configureKsp
 import com.tschuchort.compiletesting.kspWithCompilation
 import com.tschuchort.compiletesting.sourcesGeneratedBySymbolProcessor
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Test
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
-import java.io.File
+import org.junit.Assert.assertEquals
+import org.junit.Test
 
 @OptIn(ExperimentalCompilerApi::class)
 class ExtFuncCompilerTest {

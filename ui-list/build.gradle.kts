@@ -4,7 +4,6 @@ plugins {
 
     id("android-common-publish")
     id("custom-android-library")
-    id("com.google.devtools.ksp")
 }
 
 android {
@@ -46,18 +45,6 @@ dependencies {
 
     // lifecycle & view model
     api(libs.lifecycle.runtime.ktx)
-    api(libs.lifecycle.viewmodel.ktx)
-    api(libs.lifecycle.viewmodel.savedstate)
-    api(project(":common-vm-ktx"))
-
-    // room
-    api(libs.room.runtime)
-    api(libs.room.ktx)
-    api(libs.room.paging)
-    kspTest(libs.room.compiler)
 
     api(libs.paging.runtime.ktx)
-
-    // retrofit & okhttp
-    implementation(libs.converter.gson)
 }
