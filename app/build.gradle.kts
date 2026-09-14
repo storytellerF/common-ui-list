@@ -115,7 +115,7 @@ dependencies {
     implementation(libs.navigation.fragment.ktx)
     implementation(libs.nav.ui.ktx)
     testImplementation(libs.junit)
-    testImplementation("org.robolectric:robolectric:4.16.1")
+    testImplementation("org.robolectric:robolectric:4.17")
     androidTestImplementation(libs.android.junit)
     androidTestImplementation(libs.android.espresso)
 }

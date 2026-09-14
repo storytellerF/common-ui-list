@@ -120,7 +120,7 @@ fun Project.setupKover(
 
             dependencies {
                 if (androidLibModules.contains(name)) {
-                    val robolectricVersion = "4.16.1"
+                    val robolectricVersion = "4.17"
                     "testImplementation"("org.robolectric:robolectric:$robolectricVersion")
                 }
             }
