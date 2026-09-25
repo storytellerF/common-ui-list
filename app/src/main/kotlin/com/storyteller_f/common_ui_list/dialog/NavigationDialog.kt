@@ -1,19 +1,38 @@
 package com.storyteller_f.common_ui_list.dialog
 
+import android.os.Bundle
 import android.os.Parcelable
-import com.storyteller_f.common_ui.SimpleDialogFragment
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.fragment.app.DialogFragment
+import com.storyteller_f.common_ui.ResponseFragment
+import com.storyteller_f.common_ui.responseModel
 import com.storyteller_f.common_ui.setFragmentResult
 import com.storyteller_f.common_ui.setOnClick
 import com.storyteller_f.common_ui_list.databinding.DialogTestBinding
 import kotlinx.parcelize.Parcelize
 
-class NavigationDialog : SimpleDialogFragment<DialogTestBinding>(DialogTestBinding::inflate) {
-    override fun onBindViewEvent(binding: DialogTestBinding) {
+class NavigationDialog : DialogFragment(), ResponseFragment {
+    override val vm by responseModel
+
+    private var _binding: DialogTestBinding? = null
+    val binding: DialogTestBinding get() = _binding!!
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        val binding = DialogTestBinding.inflate(layoutInflater)
+        _binding = binding
         binding.button.text = "navigation"
         binding.button.setOnClick {
             setFragmentResult(Result("Test Dialog"))
             dismiss()
         }
+        return binding.root
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     @Parcelize

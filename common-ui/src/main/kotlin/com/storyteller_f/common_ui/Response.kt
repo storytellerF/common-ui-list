@@ -3,6 +3,7 @@ package com.storyteller_f.common_ui
 import android.os.Bundle
 import android.os.Parcelable
 import androidx.annotation.IdRes
+import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LifecycleOwner
@@ -147,10 +148,10 @@ private fun <A, T : Parcelable> A.waitingResponseInActivity(
     fm.setFragmentResultListener(key, this, callback)
 }
 
-private fun <A> A.show(
-    dialog: Class<out CommonDialogFragment>,
+private fun <A, D> A.show(
+    dialog: Class<D>,
     parameters: Bundle?
-): UUID where A : LifecycleOwner {
+): UUID where A : LifecycleOwner, D : DialogFragment, D : ResponseFragment {
     val randomUUID = UUID.randomUUID()
     parameters?.putSerializable("uuid", randomUUID)
     val dialogFragment = dialog.getConstructor().newInstance().apply {
@@ -188,18 +189,20 @@ fun NavController.request(
 /**
  * 显示一个Dialog 并且返回FragmentResult
  */
-fun <F> F.request(
-    dialog: KClass<out CommonDialogFragment>,
+fun <F, D> F.request(
+    dialog: KClass<D>,
     parameters: Bundle = Bundle()
-): FragmentRequest where F : LifecycleOwner = show(dialog.java, parameters).requestKey()
+): FragmentRequest where F : LifecycleOwner, D : DialogFragment, D : ResponseFragment =
+    show(dialog.java, parameters).requestKey()
 
 /**
  * 显示一个Dialog 并且返回FragmentResult
  */
-fun <F> F.request(
-    dialog: Class<out CommonDialogFragment>,
+fun <F, D> F.request(
+    dialog: Class<D>,
     parameters: Bundle = Bundle()
-): FragmentRequest where F : LifecycleOwner = show(dialog, parameters).requestKey()
+): FragmentRequest where F : LifecycleOwner, D : DialogFragment, D : ResponseFragment =
+    show(dialog, parameters).requestKey()
 
 private fun UUID.requestKey(): FragmentRequest = FragmentRequest(this)
 
