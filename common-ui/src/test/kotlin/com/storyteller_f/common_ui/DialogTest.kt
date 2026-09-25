@@ -1,7 +1,10 @@
 package com.storyteller_f.common_ui
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
+import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentActivity
 import androidx.viewbinding.ViewBinding
 import org.junit.Assert.assertNotNull
@@ -55,15 +58,17 @@ class DialogTest {
     }
 }
 
-class TestSimpleDialog : SimpleDialogFragment<TestDialogBinding>({ inflater ->
-    TestDialogBinding(View(inflater.context))
-}) {
+class TestSimpleDialog : DialogFragment(), ResponseFragment {
+    override val vm by responseModel
+
     var didBind = false
     var boundRoot: View? = null
 
-    override fun onBindViewEvent(binding: TestDialogBinding) {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        val binding = TestDialogBinding(View(inflater.context))
         didBind = true
         boundRoot = binding.root
+        return binding.root
     }
 }
 
@@ -71,4 +76,6 @@ class TestDialogBinding(private val view: View) : ViewBinding {
     override fun getRoot() = view
 }
 
-class TestResponseDialog : CommonDialogFragment()
+class TestResponseDialog : DialogFragment(), ResponseFragment {
+    override val vm by responseModel
+}
