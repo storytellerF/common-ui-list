@@ -48,15 +48,39 @@ class UiListEventProcessorTest {
     }
 
     @Test
-    fun `position parameters must have type Int`() {
+    fun `Int typealiases are accepted for both adapter positions`() {
         val source = SourceFile.kotlin(
             "sample/Sample.kt",
-            sampleSourceCode.replace("bindingAdapterPosition: Int", "bindingAdapterPosition: String")
+            sampleSourceCode.replace(
+                "@ItemHolder(\"repo\")",
+                "typealias RowIndex = Int\ntypealias AbsoluteIndex = RowIndex\n\n@ItemHolder(\"repo\")"
+            ).replace("bindingAdapterPosition: Int", "bindingAdapterPosition: RowIndex")
+                .replace("absoluteAdapterPosition: Int", "absoluteAdapterPosition: AbsoluteIndex")
         )
-        val result = compile(ProcessorProvider(), *uiListRuntimeStubs, source)
+        val result = compile(ProcessorProvider(), *uiListRuntimeStubs, source, callbackProbeSource)
 
-        assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode)
-        assertTrue(result.messages.contains("Event position parameter 'bindingAdapterPosition' must have type Int"))
+        assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode)
+        result.classLoader.loadClass("sample.CallbackProbe").getMethod("verify").invoke(null)
+    }
+
+    @Test
+    fun `position parameters must resolve to Int`() {
+        for (type in listOf("String", "TextIndex")) {
+            val source = SourceFile.kotlin(
+                "sample/Sample.kt",
+                sampleSourceCode.replace(
+                    "@ItemHolder(\"repo\")",
+                    "typealias TextIndex = String\n\n@ItemHolder(\"repo\")"
+                ).replace("bindingAdapterPosition: Int", "bindingAdapterPosition: $type")
+                    .replace("absoluteAdapterPosition: Int", "absoluteAdapterPosition: $type")
+            )
+            val result = compile(ProcessorProvider(), *uiListRuntimeStubs, source)
+
+            assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode)
+            for (name in listOf("bindingAdapterPosition", "absoluteAdapterPosition")) {
+                assertTrue(result.messages.contains("Event position parameter '$name' must have type Int"))
+            }
+        }
     }
 
     private fun compile(
