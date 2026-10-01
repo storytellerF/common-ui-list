@@ -174,7 +174,8 @@ class MainActivity : AppCompatActivity() {
         }
 
     @BindClickEvent(RepoItemHolder::class)
-    fun clickRepo(itemHolder: RepoItemHolder) {
+    fun clickRepo(position: Int) {
+        val itemHolder = adapter.getItemHolder(position) as? RepoItemHolder ?: return
         Toast.makeText(this, itemHolder.repo.fullName, Toast.LENGTH_SHORT).show()
         selectedItemHolder.update {
             it?.toMutableList()?.apply {
@@ -184,7 +185,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     @BindClickEvent(SeparatorItemHolder::class, "card")
-    fun clickLine(view: View, itemHolder: SeparatorItemHolder) {
+    fun clickLine(view: View, position: Int) {
+        val itemHolder = adapter.getItemHolder(position) as? SeparatorItemHolder ?: return
         Toast.makeText(this, "${itemHolder.info} ${view::class.qualifiedName}", Toast.LENGTH_SHORT)
             .show()
     }

@@ -11,6 +11,7 @@ import sample.ClickReceiver
 import com.storyteller_f.ui_list.core.AbstractViewHolder
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
 import com.storyteller_f.ui_list.core.BuildBatch
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.event.findFragmentOrNull
@@ -24,7 +25,14 @@ fun buildRepoItemHolder(parent: ViewGroup, type: String, key: String): AbstractV
     
         val viewHolder = RepoViewHolder(binding, key)
         binding.root.setOnClickListener { v ->
-            viewHolder.itemHolderOrNull?.let { itemHolder -> v.findFragmentOrNull<ClickReceiver>()?.clickRepo(itemHolder) }
+            viewHolder.bindingAdapterPosition.takeIf { it != RecyclerView.NO_POSITION }?.let { position -> v.findFragmentOrNull<ClickReceiver>()?.clickRepo(position) }
+        }
+        binding.root.setOnLongClickListener { v ->
+            if (viewHolder.bindingAdapterPosition == RecyclerView.NO_POSITION) {
+                return@setOnLongClickListener false
+            }
+            viewHolder.bindingAdapterPosition.takeIf { it != RecyclerView.NO_POSITION }?.let { position -> v.findFragmentOrNull<ClickReceiver>()?.longClickRepo(position) }
+            true
         }
         return viewHolder
     }//type if end
@@ -51,6 +59,7 @@ import sample.ClickReceiver
 import com.storyteller_f.ui_list.core.AbstractViewHolder
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
 import com.storyteller_f.ui_list.core.BuildBatch
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.event.findFragmentOrNull
@@ -65,12 +74,12 @@ fun buildSeparatorItemHolder(parent: ViewGroup, type: String): AbstractViewHolde
         @Suppress("UNUSED_VARIABLE") val v = viewHolder.itemView
         view.clickListener = { s ->
             if (s == "card") {
-                viewHolder.itemHolderOrNull?.let { itemHolder -> v.findFragmentOrNull<ClickReceiver>()?.clickSeparator(v, itemHolder) }
+                viewHolder.bindingAdapterPosition.takeIf { it != RecyclerView.NO_POSITION }?.let { position -> v.findFragmentOrNull<ClickReceiver>()?.clickSeparator(v, position) }
             }//if end
         }
         view.longClickListener = { s ->
             if (s == "card") {
-                viewHolder.itemHolderOrNull?.let { itemHolder -> v.findFragmentOrNull<ClickReceiver>()?.longClickSeparator(inflate, itemHolder) }
+                viewHolder.bindingAdapterPosition.takeIf { it != RecyclerView.NO_POSITION }?.let { position -> v.findFragmentOrNull<ClickReceiver>()?.longClickSeparator(position) }
             }//if end
         }
         return viewHolder

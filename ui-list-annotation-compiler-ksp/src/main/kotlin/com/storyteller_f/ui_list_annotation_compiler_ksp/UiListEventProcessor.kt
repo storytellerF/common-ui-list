@@ -188,8 +188,8 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
             val asString = parameter.name?.asString()
             if (asString.isNullOrEmpty()) {
                 ""
-            } else if (asString == "itemHolder") {
-                "itemHolder"
+            } else if (parameter.type.resolve().declaration.qualifiedName?.asString() == "kotlin.Int") {
+                "position"
             } else if (asString == "binding") {
                 "inflate"
             } else {

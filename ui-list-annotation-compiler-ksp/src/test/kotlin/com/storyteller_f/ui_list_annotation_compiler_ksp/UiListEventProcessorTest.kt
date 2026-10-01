@@ -20,6 +20,7 @@ class UiListEventProcessorTest {
             sampleSource
         )
 
+        assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode)
         val generated = result.sourcesGeneratedBySymbolProcessor
             .filter { it.name.endsWith("Builder.kt") }
             .sortedBy { it.name }
@@ -37,7 +38,7 @@ class UiListEventProcessorTest {
         configureKsp {
             symbolProcessorProviders.add(provider)
         }
-        kspWithCompilation = false
+        kspWithCompilation = true
         this.sources = sources.toList()
         jvmTarget = "21"
     }.compile()
@@ -75,11 +76,25 @@ private val uiListRuntimeStubs = arrayOf(
         """
         package android.view
         import android.content.Context
-        open class View(val context: Context)
+        open class View(val context: Context) {
+            fun setOnClickListener(listener: (View) -> Unit) = Unit
+            fun setOnLongClickListener(listener: (View) -> Boolean) = Unit
+        }
         open class ViewGroup(context: Context = Context()) : View(context)
         class LayoutInflater {
             companion object {
                 fun from(context: Context): LayoutInflater = LayoutInflater()
+            }
+        }
+        """.trimIndent()
+    ),
+    SourceFile.kotlin(
+        "androidx/recyclerview/widget/RecyclerView.kt",
+        """
+        package androidx.recyclerview.widget
+        class RecyclerView {
+            companion object {
+                const val NO_POSITION = -1
             }
         }
         """.trimIndent()
@@ -91,7 +106,8 @@ private val uiListRuntimeStubs = arrayOf(
         import android.view.View
         open class DataItemHolder
         abstract class AbstractViewHolder<IH : DataItemHolder>(val itemView: View) {
-            val itemHolderOrNull: IH? get() = null
+            val context get() = itemView.context
+            val bindingAdapterPosition: Int get() = -1
         }
         open class BindingViewHolder<IH : DataItemHolder>(binding: Any, key: String = "") :
             AbstractViewHolder<IH>((binding as sample.RepoViewItemBinding).root)
@@ -105,7 +121,7 @@ private val uiListRuntimeStubs = arrayOf(
         "com/storyteller_f/ui_list/event/View.kt",
         """
         package com.storyteller_f.ui_list.event
-        fun Any.findFragmentOrNull(): Any? = null
+        fun <T> Any.findFragmentOrNull(): T? = null
         """.trimIndent()
     ),
     SourceFile.kotlin(
@@ -168,13 +184,16 @@ private val sampleSource = SourceFile.kotlin(
 
     class ClickReceiver {
         @BindClickEvent(RepoItemHolder::class)
-        fun clickRepo(itemHolder: RepoItemHolder) = Unit
+        fun clickRepo(position: Int) = Unit
+
+        @BindLongClickEvent(RepoItemHolder::class)
+        fun longClickRepo(position: Int) = Unit
 
         @BindClickEvent(SeparatorItemHolder::class, "card")
-        fun clickSeparator(view: View, itemHolder: SeparatorItemHolder) = Unit
+        fun clickSeparator(view: View, index: Int) = Unit
 
         @BindLongClickEvent(SeparatorItemHolder::class, "card")
-        fun longClickSeparator(binding: Any, itemHolder: SeparatorItemHolder) = Unit
+        fun longClickSeparator(position: Int) = Unit
     }
     """.trimIndent()
 )

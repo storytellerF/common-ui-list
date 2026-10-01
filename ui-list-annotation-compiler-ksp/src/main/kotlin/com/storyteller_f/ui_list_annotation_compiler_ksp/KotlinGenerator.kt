@@ -235,8 +235,9 @@ class KotlinGenerator(
             "v.findFragmentOrNull<${e.receiver}>()"
         }
         val invocation = "$receiver?.${e.functionName}(${e.parameterList})"
-        return if ("itemHolder" in e.parameterList.split(", ")) {
-            "viewHolder.itemHolderOrNull?.let { itemHolder -> $invocation }"
+        return if ("position" in e.parameterList.split(", ")) {
+            "viewHolder.bindingAdapterPosition.takeIf { it != RecyclerView.NO_POSITION }" +
+                "?.let { position -> $invocation }"
         } else {
             invocation
         }
@@ -265,7 +266,7 @@ class KotlinGenerator(
     ): String {
         val singleClickListener = event.map(::produceClickListener).joinToString("\n")
         val longClickListener = event2.map(::produceLongClickListener).joinToString("\n")
-        return singleClickListener + longClickListener
+        return listOf(singleClickListener, longClickListener).filter { it.isNotEmpty() }.joinToString("\n")
     }
 
     private fun produceClickListener(it: Map.Entry<String, List<Event<KSAnnotated>>>) = """
@@ -276,8 +277,11 @@ class KotlinGenerator(
 
     private fun produceLongClickListener(it: Map.Entry<String, List<Event<KSAnnotated>>>) = """
             binding.${it.key}.setOnLongClickListener { v ->
+                if (viewHolder.bindingAdapterPosition == RecyclerView.NO_POSITION) {
+                    return@setOnLongClickListener false
+                }
                 $1
-                return true;
+                true
             }
     """.trimIndent().replace("$1", buildInvokeClickEvent(it.value).replace("\n", "\n    "))
 
