@@ -34,27 +34,29 @@ class UiListEventProcessorTest {
     }
 
     @Test
-    fun `unknown Int parameter names produce a diagnostic`() {
-        val source = SourceFile.kotlin(
-            "sample/Sample.kt",
-            sampleSourceCode.replace("position: Int", "offset: Int")
-        )
-        val result = compile(ProcessorProvider(), *uiListRuntimeStubs, source)
+    fun `ambiguous and unknown Int parameter names produce a diagnostic`() {
+        for (name in listOf("position", "index", "offset")) {
+            val source = SourceFile.kotlin(
+                "sample/Sample.kt",
+                sampleSourceCode.replace("bindingAdapterPosition: Int", "$name: Int")
+            )
+            val result = compile(ProcessorProvider(), *uiListRuntimeStubs, source)
 
-        assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode)
-        assertTrue(result.messages.contains("Unsupported event parameter 'offset'"))
+            assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode)
+            assertTrue(result.messages.contains("Unsupported event parameter '$name'"))
+        }
     }
 
     @Test
     fun `position parameters must have type Int`() {
         val source = SourceFile.kotlin(
             "sample/Sample.kt",
-            sampleSourceCode.replace("position: Int", "position: String")
+            sampleSourceCode.replace("bindingAdapterPosition: Int", "bindingAdapterPosition: String")
         )
         val result = compile(ProcessorProvider(), *uiListRuntimeStubs, source)
 
         assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode)
-        assertTrue(result.messages.contains("Event position parameter 'position' must have type Int"))
+        assertTrue(result.messages.contains("Event position parameter 'bindingAdapterPosition' must have type Int"))
     }
 
     private fun compile(
@@ -221,11 +223,10 @@ private val sampleSourceCode = """
         fun clickRepo(
             view: View,
             absoluteAdapterPosition: Int,
-            position: Int,
-            viewholder: RepoViewHolder,
-            bindingAdapterPosition: Int
+            bindingAdapterPosition: Int,
+            viewholder: RepoViewHolder
         ) {
-            calls += listOf("repo", view, absoluteAdapterPosition, position, viewholder, bindingAdapterPosition)
+            calls += listOf("repo", view, absoluteAdapterPosition, bindingAdapterPosition, viewholder)
         }
 
         @BindLongClickEvent(RepoItemHolder::class)
@@ -244,8 +245,8 @@ private val sampleSourceCode = """
         }
 
         @BindLongClickEvent(SeparatorItemHolder::class, "card")
-        fun longClickSeparator(view: View, position: Int) {
-            calls += listOf("longSeparator", view, position)
+        fun longClickSeparator(view: View, bindingAdapterPosition: Int) {
+            calls += listOf("longSeparator", view, bindingAdapterPosition)
         }
     }
 """.trimIndent()
@@ -268,11 +269,11 @@ private val callbackProbeSource = SourceFile.kotlin(
             holder.bindingAdapterPosition = 2
             holder.absoluteAdapterPosition = 7
             view.performClick()
-            check(receiver.calls.last() == listOf("repo", view, 7, 2, holder, 2))
+            check(receiver.calls.last() == listOf("repo", view, 7, 2, holder))
             holder.bindingAdapterPosition = 3
             holder.absoluteAdapterPosition = 8
             view.performClick()
-            check(receiver.calls.last() == listOf("repo", view, 8, 3, holder, 3))
+            check(receiver.calls.last() == listOf("repo", view, 8, 3, holder))
             check(view.performLongClick())
             check(receiver.calls.last() == listOf("longRepo", holder, 8))
             val count = receiver.calls.size

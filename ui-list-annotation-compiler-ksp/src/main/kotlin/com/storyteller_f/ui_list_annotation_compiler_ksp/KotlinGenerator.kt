@@ -239,8 +239,8 @@ class KotlinGenerator(
         if ("absoluteAdapterPosition" in arguments) {
             invocation = withValidPosition(invocation, "absoluteAdapterPosition", "absoluteAdapterPosition")
         }
-        if ("position" in arguments) {
-            invocation = withValidPosition(invocation, "position", "bindingAdapterPosition")
+        if ("bindingAdapterPosition" in arguments) {
+            invocation = withValidPosition(invocation, "bindingAdapterPosition", "bindingAdapterPosition")
         }
         return invocation
     }

@@ -187,7 +187,7 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
         function.parameters.joinToString(", ") { parameter ->
             val name = parameter.name?.asString()
             val argument = when (name) {
-                "bindingAdapterPosition", "position", "index" -> "position"
+                "bindingAdapterPosition" -> "bindingAdapterPosition"
                 "absoluteAdapterPosition" -> "absoluteAdapterPosition"
                 "viewholder", "viewHolder" -> "viewHolder"
                 "view" -> "v"
@@ -195,11 +195,11 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
             }
             if (argument == null) {
                 logger.error(
-                    "Unsupported event parameter '$name'; use bindingAdapterPosition, position, " +
+                    "Unsupported event parameter '$name'; use bindingAdapterPosition, " +
                         "absoluteAdapterPosition, viewholder or view",
                     parameter
                 )
-            } else if (argument in listOf("position", "absoluteAdapterPosition") &&
+            } else if (argument in listOf("bindingAdapterPosition", "absoluteAdapterPosition") &&
                 parameter.type.resolve().declaration.qualifiedName?.asString() != "kotlin.Int"
             ) {
                 logger.error("Event position parameter '$name' must have type Int", parameter)
