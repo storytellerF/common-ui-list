@@ -205,7 +205,7 @@ private val sampleSourceCode = """
     }
 
     @BindItemHolder(RepoItemHolder::class)
-    class RepoViewHolder(private val binding: RepoViewItemBinding, key: String) :
+    class RepoViewHolder(val binding: RepoViewItemBinding, key: String) :
         BindingViewHolder<RepoItemHolder>(binding, key)
 
     @ItemHolder("separator")
@@ -224,14 +224,15 @@ private val sampleSourceCode = """
             view: View,
             absoluteAdapterPosition: Int,
             bindingAdapterPosition: Int,
-            viewholder: RepoViewHolder
+            viewholder: RepoViewHolder,
+            binding: RepoViewItemBinding
         ) {
-            calls += listOf("repo", view, absoluteAdapterPosition, bindingAdapterPosition, viewholder)
+            calls += listOf("repo", view, absoluteAdapterPosition, bindingAdapterPosition, viewholder, binding)
         }
 
         @BindLongClickEvent(RepoItemHolder::class)
-        fun longClickRepo(viewholder: AbstractViewHolder<*>, absoluteAdapterPosition: Int) {
-            calls += listOf("longRepo", viewholder, absoluteAdapterPosition)
+        fun longClickRepo(binding: RepoViewItemBinding, viewholder: AbstractViewHolder<*>, absoluteAdapterPosition: Int) {
+            calls += listOf("longRepo", binding, viewholder, absoluteAdapterPosition)
         }
 
         @BindClickEvent(SeparatorItemHolder::class, "card")
@@ -239,9 +240,10 @@ private val sampleSourceCode = """
             absoluteAdapterPosition: Int,
             viewholder: SeparatorViewHolder,
             view: View,
-            bindingAdapterPosition: Int
+            bindingAdapterPosition: Int,
+            binding: EDComposeView
         ) {
-            calls += listOf("separator", absoluteAdapterPosition, viewholder, view, bindingAdapterPosition)
+            calls += listOf("separator", absoluteAdapterPosition, viewholder, view, bindingAdapterPosition, binding)
         }
 
         @BindLongClickEvent(SeparatorItemHolder::class, "card")
@@ -264,18 +266,18 @@ private val callbackProbeSource = SourceFile.kotlin(
     object CallbackProbe {
         @JvmStatic
         fun verify() {
-            val holder = buildRepoItemHolder(ViewGroup(), "", "")
+            val holder = buildRepoItemHolder(ViewGroup(), "", "") as RepoViewHolder
             val view = holder.itemView
             holder.bindingAdapterPosition = 2
             holder.absoluteAdapterPosition = 7
             view.performClick()
-            check(receiver.calls.last() == listOf("repo", view, 7, 2, holder))
+            check(receiver.calls.last() == listOf("repo", view, 7, 2, holder, holder.binding))
             holder.bindingAdapterPosition = 3
             holder.absoluteAdapterPosition = 8
             view.performClick()
-            check(receiver.calls.last() == listOf("repo", view, 8, 3, holder))
+            check(receiver.calls.last() == listOf("repo", view, 8, 3, holder, holder.binding))
             check(view.performLongClick())
-            check(receiver.calls.last() == listOf("longRepo", holder, 8))
+            check(receiver.calls.last() == listOf("longRepo", holder.binding, holder, 8))
             val count = receiver.calls.size
             holder.bindingAdapterPosition = -1
             view.performClick()
@@ -289,7 +291,7 @@ private val callbackProbeSource = SourceFile.kotlin(
             compose.bindingAdapterPosition = 5
             compose.absoluteAdapterPosition = 9
             compose.edComposeView.clickListener?.invoke("card")
-            check(receiver.calls.last() == listOf("separator", 9, compose, compose.itemView, 5))
+            check(receiver.calls.last() == listOf("separator", 9, compose, compose.itemView, 5, compose.edComposeView))
             compose.edComposeView.longClickListener?.invoke("card")
             check(receiver.calls.last() == listOf("longSeparator", compose.itemView, 5))
         }

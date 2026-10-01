@@ -4,7 +4,8 @@ import kotlin.reflect.KClass
 
 /**
  * Callback parameters are resolved by name in declaration order: bindingAdapterPosition,
- * absoluteAdapterPosition, viewholder and view. Position parameters must be Int; invalid positions are ignored.
+ * absoluteAdapterPosition, viewholder, view and binding.
+ * Position parameters must be Int; invalid positions are ignored.
  */
 @Retention(AnnotationRetention.SOURCE)
 @Target(AnnotationTarget.FUNCTION)
@@ -15,7 +16,8 @@ annotation class BindClickEvent(
 
 /**
  * Callback parameters are resolved by name in declaration order: bindingAdapterPosition,
- * absoluteAdapterPosition, viewholder and view. Position parameters must be Int; invalid positions are ignored.
+ * absoluteAdapterPosition, viewholder, view and binding.
+ * Position parameters must be Int; invalid positions are ignored.
  */
 @Retention(AnnotationRetention.SOURCE)
 @Target(AnnotationTarget.FUNCTION)

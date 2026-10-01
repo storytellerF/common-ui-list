@@ -21,17 +21,17 @@ import kotlin.reflect.KClass
 fun buildRepoItemHolder(parent: ViewGroup, type: String, key: String): AbstractViewHolder<*> {
     if (type.equals("")) {
         val context = parent.context
-        val binding = RepoViewItemBinding.inflate(LayoutInflater.from(context), parent, false)
+        val inflate = RepoViewItemBinding.inflate(LayoutInflater.from(context), parent, false)
     
-        val viewHolder = RepoViewHolder(binding, key)
-        binding.root.setOnClickListener { v ->
-            viewHolder.bindingAdapterPosition.takeIf { it != RecyclerView.NO_POSITION }?.let { bindingAdapterPosition -> viewHolder.absoluteAdapterPosition.takeIf { it != RecyclerView.NO_POSITION }?.let { absoluteAdapterPosition -> v.findFragmentOrNull<ClickReceiver>()?.clickRepo(v, absoluteAdapterPosition, bindingAdapterPosition, viewHolder) } }
+        val viewHolder = RepoViewHolder(inflate, key)
+        inflate.root.setOnClickListener { v ->
+            viewHolder.bindingAdapterPosition.takeIf { it != RecyclerView.NO_POSITION }?.let { bindingAdapterPosition -> viewHolder.absoluteAdapterPosition.takeIf { it != RecyclerView.NO_POSITION }?.let { absoluteAdapterPosition -> v.findFragmentOrNull<ClickReceiver>()?.clickRepo(v, absoluteAdapterPosition, bindingAdapterPosition, viewHolder, inflate) } }
         }
-        binding.root.setOnLongClickListener { v ->
+        inflate.root.setOnLongClickListener { v ->
             if (viewHolder.bindingAdapterPosition == RecyclerView.NO_POSITION) {
                 return@setOnLongClickListener false
             }
-            viewHolder.absoluteAdapterPosition.takeIf { it != RecyclerView.NO_POSITION }?.let { absoluteAdapterPosition -> v.findFragmentOrNull<ClickReceiver>()?.longClickRepo(viewHolder, absoluteAdapterPosition) }
+            viewHolder.absoluteAdapterPosition.takeIf { it != RecyclerView.NO_POSITION }?.let { absoluteAdapterPosition -> v.findFragmentOrNull<ClickReceiver>()?.longClickRepo(inflate, viewHolder, absoluteAdapterPosition) }
             true
         }
         return viewHolder
@@ -70,11 +70,12 @@ fun buildSeparatorItemHolder(parent: ViewGroup, type: String): AbstractViewHolde
     if (type.equals("")) {
         val context = parent.context
         val view = EDComposeView(context)
+        @Suppress("UNUSED_VARIABLE") val inflate = view
         val viewHolder = SeparatorViewHolder(view)
         @Suppress("UNUSED_VARIABLE") val v = viewHolder.itemView
         view.clickListener = { s ->
             if (s == "card") {
-                viewHolder.bindingAdapterPosition.takeIf { it != RecyclerView.NO_POSITION }?.let { bindingAdapterPosition -> viewHolder.absoluteAdapterPosition.takeIf { it != RecyclerView.NO_POSITION }?.let { absoluteAdapterPosition -> v.findFragmentOrNull<ClickReceiver>()?.clickSeparator(absoluteAdapterPosition, viewHolder, v, bindingAdapterPosition) } }
+                viewHolder.bindingAdapterPosition.takeIf { it != RecyclerView.NO_POSITION }?.let { bindingAdapterPosition -> viewHolder.absoluteAdapterPosition.takeIf { it != RecyclerView.NO_POSITION }?.let { absoluteAdapterPosition -> v.findFragmentOrNull<ClickReceiver>()?.clickSeparator(absoluteAdapterPosition, viewHolder, v, bindingAdapterPosition, inflate) } }
             }//if end
         }
         view.longClickListener = { s ->

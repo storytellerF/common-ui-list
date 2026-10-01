@@ -16,6 +16,7 @@ ViewHolder 不再保存或提供 item holder。`bindData` 使用传入的数据�
 | `absoluteAdapterPosition` | 整个 RecyclerView 中的索引，类型为 `Int` |
 | `viewholder`（兼容 `viewHolder`） | 当前 ViewHolder |
 | `view` | 点击的 View；Compose 中为 ViewHolder 的 itemView |
+| `binding` | ViewBinding 对象；Compose 中为 EDComposeView |
 
 参数可以任意排序或组合，也可省略。请求的索引无效时不调用回调。
 接收者可通过对应 adapter 的 `getItemHolder(bindingAdapterPosition)` 查询数据。

@@ -191,12 +191,13 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
                 "absoluteAdapterPosition" -> "absoluteAdapterPosition"
                 "viewholder", "viewHolder" -> "viewHolder"
                 "view" -> "v"
+                "binding" -> "inflate"
                 else -> null
             }
             if (argument == null) {
                 logger.error(
                     "Unsupported event parameter '$name'; use bindingAdapterPosition, " +
-                        "absoluteAdapterPosition, viewholder or view",
+                        "absoluteAdapterPosition, viewholder, view or binding",
                     parameter
                 )
             } else if (argument in listOf("bindingAdapterPosition", "absoluteAdapterPosition") &&

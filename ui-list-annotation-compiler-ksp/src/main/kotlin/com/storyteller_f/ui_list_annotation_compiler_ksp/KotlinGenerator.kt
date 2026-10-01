@@ -202,6 +202,7 @@ class KotlinGenerator(
         return """
             val context = parent.context
             val view = EDComposeView(context)
+            @Suppress("UNUSED_VARIABLE") val inflate = view
             val viewHolder = ${it.viewHolderName}(view)
             @Suppress("UNUSED_VARIABLE") val v = viewHolder.itemView
             view.clickListener = { s ->
@@ -256,9 +257,9 @@ class KotlinGenerator(
     ): String {
         return """
             val context = parent.context
-            val binding = ${entry.bindingName}.inflate(LayoutInflater.from(context), parent, false)
+            val inflate = ${entry.bindingName}.inflate(LayoutInflater.from(context), parent, false)
 
-            val viewHolder = ${entry.viewHolderName}(binding${entry.constructorExtraParams})
+            val viewHolder = ${entry.viewHolderName}(inflate${entry.constructorExtraParams})
             $1
             return viewHolder
         """.trimIndent()
@@ -276,13 +277,13 @@ class KotlinGenerator(
     }
 
     private fun produceClickListener(it: Map.Entry<String, List<Event<KSAnnotated>>>) = """
-            binding.${it.key}.setOnClickListener { v ->
+            inflate.${it.key}.setOnClickListener { v ->
                 $1
             }
     """.trimIndent().replace("$1", buildInvokeClickEvent(it.value).replace("\n", "\n    "))
 
     private fun produceLongClickListener(it: Map.Entry<String, List<Event<KSAnnotated>>>) = """
-            binding.${it.key}.setOnLongClickListener { v ->
+            inflate.${it.key}.setOnLongClickListener { v ->
                 if (viewHolder.bindingAdapterPosition == RecyclerView.NO_POSITION) {
                     return@setOnLongClickListener false
                 }
