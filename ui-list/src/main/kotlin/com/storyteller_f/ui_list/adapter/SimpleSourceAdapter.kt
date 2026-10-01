@@ -8,6 +8,7 @@ import com.storyteller_f.ui_list.core.BuildBatch
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.core.DefaultAdapter
 import com.storyteller_f.ui_list.core.DefaultAdapter.Companion.common_diff_util
+import com.storyteller_f.ui_list.core.ItemHolderProvider
 import kotlin.reflect.KClass
 
 @Suppress("UNCHECKED_CAST")
@@ -16,7 +17,10 @@ open class SimpleSourceAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>
 ) :
     PagingDataAdapter<IH, VH>(
         common_diff_util as DiffUtil.ItemCallback<IH>
-    ) {
+    ), ItemHolderProvider<IH> {
+    override fun getItemHolder(position: Int): IH? =
+        if (position in 0 until itemCount) peek(position) else null
+
     private val proxy = object : DefaultAdapter<IH, VH>(buildBatch) {
         override fun getItemAbstract(position: Int): IH? = getItem(position)
     }.apply {

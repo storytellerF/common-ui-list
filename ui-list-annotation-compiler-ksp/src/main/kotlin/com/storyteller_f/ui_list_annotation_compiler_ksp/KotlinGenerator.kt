@@ -202,6 +202,7 @@ class KotlinGenerator(
         return """
             val context = parent.context
             val view = EDComposeView(context)
+            @Suppress("UNUSED_VARIABLE") val inflate = view
             val viewHolder = ${it.viewHolderName}(view)
             @Suppress("UNUSED_VARIABLE") val v = viewHolder.itemView
             view.clickListener = { s ->
@@ -223,23 +224,31 @@ class KotlinGenerator(
             }
             """
             if (s == "${it.key}") {
-                $1                
+                $1
             }//if end
             """.trimIndent().replace("$1", clickBlock.replace("\n", "\n    "))
         }.joinToString("\n")
 
     private fun produceClickBlockForCompose(e: Event<KSAnnotated>): String {
-        val parameterList = e.parameterList
-        return if (e.receiver.contains("Activity")) {
-            """
-                (context as? ${e.receiver})?.${e.functionName}($parameterList)
-            """.trimIndent()
+        val receiver = if (e.receiver.contains("Activity")) {
+            "(context as? ${e.receiver})"
         } else {
-            """
-                v.findFragmentOrNull<${e.receiver}>()?.${e.functionName}($parameterList)
-            """.trimIndent()
+            "v.findFragmentOrNull<${e.receiver}>()"
         }
+        val arguments = e.parameterList.split(", ")
+        var invocation = "$receiver?.${e.functionName}(${e.parameterList})"
+        if ("absoluteAdapterPosition" in arguments) {
+            invocation = withValidPosition(invocation, "absoluteAdapterPosition", "absoluteAdapterPosition")
+        }
+        if ("bindingAdapterPosition" in arguments) {
+            invocation = withValidPosition(invocation, "bindingAdapterPosition", "bindingAdapterPosition")
+        }
+        return invocation
     }
+
+    private fun withValidPosition(invocation: String, argument: String, property: String): String =
+        "viewHolder.$property.takeIf { it != RecyclerView.NO_POSITION }" +
+            "?.let { $argument -> $invocation }"
 
     private fun buildViewHolder(
         entry: Holder<KSAnnotated>,
@@ -248,9 +257,9 @@ class KotlinGenerator(
     ): String {
         return """
             val context = parent.context
-            val binding = ${entry.bindingName}.inflate(LayoutInflater.from(context), parent, false)
+            val inflate = ${entry.bindingName}.inflate(LayoutInflater.from(context), parent, false)
 
-            val viewHolder = ${entry.viewHolderName}(binding${entry.constructorExtraParams})
+            val viewHolder = ${entry.viewHolderName}(inflate${entry.constructorExtraParams})
             $1
             return viewHolder
         """.trimIndent()
@@ -264,36 +273,27 @@ class KotlinGenerator(
     ): String {
         val singleClickListener = event.map(::produceClickListener).joinToString("\n")
         val longClickListener = event2.map(::produceLongClickListener).joinToString("\n")
-        return singleClickListener + longClickListener
+        return listOf(singleClickListener, longClickListener).filter { it.isNotEmpty() }.joinToString("\n")
     }
 
     private fun produceClickListener(it: Map.Entry<String, List<Event<KSAnnotated>>>) = """
-            binding.${it.key}.setOnClickListener { v ->
+            inflate.${it.key}.setOnClickListener { v ->
                 $1
             }
     """.trimIndent().replace("$1", buildInvokeClickEvent(it.value).replace("\n", "\n    "))
 
     private fun produceLongClickListener(it: Map.Entry<String, List<Event<KSAnnotated>>>) = """
-            binding.${it.key}.setOnLongClickListener { v ->
+            inflate.${it.key}.setOnLongClickListener { v ->
+                if (viewHolder.bindingAdapterPosition == RecyclerView.NO_POSITION) {
+                    return@setOnLongClickListener false
+                }
                 $1
-                return true;
+                true
             }
     """.trimIndent().replace("$1", buildInvokeClickEvent(it.value).replace("\n", "\n    "))
 
-    private fun buildInvokeClickEvent(events: List<Event<KSAnnotated>>): String {
-        return events.joinToString("\n") { event ->
-            val parameterList = event.parameterList
-            if (event.receiver.contains("Activity")) {
-                """
-                    (context as? ${event.receiver})?.${event.functionName}($parameterList)
-                """.trimIndent()
-            } else {
-                """
-                    v.findFragmentOrNull<${event.receiver}>()?.${event.functionName}($parameterList)
-                """.trimIndent()
-            }
-        }
-    }
+    private fun buildInvokeClickEvent(events: List<Event<KSAnnotated>>): String =
+        events.joinToString("\n", transform = ::produceClickBlockForCompose)
 }
 
 fun List<String>.coverPart(): String {

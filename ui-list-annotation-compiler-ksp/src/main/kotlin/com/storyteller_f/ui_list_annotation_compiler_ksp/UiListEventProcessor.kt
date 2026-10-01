@@ -1,6 +1,7 @@
 package com.storyteller_f.ui_list_annotation_compiler_ksp
 
 import com.google.devtools.ksp.KspExperimental
+import com.google.devtools.ksp.findActualType
 import com.google.devtools.ksp.getAnnotationsByType
 import com.google.devtools.ksp.getDeclaredFunctions
 import com.google.devtools.ksp.isAnnotationPresent
@@ -16,6 +17,7 @@ import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeAlias
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.validate
 import com.storyteller_f.annotation_defination.BindClickEvent
@@ -183,20 +185,34 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
         }
     }
 
-    private fun argumentList(it: KSFunctionDeclaration): String {
-        val parameterList = it.parameters.joinToString(", ") { parameter ->
-            val asString = parameter.name?.asString()
-            if (asString.isNullOrEmpty()) {
-                ""
-            } else if (asString == "itemHolder") {
-                "viewHolder.itemHolder"
-            } else if (asString == "binding") {
-                "inflate"
-            } else {
-                "v"
+    private fun argumentList(function: KSFunctionDeclaration): String =
+        function.parameters.joinToString(", ") { parameter ->
+            val name = parameter.name?.asString()
+            val argument = when (name) {
+                "bindingAdapterPosition" -> "bindingAdapterPosition"
+                "absoluteAdapterPosition" -> "absoluteAdapterPosition"
+                "viewholder", "viewHolder" -> "viewHolder"
+                "view" -> "v"
+                "binding" -> "inflate"
+                else -> null
             }
+            if (argument == null) {
+                logger.error(
+                    "Unsupported event parameter '$name'; use bindingAdapterPosition, " +
+                        "absoluteAdapterPosition, viewholder, view or binding",
+                    parameter
+                )
+            } else if (argument in listOf("bindingAdapterPosition", "absoluteAdapterPosition") &&
+                !parameter.type.resolve().isInt()
+            ) {
+                logger.error("Event position parameter '$name' must have type Int", parameter)
+            }
+            argument ?: "error(\"Unsupported event parameter\")"
         }
-        return parameterList
+
+    private fun KSType.isInt(): Boolean {
+        val actualDeclaration = (declaration as? KSTypeAlias)?.findActualType() ?: declaration
+        return actualDeclaration.qualifiedName?.asString() == "kotlin.Int"
     }
 
     private fun KSDeclaration.identity(): Identity {

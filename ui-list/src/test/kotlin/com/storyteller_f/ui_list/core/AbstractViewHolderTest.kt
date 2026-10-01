@@ -44,9 +44,7 @@ class AbstractViewHolderTest {
         holder.moveStateToCreate(isHolderEvent = true)
         assertEquals(Lifecycle.State.CREATED, holder.holderLifecycleOwner.lifecycle.currentState)
 
-        holder.attachItemHolder(item)
         holder.onBind(item)
-        assertEquals(item, holder.itemHolder)
         assertEquals(listOf(item), holder.bound)
 
         holder.moveStateToStart()
@@ -59,20 +57,15 @@ class AbstractViewHolderTest {
         assertEquals(Lifecycle.State.CREATED, holder.holderLifecycleOwner.lifecycle.currentState)
 
         holder.moveStateToDestroy(isHolderEvent = true)
-        holder.detachItemHolder()
         assertNull(holder.holderLifecycleOwnerOrNull)
         assertNull(holder.holderLifecycleOwnerFlow.value)
     }
 
     @Test
-    fun `holder exposes its bound item and context resources`() {
+    fun `holder exposes context resources`() {
         val activity = Robolectric.buildActivity(ComponentActivity::class.java).setup().get()
         val holder = RecordingHolder(View(activity))
-        val item = TestItem("item")
 
-        holder.attachItemHolder(item)
-
-        assertEquals(item, holder.itemHolderOrNull)
         assertEquals(activity.getColor(android.R.color.black), holder.getColor(android.R.color.black))
         assertEquals(activity.getString(R.string.loading), holder.getString(R.string.loading))
         assertEquals(

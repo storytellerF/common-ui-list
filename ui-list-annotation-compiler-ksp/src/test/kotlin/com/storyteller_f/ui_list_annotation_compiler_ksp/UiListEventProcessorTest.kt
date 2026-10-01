@@ -8,6 +8,7 @@ import com.tschuchort.compiletesting.kspWithCompilation
 import com.tschuchort.compiletesting.sourcesGeneratedBySymbolProcessor
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 @OptIn(ExperimentalCompilerApi::class)
@@ -17,59 +18,11 @@ class UiListEventProcessorTest {
         val result = compile(
             ProcessorProvider(),
             *uiListRuntimeStubs,
-            SourceFile.kotlin(
-                "sample/Sample.kt",
-                """
-                package sample
-
-                import android.view.LayoutInflater
-                import android.view.View
-                import android.view.ViewGroup
-                import com.storyteller_f.annotation_defination.BindClickEvent
-                import com.storyteller_f.annotation_defination.BindItemHolder
-                import com.storyteller_f.annotation_defination.BindLongClickEvent
-                import com.storyteller_f.annotation_defination.ItemHolder
-                import com.storyteller_f.ui_list.core.AbstractViewHolder
-                import com.storyteller_f.ui_list.core.BindingViewHolder
-                import com.storyteller_f.ui_list.core.DataItemHolder
-                import com.storyteller_f.view_holder_compose.ComposeViewHolder
-                import com.storyteller_f.view_holder_compose.EDComposeView
-
-                @ItemHolder("repo")
-                data class RepoItemHolder(val name: String) : DataItemHolder()
-
-                class RepoViewItemBinding(val root: View) {
-                    companion object {
-                        fun inflate(inflater: LayoutInflater, parent: ViewGroup, attachToParent: Boolean) =
-                            RepoViewItemBinding(View(parent.context))
-                    }
-                }
-
-                @BindItemHolder(RepoItemHolder::class)
-                class RepoViewHolder(private val binding: RepoViewItemBinding, key: String) :
-                    BindingViewHolder<RepoItemHolder>(binding, key)
-
-                @ItemHolder("separator")
-                data class SeparatorItemHolder(val title: String) : DataItemHolder()
-
-                @BindItemHolder(SeparatorItemHolder::class)
-                class SeparatorViewHolder(edComposeView: EDComposeView) :
-                    ComposeViewHolder<SeparatorItemHolder>(edComposeView)
-
-                class ClickReceiver {
-                    @BindClickEvent(RepoItemHolder::class)
-                    fun clickRepo(itemHolder: RepoItemHolder) = Unit
-
-                    @BindClickEvent(SeparatorItemHolder::class, "card")
-                    fun clickSeparator(view: View, itemHolder: SeparatorItemHolder) = Unit
-
-                    @BindLongClickEvent(SeparatorItemHolder::class, "card")
-                    fun longClickSeparator(binding: Any, itemHolder: SeparatorItemHolder) = Unit
-                }
-                """.trimIndent()
-            )
+            sampleSource,
+            callbackProbeSource
         )
 
+        assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode)
         val generated = result.sourcesGeneratedBySymbolProcessor
             .filter { it.name.endsWith("Builder.kt") }
             .sortedBy { it.name }
@@ -77,6 +30,57 @@ class UiListEventProcessorTest {
             .normalizeGenerated()
 
         assertGolden("builders.kt", generated)
+        result.classLoader.loadClass("sample.CallbackProbe").getMethod("verify").invoke(null)
+    }
+
+    @Test
+    fun `ambiguous and unknown Int parameter names produce a diagnostic`() {
+        for (name in listOf("position", "index", "offset")) {
+            val source = SourceFile.kotlin(
+                "sample/Sample.kt",
+                sampleSourceCode.replace("bindingAdapterPosition: Int", "$name: Int")
+            )
+            val result = compile(ProcessorProvider(), *uiListRuntimeStubs, source)
+
+            assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode)
+            assertTrue(result.messages.contains("Unsupported event parameter '$name'"))
+        }
+    }
+
+    @Test
+    fun `Int typealiases are accepted for both adapter positions`() {
+        val source = SourceFile.kotlin(
+            "sample/Sample.kt",
+            sampleSourceCode.replace(
+                "@ItemHolder(\"repo\")",
+                "typealias RowIndex = Int\ntypealias AbsoluteIndex = RowIndex\n\n@ItemHolder(\"repo\")"
+            ).replace("bindingAdapterPosition: Int", "bindingAdapterPosition: RowIndex")
+                .replace("absoluteAdapterPosition: Int", "absoluteAdapterPosition: AbsoluteIndex")
+        )
+        val result = compile(ProcessorProvider(), *uiListRuntimeStubs, source, callbackProbeSource)
+
+        assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode)
+        result.classLoader.loadClass("sample.CallbackProbe").getMethod("verify").invoke(null)
+    }
+
+    @Test
+    fun `position parameters must resolve to Int`() {
+        for (type in listOf("String", "TextIndex")) {
+            val source = SourceFile.kotlin(
+                "sample/Sample.kt",
+                sampleSourceCode.replace(
+                    "@ItemHolder(\"repo\")",
+                    "typealias TextIndex = String\n\n@ItemHolder(\"repo\")"
+                ).replace("bindingAdapterPosition: Int", "bindingAdapterPosition: $type")
+                    .replace("absoluteAdapterPosition: Int", "absoluteAdapterPosition: $type")
+            )
+            val result = compile(ProcessorProvider(), *uiListRuntimeStubs, source)
+
+            assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode)
+            for (name in listOf("bindingAdapterPosition", "absoluteAdapterPosition")) {
+                assertTrue(result.messages.contains("Event position parameter '$name' must have type Int"))
+            }
+        }
     }
 
     private fun compile(
@@ -87,7 +91,7 @@ class UiListEventProcessorTest {
         configureKsp {
             symbolProcessorProviders.add(provider)
         }
-        kspWithCompilation = false
+        kspWithCompilation = true
         this.sources = sources.toList()
         jvmTarget = "21"
     }.compile()
@@ -103,7 +107,8 @@ class UiListEventProcessorTest {
     private fun String.normalizeGenerated(): String =
         replace(
             Regex(
-                "(?:[A-Za-z]:[/\\\\][^\\r\\n]*?Kotlin-Compilation[^/\\\\]+[/\\\\]sources[/\\\\]|/tmp/Kotlin-Compilation[^/]+/sources/)"
+                "(?:[A-Za-z]:[/\\\\][^\\r\\n]*?Kotlin-Compilation[^/\\\\]+[/\\\\]sources[/\\\\]|" +
+                    "/tmp/Kotlin-Compilation[^/]+/sources/)"
             ),
             "<sources>/"
         )
@@ -124,11 +129,29 @@ private val uiListRuntimeStubs = arrayOf(
         """
         package android.view
         import android.content.Context
-        open class View(val context: Context)
+        open class View(val context: Context) {
+            private var clickListener: ((View) -> Unit)? = null
+            private var longClickListener: ((View) -> Boolean)? = null
+            fun setOnClickListener(listener: (View) -> Unit) { clickListener = listener }
+            fun setOnLongClickListener(listener: (View) -> Boolean) { longClickListener = listener }
+            fun performClick() { clickListener?.invoke(this) }
+            fun performLongClick() = longClickListener?.invoke(this) ?: false
+        }
         open class ViewGroup(context: Context = Context()) : View(context)
         class LayoutInflater {
             companion object {
                 fun from(context: Context): LayoutInflater = LayoutInflater()
+            }
+        }
+        """.trimIndent()
+    ),
+    SourceFile.kotlin(
+        "androidx/recyclerview/widget/RecyclerView.kt",
+        """
+        package androidx.recyclerview.widget
+        class RecyclerView {
+            companion object {
+                const val NO_POSITION = -1
             }
         }
         """.trimIndent()
@@ -140,7 +163,9 @@ private val uiListRuntimeStubs = arrayOf(
         import android.view.View
         open class DataItemHolder
         abstract class AbstractViewHolder<IH : DataItemHolder>(val itemView: View) {
-            lateinit var itemHolder: IH
+            val context get() = itemView.context
+            var bindingAdapterPosition: Int = -1
+            var absoluteAdapterPosition: Int = -1
         }
         open class BindingViewHolder<IH : DataItemHolder>(binding: Any, key: String = "") :
             AbstractViewHolder<IH>((binding as sample.RepoViewItemBinding).root)
@@ -154,7 +179,8 @@ private val uiListRuntimeStubs = arrayOf(
         "com/storyteller_f/ui_list/event/View.kt",
         """
         package com.storyteller_f.ui_list.event
-        fun Any.findFragmentOrNull(): Any? = null
+        @Suppress("UNCHECKED_CAST")
+        fun <T> Any.findFragmentOrNull(): T? = sample.receiver as T
         """.trimIndent()
     ),
     SourceFile.kotlin(
@@ -174,4 +200,125 @@ private val uiListRuntimeStubs = arrayOf(
             AbstractViewHolder<IH>(edComposeView.composeView)
         """.trimIndent()
     ),
+)
+
+private val sampleSourceCode = """
+    package sample
+
+    import android.view.LayoutInflater
+    import android.view.View
+    import android.view.ViewGroup
+    import com.storyteller_f.annotation_defination.BindClickEvent
+    import com.storyteller_f.annotation_defination.BindItemHolder
+    import com.storyteller_f.annotation_defination.BindLongClickEvent
+    import com.storyteller_f.annotation_defination.ItemHolder
+    import com.storyteller_f.ui_list.core.AbstractViewHolder
+    import com.storyteller_f.ui_list.core.BindingViewHolder
+    import com.storyteller_f.ui_list.core.DataItemHolder
+    import com.storyteller_f.view_holder_compose.ComposeViewHolder
+    import com.storyteller_f.view_holder_compose.EDComposeView
+
+    @ItemHolder("repo")
+    data class RepoItemHolder(val name: String) : DataItemHolder()
+
+    class RepoViewItemBinding(val root: View) {
+        companion object {
+            fun inflate(inflater: LayoutInflater, parent: ViewGroup, attachToParent: Boolean) =
+                RepoViewItemBinding(View(parent.context))
+        }
+    }
+
+    @BindItemHolder(RepoItemHolder::class)
+    class RepoViewHolder(val binding: RepoViewItemBinding, key: String) :
+        BindingViewHolder<RepoItemHolder>(binding, key)
+
+    @ItemHolder("separator")
+    data class SeparatorItemHolder(val title: String) : DataItemHolder()
+
+    @BindItemHolder(SeparatorItemHolder::class)
+    class SeparatorViewHolder(edComposeView: EDComposeView) :
+        ComposeViewHolder<SeparatorItemHolder>(edComposeView)
+
+    val receiver = ClickReceiver()
+
+    class ClickReceiver {
+        val calls = mutableListOf<List<Any>>()
+        @BindClickEvent(RepoItemHolder::class)
+        fun clickRepo(
+            view: View,
+            absoluteAdapterPosition: Int,
+            bindingAdapterPosition: Int,
+            viewholder: RepoViewHolder,
+            binding: RepoViewItemBinding
+        ) {
+            calls += listOf("repo", view, absoluteAdapterPosition, bindingAdapterPosition, viewholder, binding)
+        }
+
+        @BindLongClickEvent(RepoItemHolder::class)
+        fun longClickRepo(binding: RepoViewItemBinding, viewholder: AbstractViewHolder<*>, absoluteAdapterPosition: Int) {
+            calls += listOf("longRepo", binding, viewholder, absoluteAdapterPosition)
+        }
+
+        @BindClickEvent(SeparatorItemHolder::class, "card")
+        fun clickSeparator(
+            absoluteAdapterPosition: Int,
+            viewholder: SeparatorViewHolder,
+            view: View,
+            bindingAdapterPosition: Int,
+            binding: EDComposeView
+        ) {
+            calls += listOf("separator", absoluteAdapterPosition, viewholder, view, bindingAdapterPosition, binding)
+        }
+
+        @BindLongClickEvent(SeparatorItemHolder::class, "card")
+        fun longClickSeparator(view: View, bindingAdapterPosition: Int) {
+            calls += listOf("longSeparator", view, bindingAdapterPosition)
+        }
+    }
+""".trimIndent()
+
+private val sampleSource = SourceFile.kotlin("sample/Sample.kt", sampleSourceCode)
+
+private val callbackProbeSource = SourceFile.kotlin(
+    "sample/CallbackProbe.kt",
+    """
+    package sample
+    import android.view.ViewGroup
+    import sample.ui_list.buildRepoItemHolder
+    import sample.ui_list.buildSeparatorItemHolder
+
+    object CallbackProbe {
+        @JvmStatic
+        fun verify() {
+            val holder = buildRepoItemHolder(ViewGroup(), "", "") as RepoViewHolder
+            val view = holder.itemView
+            holder.bindingAdapterPosition = 2
+            holder.absoluteAdapterPosition = 7
+            view.performClick()
+            check(receiver.calls.last() == listOf("repo", view, 7, 2, holder, holder.binding))
+            holder.bindingAdapterPosition = 3
+            holder.absoluteAdapterPosition = 8
+            view.performClick()
+            check(receiver.calls.last() == listOf("repo", view, 8, 3, holder, holder.binding))
+            check(view.performLongClick())
+            check(receiver.calls.last() == listOf("longRepo", holder.binding, holder, 8))
+            val count = receiver.calls.size
+            holder.bindingAdapterPosition = -1
+            view.performClick()
+            check(!view.performLongClick())
+            check(receiver.calls.size == count)
+            holder.bindingAdapterPosition = 3
+            holder.absoluteAdapterPosition = -1
+            view.performClick()
+            check(receiver.calls.size == count)
+            val compose = buildSeparatorItemHolder(ViewGroup(), "") as SeparatorViewHolder
+            compose.bindingAdapterPosition = 5
+            compose.absoluteAdapterPosition = 9
+            compose.edComposeView.clickListener?.invoke("card")
+            check(receiver.calls.last() == listOf("separator", 9, compose, compose.itemView, 5, compose.edComposeView))
+            compose.edComposeView.longClickListener?.invoke("card")
+            check(receiver.calls.last() == listOf("longSeparator", compose.itemView, 5))
+        }
+    }
+    """.trimIndent()
 )

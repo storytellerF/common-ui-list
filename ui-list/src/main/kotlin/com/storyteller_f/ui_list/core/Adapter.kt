@@ -72,19 +72,6 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: 
     val holderLifecycleOwner: LifecycleOwner get() = holderLifecycleOwnerOrNull!!
     val holderLifecycleOwnerOrNull get() = _holderLifecycleOwner.value
 
-    private var _itemHolder: IH? = null
-
-    /**
-     * 需要保证当前已经绑定过数据了
-     * 在[holderLifecycleOwner] 生命周期内或者onBind 中使用都是安全的
-     */
-    val itemHolder get() = _itemHolder!!
-
-    /**
-     * 在事件处理中使用这个更加合适
-     */
-    val itemHolderOrNull get() = itemHolder
-
     private var observer: LifecycleObserver = BindLifecycleObserver()
 
     fun onBind(itemHolder: IH) {
@@ -100,14 +87,6 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: 
     fun getDimen(@DimenRes id: Int) = context.resources.getDimension(id)
 
     fun getString(@StringRes id: Int) = context.resources.getString(id)
-
-    internal fun attachItemHolder(itemHolder: IH) {
-        _itemHolder = itemHolder
-    }
-
-    internal fun detachItemHolder() {
-        _itemHolder = null
-    }
 
     /**
      * onViewAttachedToWindow 被触发或者外部生命周期onStart 触发
@@ -299,7 +278,6 @@ open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(
 
     override fun onBindViewHolder(holder: VH, position: Int) {
         val itemHolder = getItemAbstract(position) ?: return
-        holder.attachItemHolder(itemHolder)
         holder.moveStateToCreate(true)
         holder.onBind(itemHolder)
     }
@@ -336,7 +314,6 @@ open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(
     override fun onViewRecycled(holder: VH) {
         super.onViewRecycled(holder)
         holder.moveStateToDestroy(true)
-        holder.detachItemHolder()
     }
 
     companion object {

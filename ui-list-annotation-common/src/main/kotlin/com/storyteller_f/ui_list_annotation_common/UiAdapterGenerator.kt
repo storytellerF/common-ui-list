@@ -6,6 +6,7 @@ object UiAdapterGenerator {
         "com.storyteller_f.ui_list.core.AbstractViewHolder",
         "android.view.LayoutInflater",
         "android.view.ViewGroup",
+        "androidx.recyclerview.widget.RecyclerView",
         "com.storyteller_f.ui_list.core.BuildBatch",
         "com.storyteller_f.ui_list.core.DataItemHolder",
         "com.storyteller_f.ui_list.event.findFragmentOrNull",
