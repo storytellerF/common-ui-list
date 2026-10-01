@@ -8,6 +8,7 @@ import com.tschuchort.compiletesting.kspWithCompilation
 import com.tschuchort.compiletesting.sourcesGeneratedBySymbolProcessor
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 @OptIn(ExperimentalCompilerApi::class)
@@ -17,7 +18,8 @@ class UiListEventProcessorTest {
         val result = compile(
             ProcessorProvider(),
             *uiListRuntimeStubs,
-            sampleSource
+            sampleSource,
+            callbackProbeSource
         )
 
         assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode)
@@ -28,6 +30,31 @@ class UiListEventProcessorTest {
             .normalizeGenerated()
 
         assertGolden("builders.kt", generated)
+        result.classLoader.loadClass("sample.CallbackProbe").getMethod("verify").invoke(null)
+    }
+
+    @Test
+    fun `unknown Int parameter names produce a diagnostic`() {
+        val source = SourceFile.kotlin(
+            "sample/Sample.kt",
+            sampleSourceCode.replace("position: Int", "offset: Int")
+        )
+        val result = compile(ProcessorProvider(), *uiListRuntimeStubs, source)
+
+        assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode)
+        assertTrue(result.messages.contains("Unsupported event parameter 'offset'"))
+    }
+
+    @Test
+    fun `position parameters must have type Int`() {
+        val source = SourceFile.kotlin(
+            "sample/Sample.kt",
+            sampleSourceCode.replace("position: Int", "position: String")
+        )
+        val result = compile(ProcessorProvider(), *uiListRuntimeStubs, source)
+
+        assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode)
+        assertTrue(result.messages.contains("Event position parameter 'position' must have type Int"))
     }
 
     private fun compile(
@@ -77,8 +104,12 @@ private val uiListRuntimeStubs = arrayOf(
         package android.view
         import android.content.Context
         open class View(val context: Context) {
-            fun setOnClickListener(listener: (View) -> Unit) = Unit
-            fun setOnLongClickListener(listener: (View) -> Boolean) = Unit
+            private var clickListener: ((View) -> Unit)? = null
+            private var longClickListener: ((View) -> Boolean)? = null
+            fun setOnClickListener(listener: (View) -> Unit) { clickListener = listener }
+            fun setOnLongClickListener(listener: (View) -> Boolean) { longClickListener = listener }
+            fun performClick() { clickListener?.invoke(this) }
+            fun performLongClick() = longClickListener?.invoke(this) ?: false
         }
         open class ViewGroup(context: Context = Context()) : View(context)
         class LayoutInflater {
@@ -107,7 +138,8 @@ private val uiListRuntimeStubs = arrayOf(
         open class DataItemHolder
         abstract class AbstractViewHolder<IH : DataItemHolder>(val itemView: View) {
             val context get() = itemView.context
-            val bindingAdapterPosition: Int get() = -1
+            var bindingAdapterPosition: Int = -1
+            var absoluteAdapterPosition: Int = -1
         }
         open class BindingViewHolder<IH : DataItemHolder>(binding: Any, key: String = "") :
             AbstractViewHolder<IH>((binding as sample.RepoViewItemBinding).root)
@@ -121,7 +153,8 @@ private val uiListRuntimeStubs = arrayOf(
         "com/storyteller_f/ui_list/event/View.kt",
         """
         package com.storyteller_f.ui_list.event
-        fun <T> Any.findFragmentOrNull(): T? = null
+        @Suppress("UNCHECKED_CAST")
+        fun <T> Any.findFragmentOrNull(): T? = sample.receiver as T
         """.trimIndent()
     ),
     SourceFile.kotlin(
@@ -143,9 +176,7 @@ private val uiListRuntimeStubs = arrayOf(
     ),
 )
 
-private val sampleSource = SourceFile.kotlin(
-    "sample/Sample.kt",
-    """
+private val sampleSourceCode = """
     package sample
 
     import android.view.LayoutInflater
@@ -182,18 +213,85 @@ private val sampleSource = SourceFile.kotlin(
     class SeparatorViewHolder(edComposeView: EDComposeView) :
         ComposeViewHolder<SeparatorItemHolder>(edComposeView)
 
+    val receiver = ClickReceiver()
+
     class ClickReceiver {
+        val calls = mutableListOf<List<Any>>()
         @BindClickEvent(RepoItemHolder::class)
-        fun clickRepo(position: Int) = Unit
+        fun clickRepo(
+            view: View,
+            absoluteAdapterPosition: Int,
+            position: Int,
+            viewholder: RepoViewHolder,
+            bindingAdapterPosition: Int
+        ) {
+            calls += listOf("repo", view, absoluteAdapterPosition, position, viewholder, bindingAdapterPosition)
+        }
 
         @BindLongClickEvent(RepoItemHolder::class)
-        fun longClickRepo(position: Int) = Unit
+        fun longClickRepo(viewholder: AbstractViewHolder<*>, absoluteAdapterPosition: Int) {
+            calls += listOf("longRepo", viewholder, absoluteAdapterPosition)
+        }
 
         @BindClickEvent(SeparatorItemHolder::class, "card")
-        fun clickSeparator(view: View, index: Int) = Unit
+        fun clickSeparator(
+            absoluteAdapterPosition: Int,
+            viewholder: SeparatorViewHolder,
+            view: View,
+            bindingAdapterPosition: Int
+        ) {
+            calls += listOf("separator", absoluteAdapterPosition, viewholder, view, bindingAdapterPosition)
+        }
 
         @BindLongClickEvent(SeparatorItemHolder::class, "card")
-        fun longClickSeparator(position: Int) = Unit
+        fun longClickSeparator(view: View, position: Int) {
+            calls += listOf("longSeparator", view, position)
+        }
+    }
+""".trimIndent()
+
+private val sampleSource = SourceFile.kotlin("sample/Sample.kt", sampleSourceCode)
+
+private val callbackProbeSource = SourceFile.kotlin(
+    "sample/CallbackProbe.kt",
+    """
+    package sample
+    import android.view.ViewGroup
+    import sample.ui_list.buildRepoItemHolder
+    import sample.ui_list.buildSeparatorItemHolder
+
+    object CallbackProbe {
+        @JvmStatic
+        fun verify() {
+            val holder = buildRepoItemHolder(ViewGroup(), "", "")
+            val view = holder.itemView
+            holder.bindingAdapterPosition = 2
+            holder.absoluteAdapterPosition = 7
+            view.performClick()
+            check(receiver.calls.last() == listOf("repo", view, 7, 2, holder, 2))
+            holder.bindingAdapterPosition = 3
+            holder.absoluteAdapterPosition = 8
+            view.performClick()
+            check(receiver.calls.last() == listOf("repo", view, 8, 3, holder, 3))
+            check(view.performLongClick())
+            check(receiver.calls.last() == listOf("longRepo", holder, 8))
+            val count = receiver.calls.size
+            holder.bindingAdapterPosition = -1
+            view.performClick()
+            check(!view.performLongClick())
+            check(receiver.calls.size == count)
+            holder.bindingAdapterPosition = 3
+            holder.absoluteAdapterPosition = -1
+            view.performClick()
+            check(receiver.calls.size == count)
+            val compose = buildSeparatorItemHolder(ViewGroup(), "") as SeparatorViewHolder
+            compose.bindingAdapterPosition = 5
+            compose.absoluteAdapterPosition = 9
+            compose.edComposeView.clickListener?.invoke("card")
+            check(receiver.calls.last() == listOf("separator", 9, compose, compose.itemView, 5))
+            compose.edComposeView.longClickListener?.invoke("card")
+            check(receiver.calls.last() == listOf("longSeparator", compose.itemView, 5))
+        }
     }
     """.trimIndent()
 )

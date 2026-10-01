@@ -234,14 +234,20 @@ class KotlinGenerator(
         } else {
             "v.findFragmentOrNull<${e.receiver}>()"
         }
-        val invocation = "$receiver?.${e.functionName}(${e.parameterList})"
-        return if ("position" in e.parameterList.split(", ")) {
-            "viewHolder.bindingAdapterPosition.takeIf { it != RecyclerView.NO_POSITION }" +
-                "?.let { position -> $invocation }"
-        } else {
-            invocation
+        val arguments = e.parameterList.split(", ")
+        var invocation = "$receiver?.${e.functionName}(${e.parameterList})"
+        if ("absoluteAdapterPosition" in arguments) {
+            invocation = withValidPosition(invocation, "absoluteAdapterPosition", "absoluteAdapterPosition")
         }
+        if ("position" in arguments) {
+            invocation = withValidPosition(invocation, "position", "bindingAdapterPosition")
+        }
+        return invocation
     }
+
+    private fun withValidPosition(invocation: String, argument: String, property: String): String =
+        "viewHolder.$property.takeIf { it != RecyclerView.NO_POSITION }" +
+            "?.let { $argument -> $invocation }"
 
     private fun buildViewHolder(
         entry: Holder<KSAnnotated>,

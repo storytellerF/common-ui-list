@@ -2,7 +2,10 @@ package com.storyteller_f.annotation_defination
 
 import kotlin.reflect.KClass
 
-/** Int callback parameters receive the current bindingAdapterPosition; invalid positions are ignored. */
+/**
+ * Callback parameters are resolved by name in declaration order: bindingAdapterPosition/position,
+ * absoluteAdapterPosition, viewholder and view. Position parameters must be Int; invalid positions are ignored.
+ */
 @Retention(AnnotationRetention.SOURCE)
 @Target(AnnotationTarget.FUNCTION)
 annotation class BindClickEvent(
@@ -10,7 +13,10 @@ annotation class BindClickEvent(
     val viewName: String = "root",
 )
 
-/** Int callback parameters receive the current bindingAdapterPosition; invalid positions are ignored. */
+/**
+ * Callback parameters are resolved by name in declaration order: bindingAdapterPosition/position,
+ * absoluteAdapterPosition, viewholder and view. Position parameters must be Int; invalid positions are ignored.
+ */
 @Retention(AnnotationRetention.SOURCE)
 @Target(AnnotationTarget.FUNCTION)
 annotation class BindLongClickEvent(

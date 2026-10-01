@@ -183,21 +183,29 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
         }
     }
 
-    private fun argumentList(it: KSFunctionDeclaration): String {
-        val parameterList = it.parameters.joinToString(", ") { parameter ->
-            val asString = parameter.name?.asString()
-            if (asString.isNullOrEmpty()) {
-                ""
-            } else if (parameter.type.resolve().declaration.qualifiedName?.asString() == "kotlin.Int") {
-                "position"
-            } else if (asString == "binding") {
-                "inflate"
-            } else {
-                "v"
+    private fun argumentList(function: KSFunctionDeclaration): String =
+        function.parameters.joinToString(", ") { parameter ->
+            val name = parameter.name?.asString()
+            val argument = when (name) {
+                "bindingAdapterPosition", "position", "index" -> "position"
+                "absoluteAdapterPosition" -> "absoluteAdapterPosition"
+                "viewholder", "viewHolder" -> "viewHolder"
+                "view" -> "v"
+                else -> null
             }
+            if (argument == null) {
+                logger.error(
+                    "Unsupported event parameter '$name'; use bindingAdapterPosition, position, " +
+                        "absoluteAdapterPosition, viewholder or view",
+                    parameter
+                )
+            } else if (argument in listOf("position", "absoluteAdapterPosition") &&
+                parameter.type.resolve().declaration.qualifiedName?.asString() != "kotlin.Int"
+            ) {
+                logger.error("Event position parameter '$name' must have type Int", parameter)
+            }
+            argument ?: "error(\"Unsupported event parameter\")"
         }
-        return parameterList
-    }
 
     private fun KSDeclaration.identity(): Identity {
         return Identity(qualifiedName!!.asString(), simpleName.asString())
