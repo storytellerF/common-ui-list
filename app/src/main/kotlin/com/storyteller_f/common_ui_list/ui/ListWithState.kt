@@ -27,6 +27,7 @@ import com.storyteller_f.ui_list.adapter.ManualAdapter
 import com.storyteller_f.ui_list.adapter.SimpleSourceAdapter
 import com.storyteller_f.ui_list.core.AbstractViewHolder
 import com.storyteller_f.ui_list.core.DataItemHolder
+import com.storyteller_f.ui_list.core.getItemHolderAt
 import com.storyteller_f.ui_list.ui.SimpleLoadStateAdapter
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.SharingStarted
@@ -236,9 +237,7 @@ class ListWithState @JvmOverloads constructor(
                 super.getItemOffsets(outRect, view, parent, state)
                 if (editing.value) {
                     val childAdapterPosition = parent.getChildAdapterPosition(view)
-                    val childViewHolder = parent.getChildViewHolder(view)
-                    val itemHolder =
-                        (childViewHolder as? AbstractViewHolder<*>)?.itemHolderOrNull
+                    val itemHolder = parent.adapter?.getItemHolderAt(childAdapterPosition)
                     if (itemHolder == null) {
                         outRect.right = 0
                         return
@@ -258,9 +257,8 @@ class ListWithState @JvmOverloads constructor(
                         val child = parent.getChildAt(i)
                         val top = child.top
                         val bottom = child.bottom
-                        val childViewHolder = parent.getChildViewHolder(child)
-                        val itemHolder =
-                            (childViewHolder as? AbstractViewHolder<*>)?.itemHolderOrNull
+                        val position = parent.getChildAdapterPosition(child)
+                        val itemHolder = parent.adapter?.getItemHolderAt(position)
                         if (itemHolder == null) continue
                         selectableDrawer.draw(
                             c,

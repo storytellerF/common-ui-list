@@ -3,9 +3,10 @@
 [![codecov](https://codecov.io/gh/storytellerF/common-ui-list/graph/badge.svg?token=5IK0PP6G9G)](https://codecov.io/gh/storytellerF/common-ui-list)
 
 
-ViewHolder 不再缓存 bind 时的 item holder。`bindData` 使用传入的数据；
-`itemHolderOrNull` 动态查询当前 `bindingAdapterPosition` 对应的数据，无效位置或 Paging
-占位返回 null。自定义 adapter 需实现 `ItemHolderProvider`，使用 adapter 内的相对位置读取数据。
+ViewHolder 不再保存或提供 item holder。`bindData` 使用传入的数据；事件回调只按签名传参。
+数据从 adapter 查询：子 adapter 使用 `getItemHolder(position)`；整个列表使用
+`recyclerView.adapter?.getItemHolderAt(absoluteAdapterPosition)`，支持嵌套 ConcatAdapter。
+无效位置、加载状态头尾和 Paging 占位返回 null。自定义数据 adapter 需实现 `ItemHolderProvider`。
 
 `@BindClickEvent` / `@BindLongClickEvent` 按方法签名中的参数名和声明顺序传参：
 

@@ -1,17 +1,12 @@
 package com.storyteller_f.ui_list.core
 
 import android.view.View
-import android.view.ViewGroup
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.Lifecycle
-import androidx.recyclerview.widget.ConcatAdapter
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.storyteller_f.ui_list.R
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -67,11 +62,10 @@ class AbstractViewHolderTest {
     }
 
     @Test
-    fun `unbound holder exposes null and context resources`() {
+    fun `holder exposes context resources`() {
         val activity = Robolectric.buildActivity(ComponentActivity::class.java).setup().get()
         val holder = RecordingHolder(View(activity))
 
-        assertNull(holder.itemHolderOrNull)
         assertEquals(activity.getColor(android.R.color.black), holder.getColor(android.R.color.black))
         assertEquals(activity.getString(R.string.loading), holder.getString(R.string.loading))
         assertEquals(
@@ -80,69 +74,6 @@ class AbstractViewHolderTest {
             0f,
         )
         assertNotNull(holder.getDrawable(android.R.drawable.ic_menu_add))
-    }
-
-    @Test
-    fun `current item reflects adapter updates without another bind`() {
-        val activity = Robolectric.buildActivity(ComponentActivity::class.java).setup().get()
-        val original = TestItem("original")
-        val adapter = CurrentItemAdapter(mutableListOf(original))
-
-        val recycler = layoutRecycler(activity, adapter)
-        val holder = recycler.findViewHolderForAdapterPosition(0) as RecordingHolder
-        assertSame(original, holder.itemHolderOrNull)
-
-        val replacement = TestItem("replacement")
-        adapter.items[0] = replacement
-        assertSame(replacement, holder.itemHolderOrNull)
-        assertEquals(listOf(original), holder.bound)
-
-        adapter.items.clear()
-        assertNull(holder.itemHolderOrNull)
-        adapter.notifyItemRemoved(0)
-        assertEquals(RecyclerView.NO_POSITION, holder.bindingAdapterPosition)
-        assertNull(holder.itemHolderOrNull)
-    }
-
-    @Test
-    fun `concat holder resolves position in the adapter that bound it`() {
-        val activity = Robolectric.buildActivity(ComponentActivity::class.java).setup().get()
-        val header = CurrentItemAdapter(mutableListOf(TestItem("header")))
-        val item = TestItem("content")
-        val content = CurrentItemAdapter(mutableListOf(item))
-        val concat = ConcatAdapter(header, content)
-        val recycler = layoutRecycler(activity, concat)
-        val holder = recycler.findViewHolderForAdapterPosition(1) as RecordingHolder
-
-        assertEquals(0, holder.bindingAdapterPosition)
-        assertSame(item, holder.itemHolderOrNull)
-    }
-
-    private fun layoutRecycler(
-        activity: ComponentActivity,
-        adapter: RecyclerView.Adapter<*>,
-    ): RecyclerView {
-        val recycler = RecyclerView(activity)
-        recycler.layoutManager = LinearLayoutManager(activity)
-        recycler.adapter = adapter
-        activity.setContentView(recycler)
-        val size = View.MeasureSpec.makeMeasureSpec(500, View.MeasureSpec.EXACTLY)
-        recycler.measure(size, size)
-        recycler.layout(0, 0, 500, 500)
-        return recycler
-    }
-
-    private class CurrentItemAdapter(val items: MutableList<TestItem>) :
-        RecyclerView.Adapter<RecordingHolder>(), ItemHolderProvider<TestItem> {
-        override fun getItemHolder(position: Int) = items.getOrNull(position)
-        override fun getItemCount() = items.size
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-            RecordingHolder(View(parent.context).apply {
-                layoutParams = RecyclerView.LayoutParams(100, 100)
-            })
-        override fun onBindViewHolder(holder: RecordingHolder, position: Int) {
-            holder.onBind(items[position])
-        }
     }
 
     private data class TestItem(val id: String) : DataItemHolder() {

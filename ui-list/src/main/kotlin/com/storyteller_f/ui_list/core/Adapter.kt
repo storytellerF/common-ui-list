@@ -56,11 +56,6 @@ abstract class DataItemHolder(val type: String = "", val key: String = "") {
     open fun areContentsTheSame(other: DataItemHolder): Boolean = this == other
 }
 
-/** Resolves data using a position relative to the adapter that bound the holder. */
-interface ItemHolderProvider<out IH : DataItemHolder> {
-    fun getItemHolder(position: Int): IH?
-}
-
 abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: String = "") :
     RecyclerView.ViewHolder(itemView) {
     @OptIn(ExperimentalUuidApi::class)
@@ -76,24 +71,6 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: 
     @Suppress("MemberVisibilityCanBePrivate")
     val holderLifecycleOwner: LifecycleOwner get() = holderLifecycleOwnerOrNull!!
     val holderLifecycleOwnerOrNull get() = _holderLifecycleOwner.value
-
-    /** Current adapter data. Use the bindData argument while binding. */
-    val itemHolder: IH get() = checkNotNull(itemHolderOrNull) {
-        "The holder has no current adapter item"
-    }
-
-    /** Returns null for an unbound/removed holder or a Paging placeholder. */
-    val itemHolderOrNull: IH?
-        get() {
-            val adapter = bindingAdapter ?: return null
-            val position = bindingAdapterPosition
-            if (position == RecyclerView.NO_POSITION || position !in 0 until adapter.itemCount) {
-                return null
-            }
-            val provider = adapter as? ItemHolderProvider<*> ?: return null
-            @Suppress("UNCHECKED_CAST")
-            return provider.getItemHolder(position) as IH?
-        }
 
     private var observer: LifecycleObserver = BindLifecycleObserver()
 
