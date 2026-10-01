@@ -223,21 +223,22 @@ class KotlinGenerator(
             }
             """
             if (s == "${it.key}") {
-                $1                
+                $1
             }//if end
             """.trimIndent().replace("$1", clickBlock.replace("\n", "\n    "))
         }.joinToString("\n")
 
     private fun produceClickBlockForCompose(e: Event<KSAnnotated>): String {
-        val parameterList = e.parameterList
-        return if (e.receiver.contains("Activity")) {
-            """
-                (context as? ${e.receiver})?.${e.functionName}($parameterList)
-            """.trimIndent()
+        val receiver = if (e.receiver.contains("Activity")) {
+            "(context as? ${e.receiver})"
         } else {
-            """
-                v.findFragmentOrNull<${e.receiver}>()?.${e.functionName}($parameterList)
-            """.trimIndent()
+            "v.findFragmentOrNull<${e.receiver}>()"
+        }
+        val invocation = "$receiver?.${e.functionName}(${e.parameterList})"
+        return if ("itemHolder" in e.parameterList.split(", ")) {
+            "viewHolder.itemHolderOrNull?.let { itemHolder -> $invocation }"
+        } else {
+            invocation
         }
     }
 
@@ -280,20 +281,8 @@ class KotlinGenerator(
             }
     """.trimIndent().replace("$1", buildInvokeClickEvent(it.value).replace("\n", "\n    "))
 
-    private fun buildInvokeClickEvent(events: List<Event<KSAnnotated>>): String {
-        return events.joinToString("\n") { event ->
-            val parameterList = event.parameterList
-            if (event.receiver.contains("Activity")) {
-                """
-                    (context as? ${event.receiver})?.${event.functionName}($parameterList)
-                """.trimIndent()
-            } else {
-                """
-                    v.findFragmentOrNull<${event.receiver}>()?.${event.functionName}($parameterList)
-                """.trimIndent()
-            }
-        }
-    }
+    private fun buildInvokeClickEvent(events: List<Event<KSAnnotated>>): String =
+        events.joinToString("\n", transform = ::produceClickBlockForCompose)
 }
 
 fun List<String>.coverPart(): String {

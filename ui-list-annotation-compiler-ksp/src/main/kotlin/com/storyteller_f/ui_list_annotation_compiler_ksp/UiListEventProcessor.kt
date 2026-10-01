@@ -189,7 +189,7 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
             if (asString.isNullOrEmpty()) {
                 ""
             } else if (asString == "itemHolder") {
-                "viewHolder.itemHolder"
+                "itemHolder"
             } else if (asString == "binding") {
                 "inflate"
             } else {

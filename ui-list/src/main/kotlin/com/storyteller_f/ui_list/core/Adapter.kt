@@ -56,6 +56,11 @@ abstract class DataItemHolder(val type: String = "", val key: String = "") {
     open fun areContentsTheSame(other: DataItemHolder): Boolean = this == other
 }
 
+/** Resolves data using a position relative to the adapter that bound the holder. */
+interface ItemHolderProvider<out IH : DataItemHolder> {
+    fun getItemHolder(position: Int): IH?
+}
+
 abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: String = "") :
     RecyclerView.ViewHolder(itemView) {
     @OptIn(ExperimentalUuidApi::class)
@@ -72,18 +77,23 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: 
     val holderLifecycleOwner: LifecycleOwner get() = holderLifecycleOwnerOrNull!!
     val holderLifecycleOwnerOrNull get() = _holderLifecycleOwner.value
 
-    private var _itemHolder: IH? = null
+    /** Current adapter data. Use the bindData argument while binding. */
+    val itemHolder: IH get() = checkNotNull(itemHolderOrNull) {
+        "The holder has no current adapter item"
+    }
 
-    /**
-     * 需要保证当前已经绑定过数据了
-     * 在[holderLifecycleOwner] 生命周期内或者onBind 中使用都是安全的
-     */
-    val itemHolder get() = _itemHolder!!
-
-    /**
-     * 在事件处理中使用这个更加合适
-     */
-    val itemHolderOrNull get() = itemHolder
+    /** Returns null for an unbound/removed holder or a Paging placeholder. */
+    val itemHolderOrNull: IH?
+        get() {
+            val adapter = bindingAdapter ?: return null
+            val position = bindingAdapterPosition
+            if (position == RecyclerView.NO_POSITION || position !in 0 until adapter.itemCount) {
+                return null
+            }
+            val provider = adapter as? ItemHolderProvider<*> ?: return null
+            @Suppress("UNCHECKED_CAST")
+            return provider.getItemHolder(position) as IH?
+        }
 
     private var observer: LifecycleObserver = BindLifecycleObserver()
 
@@ -100,14 +110,6 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: 
     fun getDimen(@DimenRes id: Int) = context.resources.getDimension(id)
 
     fun getString(@StringRes id: Int) = context.resources.getString(id)
-
-    internal fun attachItemHolder(itemHolder: IH) {
-        _itemHolder = itemHolder
-    }
-
-    internal fun detachItemHolder() {
-        _itemHolder = null
-    }
 
     /**
      * onViewAttachedToWindow 被触发或者外部生命周期onStart 触发
@@ -299,7 +301,6 @@ open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(
 
     override fun onBindViewHolder(holder: VH, position: Int) {
         val itemHolder = getItemAbstract(position) ?: return
-        holder.attachItemHolder(itemHolder)
         holder.moveStateToCreate(true)
         holder.onBind(itemHolder)
     }
@@ -336,7 +337,6 @@ open class DefaultAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(
     override fun onViewRecycled(holder: VH) {
         super.onViewRecycled(holder)
         holder.moveStateToDestroy(true)
-        holder.detachItemHolder()
     }
 
     companion object {

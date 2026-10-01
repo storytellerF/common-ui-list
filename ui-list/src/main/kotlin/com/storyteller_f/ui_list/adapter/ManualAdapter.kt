@@ -8,6 +8,7 @@ import com.storyteller_f.ui_list.core.BuildBatch
 import com.storyteller_f.ui_list.core.DataItemHolder
 import com.storyteller_f.ui_list.core.DefaultAdapter
 import com.storyteller_f.ui_list.core.DefaultAdapter.Companion.common_diff_util
+import com.storyteller_f.ui_list.core.ItemHolderProvider
 import kotlin.reflect.KClass
 
 /**
@@ -17,7 +18,9 @@ import kotlin.reflect.KClass
 class ManualAdapter<IH : DataItemHolder, VH : AbstractViewHolder<IH>>(
     buildBatch: Map<KClass<out DataItemHolder>, BuildBatch>
 ) :
-    ListAdapter<IH, VH>(common_diff_util as DiffUtil.ItemCallback<IH>) {
+    ListAdapter<IH, VH>(common_diff_util as DiffUtil.ItemCallback<IH>), ItemHolderProvider<IH> {
+    override fun getItemHolder(position: Int): IH? = currentList.getOrNull(position)
+
     private val proxy = DefaultAdapter<IH, VH>(buildBatch).apply {
         target = this@ManualAdapter
     }

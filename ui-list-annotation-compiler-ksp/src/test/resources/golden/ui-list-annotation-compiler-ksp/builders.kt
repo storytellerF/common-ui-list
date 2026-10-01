@@ -24,7 +24,7 @@ fun buildRepoItemHolder(parent: ViewGroup, type: String, key: String): AbstractV
     
         val viewHolder = RepoViewHolder(binding, key)
         binding.root.setOnClickListener { v ->
-            v.findFragmentOrNull<ClickReceiver>()?.clickRepo(viewHolder.itemHolder)
+            viewHolder.itemHolderOrNull?.let { itemHolder -> v.findFragmentOrNull<ClickReceiver>()?.clickRepo(itemHolder) }
         }
         return viewHolder
     }//type if end
@@ -65,12 +65,12 @@ fun buildSeparatorItemHolder(parent: ViewGroup, type: String): AbstractViewHolde
         @Suppress("UNUSED_VARIABLE") val v = viewHolder.itemView
         view.clickListener = { s ->
             if (s == "card") {
-                v.findFragmentOrNull<ClickReceiver>()?.clickSeparator(v, viewHolder.itemHolder)                
+                viewHolder.itemHolderOrNull?.let { itemHolder -> v.findFragmentOrNull<ClickReceiver>()?.clickSeparator(v, itemHolder) }
             }//if end
         }
         view.longClickListener = { s ->
             if (s == "card") {
-                v.findFragmentOrNull<ClickReceiver>()?.longClickSeparator(inflate, viewHolder.itemHolder)                
+                viewHolder.itemHolderOrNull?.let { itemHolder -> v.findFragmentOrNull<ClickReceiver>()?.longClickSeparator(inflate, itemHolder) }
             }//if end
         }
         return viewHolder

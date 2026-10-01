@@ -10,6 +10,7 @@ import com.storyteller_f.ui_list.core.BuildBatch
 import com.storyteller_f.ui_list.core.DataItemHolder
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -30,8 +31,12 @@ class SimpleSourceAdapterTest {
             }))
         )
 
-        adapter.submitData(activity.lifecycle, PagingData.from(listOf(TestItem("id", "row"))))
+        val item = TestItem("id", "row")
+        adapter.submitData(activity.lifecycle, PagingData.from(listOf(item)))
         Shadows.shadowOf(Looper.getMainLooper()).idle()
+        assertSame(item, adapter.getItemHolder(0))
+        assertNull(adapter.getItemHolder(-1))
+        assertNull(adapter.getItemHolder(adapter.itemCount))
         val viewType = adapter.getItemViewType(0)
         val holder = adapter.onCreateViewHolder(FrameLayout(activity), viewType)
 

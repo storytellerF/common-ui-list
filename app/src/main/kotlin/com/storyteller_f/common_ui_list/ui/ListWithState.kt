@@ -238,7 +238,11 @@ class ListWithState @JvmOverloads constructor(
                     val childAdapterPosition = parent.getChildAdapterPosition(view)
                     val childViewHolder = parent.getChildViewHolder(view)
                     val itemHolder =
-                        (childViewHolder as AbstractViewHolder<*>).itemHolder
+                        (childViewHolder as? AbstractViewHolder<*>)?.itemHolderOrNull
+                    if (itemHolder == null) {
+                        outRect.right = 0
+                        return
+                    }
                     outRect.right = selectableDrawer.width(
                         view, parent, state, childAdapterPosition, itemHolder
                     )
@@ -256,7 +260,8 @@ class ListWithState @JvmOverloads constructor(
                         val bottom = child.bottom
                         val childViewHolder = parent.getChildViewHolder(child)
                         val itemHolder =
-                            (childViewHolder as AbstractViewHolder<*>).itemHolder
+                            (childViewHolder as? AbstractViewHolder<*>)?.itemHolderOrNull
+                        if (itemHolder == null) continue
                         selectableDrawer.draw(
                             c,
                             top,
