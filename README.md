@@ -21,3 +21,5 @@ ViewHolder 不再保存或提供 item holder。`bindData` 使用传入的数据�
 参数可以任意排序或组合，也可省略。请求的索引无效时不调用回调。
 接收者可通过对应 adapter 的 `getItemHolder(bindingAdapterPosition)` 查询数据。
 未知参数名或非 `Int` 的索引参数会产生 KSP 编译错误。
+
+开发环境、ViewHolder 生命周期约束与回归测试见 [DEVELOPMENT.md](DEVELOPMENT.md)。

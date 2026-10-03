@@ -72,7 +72,11 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: 
     val holderLifecycleOwner: LifecycleOwner get() = holderLifecycleOwnerOrNull!!
     val holderLifecycleOwnerOrNull get() = _holderLifecycleOwner.value
 
-    private var observer: LifecycleObserver = BindLifecycleObserver()
+    private val observer: LifecycleObserver = BindLifecycleObserver()
+
+    // A recycled itemView may no longer belong to the Fragment's view tree.
+    // Always unsubscribe from the Lifecycle used at registration time.
+    private var observedLifecycle: Lifecycle? = null
 
     fun onBind(itemHolder: IH) {
         bindData(itemHolder)
@@ -98,11 +102,17 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: 
                 "isHolderEvent = $isHolderEvent"
         )
         moveToState(Lifecycle.Event.ON_START)
-        // 开始监听外部LifecycleOwner
-        val owner: LifecycleOwner? = itemView.findFragmentOrNull<Fragment>()
-            ?: itemView.findActivityOrNull() as? ComponentActivity
-        requireNotNull(owner)
-        owner.lifecycle.addObserver(observer)
+        if (isHolderEvent) {
+            // Lifecycle callbacks must not resolve the owner again or re-register themselves.
+            val owner: LifecycleOwner? = itemView.findFragmentOrNull<Fragment>()
+                ?: itemView.findActivityOrNull() as? ComponentActivity
+            requireNotNull(owner)
+            if (observedLifecycle !== owner.lifecycle) {
+                unobserveLifecycle()
+                observedLifecycle = owner.lifecycle
+                owner.lifecycle.addObserver(observer)
+            }
+        }
     }
 
     /**
@@ -183,6 +193,7 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: 
             "$label moveStateToDestroy() called with: " +
                 "isHolderEvent = $isHolderEvent"
         )
+        unobserveLifecycle()
         val lifecycleOwner = holderLifecycleOwnerOrNull
         if (lifecycleOwner == null) {
             Log.i(
@@ -192,12 +203,13 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: 
             )
             return
         }
-        val owner: LifecycleOwner? = itemView.findFragmentOrNull<Fragment>()
-            ?: itemView.findActivityOrNull() as? ComponentActivity
-        requireNotNull(owner)
-        owner.lifecycle.removeObserver(observer)
         moveToState(Lifecycle.Event.ON_DESTROY)
         unbindLifecycleOwner()
+    }
+
+    private fun unobserveLifecycle() {
+        observedLifecycle?.removeObserver(observer)
+        observedLifecycle = null
     }
 
     private fun moveToState(event: Lifecycle.Event) {
@@ -239,6 +251,10 @@ abstract class AbstractViewHolder<IH : DataItemHolder>(itemView: View, val key: 
         override fun onPause(owner: LifecycleOwner) {
             super.onPause(owner)
             moveStateToPause(false)
+        }
+
+        override fun onDestroy(owner: LifecycleOwner) {
+            moveStateToDestroy(false)
         }
     }
 
