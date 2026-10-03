@@ -24,6 +24,12 @@ android {
 
 }
 
+// Robolectric's API 36 shared-memory setup accesses SharedSecrets on JDK 21.
+// Keep this export confined to test JVMs.
+tasks.withType<Test>().configureEach {
+    jvmArgs("--add-exports=java.base/jdk.internal.access=ALL-UNNAMED")
+}
+
 dependencies {
     implementation(project(":ui-list-annotation-definition"))
     testImplementation(libs.junit)
