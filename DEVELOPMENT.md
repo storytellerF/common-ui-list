@@ -10,7 +10,7 @@
 
 默认开启跨项目并行，最多 4 个 worker；不设置 `Test.maxParallelForks`，保留 Gradle 默认的单 fork。Gradle daemon 的 4 GiB 堆限制不包含测试 JVM、Kotlin daemon 和其他 worker。内存较小的环境可用 `--max-workers=2`，或用 `--no-parallel` 退回串行。
 
-各模块的编译、KSP 生成代码、测试和 Kover 报告使用各自的 `build/` 目录。Kover 汇总通过项目依赖收集产物。Detekt 默认只读，可与编译、测试在同一次调用中执行；需要修复格式时显式运行 `./gradlew detekt --auto-correct`。只有显式自动修复时需要避免与读取同一源码的编译或分析任务重叠，修复后重新验证编译和测试。现有 AST 并行配置保持不变。
+各模块的编译、KSP 生成代码、测试和 Kover 报告使用各自的 `build/` 目录。Kover 汇总通过项目依赖收集产物。Detekt 默认只读，可与编译、测试在同一次调用中执行；需要修复格式时显式运行 `./gradlew detekt --auto-correct`。只有显式自动修复时需要避免与读取同一源码的编译或分析任务重叠，修复后重新验证编译和测试。Detekt 内部 AST 并行默认开启，与 Gradle 跨项目并行独立；`--no-parallel` 只关闭后者，不会关闭 AST 并行。
 
 为保护显式自动修复写入的源码和共享 baseline，分析任务与 baseline 生成任务仍共用一个独占 build service；SARIF 汇总等待本次调度的所有 Detekt 生产任务结束。共享的 `config/detekt/baseline.xml` 仍为现有全局基线，更新它时应显式选择一个模块的 baseline 任务并审查差异，不能把多模块依次覆盖的结果当作合并基线。
 
@@ -55,6 +55,26 @@ python tools/benchmark-gradle.py --repeats 3 --workers 4
 - 修复后运行 `:ext-func-compiler:test --rerun detekt --no-auto-correct --continue --parallel`：重新编译并执行的 2 个编译器测试全部通过，11 个模块的 Detekt 全部重新执行，模块及 SARIF 汇总诊断均为 0，构建成功。日志位于 `build/issue32-longmethod-fix.log`。上表性能数据保留自 fixture 提取前的测量。
 
 报告与验收日志分别位于 `build/issue32-reports.log`、`build/issue32-device.log`、`build/issue32-detekt-parallel.log`、`build/issue32-detekt-serial.log` 和 `build/issue32-detekt-serial-reuse.log`。
+
+### Issue #39：Detekt AST 并行基准（2026-10-25）
+
+基于提交 `e8a6bd2`，在 Windows 11、28 逻辑 CPU、31.84 GiB RAM、Temurin 21.0.12.1、Gradle 9.8.1、Detekt 1.23.8 上比较 `parallel=false/true`。固定 Gradle 跨模块并行、4 个 worker、4 GiB daemon 堆、现有 Detekt 独占 service、规则和 baseline，不启用 Worker API；自动修复关闭。
+
+显式运行 11 个模块的普通 `:模块:detekt`（共 88 个源码文件），用任务级 `--rerun` 强制分析，禁用构建及配置缓存。依赖先预热，离线测量；每个场景各三组，交替 false→true、true→false、false→true，共 18 次正式调用。新进程场景每次启动 single-use daemon；预热场景在同一个独立 daemon 上先分别预热两个开关，再采集六次正式样本。
+
+| 场景 | 关闭：整次调用中位数（秒） | 开启：整次调用中位数（秒） | 缩短 | 关闭/开启：Detekt 任务合计中位数（秒） |
+| --- | ---: | ---: | ---: | ---: |
+| 新进程，清除 Detekt 报告 | 30.991 | 25.902 | 16.4% | 8.249 / 5.195 |
+| 新进程，保留报告并强制重跑 | 31.890 | 28.603 | 10.3% | 8.208 / 5.726 |
+| 复用已预热的 daemon，强制重跑 | 12.360 | 10.648 | 13.9% | 3.795 / 1.381 |
+
+新进程场景仍保留编译产物、下载依赖和系统文件缓存，不代表首次 checkout 的完整冷构建。预热进程逐轮整次调用 false/true 为 12.360/10.848、11.582/10.648、15.934/9.192 秒；三轮开启均更快。Detekt 任务计时包含插件与报告工作，不是纯 AST 解析时间。
+
+每 200 ms 对本次进程树同时采样并求和。全部样本最高 RSS 为 1807.2 MiB、Windows private bytes 为 2212.8 MiB；新进程且保留报告的场景中，开启后的峰值中位数分别增加 228.5 MiB 和 276.3 MiB，其他场景未观察到增加。预热 daemon 的累计 JVM 状态会影响内存，不能将这些差异完全归因于开关，也不能声称并行省内存。
+
+18 次分析全部成功，每次 11 个任务实际执行。每次的 55 份模块报告及合并 SARIF 在去除 HTML/Markdown 生成时间后完全一致，findings 均为 0；已跟踪文件的 SHA-256 未改变。此基准未覆盖自动修复、有违规输入或类型解析任务。共享机器最低可用内存曾降至 693.8 MiB，且一次关闭并行的调用达到 43.035 秒；所有样本均保留，未删除慢样本。小样本结果不能保证目标 CI 上的收益，尤其是低核或内存紧张的 runner；Gradle worker 上限也不等于 Detekt 内部线程上限。
+
+基于本机预热约省 1.7 秒、新进程约省 3–5 秒且报告一致，开启共享 `detekt { parallel = true }`。保留只读默认、现有共享锁与全部报告。原始日志、逐次内存与报告副本位于本地 `build/issue39-benchmark/`，不纳入版本控制。
 
 ## ViewHolder 生命周期
 
