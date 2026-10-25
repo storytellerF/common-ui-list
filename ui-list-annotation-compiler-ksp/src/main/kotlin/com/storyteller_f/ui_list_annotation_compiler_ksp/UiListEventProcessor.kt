@@ -96,14 +96,15 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
         clickEvents: Sequence<KSAnnotated>,
         longClickEvents: Sequence<KSAnnotated>
     ): List<KSAnnotated>? {
+        // Preserve the legacy validation scope; generated code does not consume context parameters or backing fields.
         val viewHolderMap = viewHolders.groupBy {
-            it.validate()
+            it.validate(enableNewFeatures = false)
         }
         val clickEventMap = clickEvents.groupBy {
-            it.validate()
+            it.validate(enableNewFeatures = false)
         }
         val longClickEventMap = longClickEvents.groupBy {
-            it.validate()
+            it.validate(enableNewFeatures = false)
         }
         val viewHolderCount = viewHolders.count()
         val clickEventCount = clickEvents.count()
@@ -122,7 +123,12 @@ class UiListEventProcessor(private val environment: SymbolProcessorEnvironment) 
             logger.warn("ui-list round $count exit")
             return null
         }
-        return emptyList()
+        // Builders aggregate holders and events: retry the entire batch before writing any file.
+        return if (invalidate.isEmpty()) {
+            emptyList()
+        } else {
+            viewHolders.toList() + clickEvents.toList() + longClickEvents.toList()
+        }
     }
 
     private fun writeFile(

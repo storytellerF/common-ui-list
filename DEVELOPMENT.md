@@ -61,3 +61,33 @@ python tools/benchmark-gradle.py --repeats 3 --workers 4
 Fragment 中的数据订阅仍应使用 `viewLifecycleOwner`，adapter 应按 view lifecycle 创建和清理。这与 holder 内部的 observer 管理独立，不能替代库自身的解绑。
 
 `AbstractViewHolderTest` 覆盖行视图脱离父树后回收、宿主恢复与销毁。`FragmentGridNavigationTest` 使用真实 RecyclerView 和 FragmentManager，覆盖列表切换到网格后压入子 Fragment，再返回原网格。两者固定使用 Robolectric API 36；测试 JVM 的 `jdk.internal.access` 导出仅用于 Robolectric 的 shared-memory 初始化，不用于运行时库或应用。
+
+## KSP 校验与弃用诊断（Issue #35）
+
+两个编译器显式使用 `validate(enableNewFeatures = false)`，与 KSP 2.3.12 的旧重载行为一致。
+当前生成器未提供 context parameters 和 explicit backing fields 的生成支持，因此不在此次弃用迁移中扩大校验范围。
+之后支持这些语言特性时，应一起更新校验选项、生成器及对应测试。
+
+生成文件会聚合同一批符号。若本轮存在不可解析的符号，两个处理器均返回整批源符号，暂不写文件；
+下一轮重新获取符号，避免漏掉已有效的事件或生成部分文件后重复写入。测试使用另一轮生成的类型别名验证恢复，
+并覆盖始终无法解析时不生成 builder、有效与无效符号混合、原有 golden 输出和生成回调行为。
+
+验证命令：
+
+```sh
+./gradlew :ext-func-compiler:test :ui-list-annotation-compiler-ksp:test :ext-func-compiler:detekt --no-auto-correct :ui-list-annotation-compiler-ksp:detekt --no-auto-correct --no-parallel
+./gradlew help --warning-mode all --no-configuration-cache -Dorg.gradle.deprecation.trace=true
+```
+
+2026-10-25 在 JDK 21 / Gradle 9.8.1 上验证：两个编译器共 10 个测试通过，保留原有 golden；两个模块的 Detekt 通过。
+发布验证使用临时 init script，仅对两个模块关闭签名任务并移除 `.asc` 发布附件，验证 `publishToMavenLocal`；
+正式发布配置没有修改。当前环境没有发布签名密钥，未验证签名或执行 Maven Central 发布，正式发布仍由带密钥的上游 CI 执行。
+
+使用 `--warning-mode all` 和 `-Dorg.gradle.deprecation.trace=true` 展开后的来源：
+
+- 项目根脚本的 `tasks.registering` 委托语法（Gradle 10 移除）：已改为 `tasks.register<ReportMergeTask>`，保留延迟配置。
+- Detekt 1.23.8 的 `DetektPlugin.apply`（`DetektPlugin.kt:28`）调用 `ReportingExtension.file(String)`，将在 Gradle 10 移除。
+- 同一插件的 `configurePluginDependencies`（`DetektPlugin.kt:99,107`）调用 `Configuration.setVisible(boolean)`，将在 Gradle 11 移除。
+
+后两项来自第三方插件，仍会报告；本次没有屏蔽警告或跳过符号校验，也不声称已兼容 Gradle 10。
+升级 Detekt 时需同时验证规则、格式化插件、baseline 和 SARIF 汇总，不能只替换版本来消除提示。
