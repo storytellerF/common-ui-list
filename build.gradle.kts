@@ -7,6 +7,10 @@ import io.gitlab.arturbosch.detekt.report.ReportMergeTask
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.gradle.api.services.BuildService
+import org.gradle.api.services.BuildServiceParameters
+
+abstract class ExclusiveBuildResource : BuildService<BuildServiceParameters.None>
 
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
@@ -37,6 +41,15 @@ tasks.withType<Test> {
     }
 }
 setupDeprecationCheck(listOf(""))
+// These leases cover this Gradle invocation. Separate invocations sharing a
+// physical device still need an external device lock.
+val connectedDevice = gradle.sharedServices.registerIfAbsent(
+    "connectedDevice", ExclusiveBuildResource::class
+) { maxParallelUsages.set(1) }
+subprojects {
+    tasks.matching { it.name.startsWith("connected") && it.name.endsWith("AndroidTest") }
+        .configureEach { usesService(connectedDevice) }
+}
 setupDetekt()
 setupKover(
     listOf(
@@ -55,6 +68,11 @@ setupKover(
 )
 
 fun Project.setupDetekt() {
+    // autoCorrect writes sources and baseline tasks share one output file.
+    // Serialize both kinds of tasks, including readers of that baseline.
+    val detektWrites = gradle.sharedServices.registerIfAbsent(
+        "detektWrites", ExclusiveBuildResource::class
+    ) { maxParallelUsages.set(1) }
     val detektReportMergeSarif by tasks.registering(ReportMergeTask::class) {
         output = layout.buildDirectory.file("reports/detekt/merge.sarif")
     }
@@ -78,6 +96,7 @@ fun Project.setupDetekt() {
             detektPlugins(rootProject.libs.detekt.rules.ruleauthors)
         }
         tasks.withType<Detekt>().configureEach {
+            usesService(detektWrites)
             jvmTarget = "1.8"
             reports {
                 xml.required = true
@@ -90,10 +109,14 @@ fun Project.setupDetekt() {
             finalizedBy(detektReportMergeSarif)
         }
         detektReportMergeSarif {
+            // A finalizer from one module must wait for the other scheduled
+            // producers, otherwise parallel execution can merge partial reports.
+            mustRunAfter(tasks.withType<Detekt>())
             input.from(
                 tasks.withType<Detekt>().map { it.sarifReportFile })
         }
         tasks.withType<DetektCreateBaselineTask>().configureEach {
+            usesService(detektWrites)
             jvmTarget = "1.8"
         }
     }

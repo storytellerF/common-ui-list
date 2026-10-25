@@ -16,55 +16,7 @@ class ExtFuncCompilerTest {
     fun `generates ext builder for ksp backed annotation variants`() {
         val result = compile(
             ExtFuncProvider(),
-            SourceFile.kotlin(
-                "sample/Sample.kt",
-                """
-                package sample
-
-                import android.content.Context
-                import androidx.annotation.MainThread
-                import androidx.fragment.app.Fragment
-                import androidx.lifecycle.ViewModel
-                import androidx.lifecycle.ViewModelStore
-                import androidx.lifecycle.ViewModelStoreOwner
-                import androidx.lifecycle.viewmodel.CreationExtras
-                import androidx.lifecycle.viewmodel.HasDefaultViewModelProviderFactory
-                import com.storyteller_f.ext_func_definition.ExtFuncFlat
-                import com.storyteller_f.ext_func_definition.ExtFuncFlatType
-
-                @ExtFuncFlat(ExtFuncFlatType.V2)
-                val Context.service get() = "service"
-
-                @ExtFuncFlat(ExtFuncFlatType.V3)
-                val Context.bindingService get() = "binding"
-
-                @ExtFuncFlat(ExtFuncFlatType.V4, isContextReceiver = true)
-                val Float.dp get() = this
-
-                @ExtFuncFlat(ExtFuncFlatType.V5)
-                @MainThread
-                inline fun <reified VM : ViewModel, T, ARG> T.vm(
-                    crossinline arg: () -> ARG,
-                    noinline storeProducer: () -> ViewModelStore = { viewModelStore },
-                    noinline ownerProducer: () -> HasDefaultViewModelProviderFactory = { this },
-                    crossinline vmProducer: (ARG) -> VM,
-                ) where T : HasDefaultViewModelProviderFactory, T : ViewModelStoreOwner =
-                    ViewModelLazy(VM::class, storeProducer, defaultFactory(arg, vmProducer)) {
-                        ownerProducer().defaultViewModelCreationExtras
-                    }
-
-                abstract class DelegateTarget {
-                    abstract fun sayTest(): String
-                }
-
-                open class DelegateOwner {
-                    @ExtFuncFlat(ExtFuncFlatType.V8)
-                    val delegate: DelegateTarget = object : DelegateTarget() {
-                        override fun sayTest() = "ok"
-                    }
-                }
-                """.trimIndent()
-            ),
+            annotationVariantsSource,
             *androidStubs,
             *lifecycleStubs,
         )
@@ -115,6 +67,56 @@ class ExtFuncCompilerTest {
             .replace("\r\n", "\n")
             .trim()
 }
+
+private val annotationVariantsSource = SourceFile.kotlin(
+    "sample/Sample.kt",
+    """
+    package sample
+
+    import android.content.Context
+    import androidx.annotation.MainThread
+    import androidx.fragment.app.Fragment
+    import androidx.lifecycle.ViewModel
+    import androidx.lifecycle.ViewModelStore
+    import androidx.lifecycle.ViewModelStoreOwner
+    import androidx.lifecycle.viewmodel.CreationExtras
+    import androidx.lifecycle.viewmodel.HasDefaultViewModelProviderFactory
+    import com.storyteller_f.ext_func_definition.ExtFuncFlat
+    import com.storyteller_f.ext_func_definition.ExtFuncFlatType
+
+    @ExtFuncFlat(ExtFuncFlatType.V2)
+    val Context.service get() = "service"
+
+    @ExtFuncFlat(ExtFuncFlatType.V3)
+    val Context.bindingService get() = "binding"
+
+    @ExtFuncFlat(ExtFuncFlatType.V4, isContextReceiver = true)
+    val Float.dp get() = this
+
+    @ExtFuncFlat(ExtFuncFlatType.V5)
+    @MainThread
+    inline fun <reified VM : ViewModel, T, ARG> T.vm(
+        crossinline arg: () -> ARG,
+        noinline storeProducer: () -> ViewModelStore = { viewModelStore },
+        noinline ownerProducer: () -> HasDefaultViewModelProviderFactory = { this },
+        crossinline vmProducer: (ARG) -> VM,
+    ) where T : HasDefaultViewModelProviderFactory, T : ViewModelStoreOwner =
+        ViewModelLazy(VM::class, storeProducer, defaultFactory(arg, vmProducer)) {
+            ownerProducer().defaultViewModelCreationExtras
+        }
+
+    abstract class DelegateTarget {
+        abstract fun sayTest(): String
+    }
+
+    open class DelegateOwner {
+        @ExtFuncFlat(ExtFuncFlatType.V8)
+        val delegate: DelegateTarget = object : DelegateTarget() {
+            override fun sayTest() = "ok"
+        }
+    }
+    """.trimIndent()
+)
 
 private val androidStubs = arrayOf(
     SourceFile.kotlin(
