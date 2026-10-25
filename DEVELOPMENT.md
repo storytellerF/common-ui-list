@@ -10,7 +10,11 @@
 
 默认开启跨项目并行，最多 4 个 worker；不设置 `Test.maxParallelForks`，保留 Gradle 默认的单 fork。Gradle daemon 的 4 GiB 堆限制不包含测试 JVM、Kotlin daemon 和其他 worker。内存较小的环境可用 `--max-workers=2`，或用 `--no-parallel` 退回串行。
 
-各模块的编译、KSP 生成代码、测试和 Kover 报告使用各自的 `build/` 目录。Kover 汇总通过项目依赖收集产物。Detekt 保留现有自动修复行为，因此分析任务与 baseline 生成任务共用一个独占 build service；SARIF 汇总等待本次调度的所有 Detekt 生产任务结束。共享的 `config/detekt/baseline.xml` 仍为现有全局基线，更新它时应显式选择一个模块的 baseline 任务并审查差异，不能把多模块依次覆盖的结果当作合并基线。
+各模块的编译、KSP 生成代码、测试和 Kover 报告使用各自的 `build/` 目录。Kover 汇总通过项目依赖收集产物。Detekt 默认只读，可与编译、测试在同一次调用中执行；需要修复格式时显式运行 `./gradlew detekt --auto-correct`。只有显式自动修复时需要避免与读取同一源码的编译或分析任务重叠，修复后重新验证编译和测试。现有 AST 并行配置保持不变。
+
+为保护显式自动修复写入的源码和共享 baseline，分析任务与 baseline 生成任务仍共用一个独占 build service；SARIF 汇总等待本次调度的所有 Detekt 生产任务结束。共享的 `config/detekt/baseline.xml` 仍为现有全局基线，更新它时应显式选择一个模块的 baseline 任务并审查差异，不能把多模块依次覆盖的结果当作合并基线。
+
+当前 `excludeCorrectable: false` 策略会继续报告当次发现的可修复违规，因此 `--auto-correct` 即使已修复源码也可能返回失败；修复后重新运行普通 Detekt 确认通过。
 
 `connected*AndroidTest` 任务共用一个独占 build service，同一次 Gradle 调用中不会同时占用设备；CI 的 `connectedCheck` 也显式传入 `--no-parallel`。独立 Gradle 调用或其他项目共用同一设备时，仍需在调用外持有设备锁；build service 只约束本次调用。
 
