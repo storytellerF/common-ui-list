@@ -1,0 +1,7 @@
+// Diagnostic instrumentation only; benchmarks disable configuration caching.
+gradle.allprojects {
+    tasks.withType(Test).configureEach {
+        doFirst { println("BENCH_TASK|${path}|start|${System.currentTimeMillis()}") }
+        doLast { println("BENCH_TASK|${path}|end|${System.currentTimeMillis()}") }
+    }
+}
