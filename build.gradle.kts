@@ -73,7 +73,7 @@ fun Project.setupDetekt() {
     val detektWrites = gradle.sharedServices.registerIfAbsent(
         "detektWrites", ExclusiveBuildResource::class
     ) { maxParallelUsages.set(1) }
-    val detektReportMergeSarif by tasks.registering(ReportMergeTask::class) {
+    val detektReportMergeSarif = tasks.register<ReportMergeTask>("detektReportMergeSarif") {
         output = layout.buildDirectory.file("reports/detekt/merge.sarif")
     }
     subprojects {
@@ -108,7 +108,7 @@ fun Project.setupDetekt() {
             basePath = rootDir.absolutePath
             finalizedBy(detektReportMergeSarif)
         }
-        detektReportMergeSarif {
+        detektReportMergeSarif.configure {
             // A finalizer from one module must wait for the other scheduled
             // producers, otherwise parallel execution can merge partial reports.
             mustRunAfter(tasks.withType<Detekt>())

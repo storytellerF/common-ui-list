@@ -1,6 +1,11 @@
 package com.storyteller_f.ui_list_annotation_compiler_ksp
 
+import com.google.devtools.ksp.processing.Dependencies
+import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.processing.SymbolProcessor
+import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
+import com.google.devtools.ksp.symbol.KSAnnotated
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.configureKsp
@@ -82,6 +87,54 @@ class UiListEventProcessorTest {
             }
         }
     }
+
+    @Test
+    fun `unresolved symbols are deferred without generating builders`() {
+        val deferred = mutableListOf<Int>()
+        val result = compile(trackingProvider(deferred, false), deferredSource, *uiListRuntimeStubs)
+
+        assertTrue(deferred.first() > 0)
+        assertTrue(result.sourcesGeneratedBySymbolProcessor.none { it.name == "RepoItemHolderBuilder.kt" })
+    }
+
+    @Test
+    fun `deferred symbols generate builders after their type is generated`() {
+        val deferred = mutableListOf<Int>()
+        val result = compile(
+            trackingProvider(deferred, true),
+            deferredSource,
+            callbackProbeSource,
+            *uiListRuntimeStubs,
+        )
+
+        assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode)
+        assertTrue(deferred.first() > 0)
+        assertEquals(0, deferred.last())
+        assertEquals(2, result.sourcesGeneratedBySymbolProcessor.count { it.name.endsWith("Builder.kt") })
+        result.classLoader.loadClass("sample.CallbackProbe").getMethod("verify").invoke(null)
+    }
+
+    private fun trackingProvider(deferred: MutableList<Int>, generateType: Boolean) =
+        object : SymbolProcessorProvider {
+            override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
+                val delegate = ProcessorProvider().create(environment)
+                return object : SymbolProcessor {
+                    private var firstRound = true
+
+                    override fun process(resolver: Resolver): List<KSAnnotated> {
+                        val pending = delegate.process(resolver)
+                        deferred.add(pending.size)
+                        if (firstRound && generateType) {
+                            environment.codeGenerator.createNewFile(Dependencies(false), "sample", "Missing").use {
+                                it.write("package sample\ntypealias Missing = Int\n".toByteArray())
+                            }
+                        }
+                        firstRound = false
+                        return pending
+                    }
+                }
+            }
+        }
 
     private fun compile(
         provider: SymbolProcessorProvider,
@@ -321,4 +374,9 @@ private val callbackProbeSource = SourceFile.kotlin(
         }
     }
     """.trimIndent()
+)
+
+private val deferredSource = SourceFile.kotlin(
+    "sample/Sample.kt",
+    sampleSourceCode.replace("bindingAdapterPosition: Int", "bindingAdapterPosition: Missing")
 )

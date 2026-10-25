@@ -1,6 +1,11 @@
 package com.storyteller_f.ext_func_compiler
 
+import com.google.devtools.ksp.processing.Dependencies
+import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.processing.SymbolProcessor
+import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
+import com.google.devtools.ksp.symbol.KSAnnotated
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.configureKsp
@@ -8,6 +13,7 @@ import com.tschuchort.compiletesting.kspWithCompilation
 import com.tschuchort.compiletesting.sourcesGeneratedBySymbolProcessor
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 @OptIn(ExperimentalCompilerApi::class)
@@ -37,6 +43,58 @@ class ExtFuncCompilerTest {
 
         assertGolden("pure_generators.kt", output)
     }
+
+    @Test
+    fun `unresolved symbols are deferred without generating builders`() {
+        val deferred = mutableListOf<Int>()
+        val result = compile(
+            trackingProvider(deferred, false),
+            deferredSource,
+            *androidStubs,
+            *lifecycleStubs,
+        )
+
+        assertTrue(deferred.first() > 0)
+        assertTrue(result.sourcesGeneratedBySymbolProcessor.none { it.name == "ExtBuilder.kt" })
+    }
+
+    @Test
+    fun `deferred symbols generate builders after their type is generated`() {
+        val deferred = mutableListOf<Int>()
+        val result = compile(
+            trackingProvider(deferred, true),
+            deferredSource,
+            *androidStubs,
+            *lifecycleStubs,
+        )
+
+        assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode)
+        assertTrue(deferred.first() > 0)
+        assertEquals(0, deferred.last())
+        assertEquals(1, result.sourcesGeneratedBySymbolProcessor.count { it.name == "ExtBuilder.kt" })
+    }
+
+    private fun trackingProvider(deferred: MutableList<Int>, generateType: Boolean) =
+        object : SymbolProcessorProvider {
+            override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
+                val delegate = ExtFuncProvider().create(environment)
+                return object : SymbolProcessor {
+                    private var firstRound = true
+
+                    override fun process(resolver: Resolver): List<KSAnnotated> {
+                        val pending = delegate.process(resolver)
+                        deferred.add(pending.size)
+                        if (firstRound && generateType) {
+                            environment.codeGenerator.createNewFile(Dependencies(false), "sample", "Missing").use {
+                                it.write("package sample\ntypealias Missing = String\n".toByteArray())
+                            }
+                        }
+                        firstRound = false
+                        return pending
+                    }
+                }
+            }
+        }
 
     private fun compile(
         provider: SymbolProcessorProvider,
@@ -212,4 +270,17 @@ private val lifecycleStubs = arrayOf(
         ): () -> Any = { Any() }
         """.trimIndent()
     ),
+)
+
+private val deferredSource = SourceFile.kotlin(
+    "Deferred.kt",
+    """
+    package sample
+    import com.storyteller_f.ext_func_definition.ExtFuncFlat
+    import com.storyteller_f.ext_func_definition.ExtFuncFlatType
+    @ExtFuncFlat(ExtFuncFlatType.V2)
+    val android.content.Context.service: Missing get() = "ok"
+    @ExtFuncFlat(ExtFuncFlatType.V2)
+    val android.content.Context.ready: String get() = "ready"
+    """.trimIndent()
 )

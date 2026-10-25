@@ -30,7 +30,8 @@ class ExtFuncProcessor(private val codeGenerator: CodeGenerator, private val log
     override fun process(resolver: Resolver): List<KSAnnotated> {
         round++
         val symbols = resolver.getSymbolsWithAnnotation(ExtFuncFlat::class.java.canonicalName)
-        val invalidates = symbols.filter { !it.validate() }.toList()
+        // Preserve the legacy validation scope; generated code does not consume context parameters or backing fields.
+        val invalidates = symbols.filter { !it.validate(enableNewFeatures = false) }.toList()
         logger.info(
             "ext-func round $round invalidates ${invalidates.size} ${
                 invalidates.joinToString {
@@ -38,8 +39,10 @@ class ExtFuncProcessor(private val codeGenerator: CodeGenerator, private val log
                 }
             }"
         )
+        // ExtBuilder aggregates a package: do not write a partial file before deferred symbols resolve.
+        if (invalidates.isNotEmpty()) return symbols.toList()
         val filtered = symbols.filter {
-            (it is KSPropertyDeclaration || it is KSFunctionDeclaration || it is KSClassDeclaration) && it.validate()
+            it is KSPropertyDeclaration || it is KSFunctionDeclaration || it is KSClassDeclaration
         }
         val groupByPackageName = filtered.mapNotNull { ksAnnotated ->
             val extFuncFlat = ksAnnotated.getAnnotationsByType(ExtFuncFlat::class).first()
