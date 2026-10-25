@@ -68,7 +68,7 @@ setupKover(
 )
 
 fun Project.setupDetekt() {
-    // autoCorrect writes sources and baseline tasks share one output file.
+    // Explicit auto-correction writes sources and baseline tasks share one output file.
     // Serialize both kinds of tasks, including readers of that baseline.
     val detektWrites = gradle.sharedServices.registerIfAbsent(
         "detektWrites", ExclusiveBuildResource::class
@@ -86,7 +86,7 @@ fun Project.setupDetekt() {
                 io.gitlab.arturbosch.detekt.extensions.DetektExtension.DEFAULT_TEST_SRC_DIR_KOTLIN,
             )
             buildUponDefaultConfig = true
-            autoCorrect = true
+            autoCorrect = false
             config.setFrom("$rootDir/config/detekt/detekt.yml")
             baseline = file("$rootDir/config/detekt/baseline.xml")
         }
